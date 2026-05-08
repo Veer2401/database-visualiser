@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         processedQuery = `
           SELECT table_name as "Tables_in_${database}"
           FROM information_schema.tables
-          WHERE table_schema = '${database}'
+          WHERE table_schema = current_schema()
           AND table_type = 'BASE TABLE'
           ORDER BY table_name
         `;

@@ -356,7 +356,7 @@ const terminalQueries = [
 
 const faqItems = [
   { q: 'Do I need to know SQL?', a: 'No. You can create databases, tables, and relationships entirely by point-and-click. SQL is optional for when you want to run custom queries or export.' },
-  { q: 'Is my data stored in DB Visualiser?', a: 'Schema and structure are stored so you can edit and sync. You connect your own MySQL for live data; we don’t store your actual database contents.' },
+  { q: 'Is my data stored in DB Visualiser?', a: "Schema and structure are stored so you can edit and sync. You connect your own PostgreSQL for live data; we don't store your actual database contents." },
   { q: 'Can I export my schema?', a: 'Yes. Export to SQL scripts, Word (DOCX), or PDF so you can use the schema in other tools or share with your team.' },
   { q: 'What’s the difference between Dashboard and Terminal mode?', a: 'Dashboard is the visual canvas for designing. Terminal mode focuses on running SQL and viewing results—same project, different view.' },
 ];
@@ -468,7 +468,7 @@ export default function LandingPage() {
                 className="lg:col-span-6 lg:pt-3"
               >
                 <p className="text-left font-sans font-normal text-gray-700 tracking-tight leading-[1.35] text-base sm:text-lg">
-                  Design, visualize, and manage MySQL schemas with a clean drag-and-drop canvas.
+                  Design, visualize, and manage PostgreSQL schemas with a clean drag-and-drop canvas.
                   Export SQL instantly and present your database structure with confidence.
                 </p>
               </motion.div>
@@ -652,7 +652,7 @@ export default function LandingPage() {
 
             <div className="relative flex flex-col lg:flex-row lg:justify-between lg:gap-4 gap-6 sm:gap-8">
               {[
-                { step: '1', title: 'Create database', desc: 'Name your project and create a new MySQL database in one click.' },
+                { step: '1', title: 'Create database', desc: 'Name your project and create a new PostgreSQL database in one click.' },
                 { step: '2', title: 'Add tables', desc: 'Define tables and columns with types, keys, and constraints visually.' },
                 { step: '3', title: 'Connect relations', desc: 'Link tables with foreign keys. See relationships on the canvas.' },
                 { step: '4', title: 'Run or export', desc: 'Execute SQL in the terminal or export schema to SQL, DOCX, or PDF.' },
@@ -952,7 +952,7 @@ export default function LandingPage() {
                         <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />
                       </div>
                       <div className="font-mono text-xs">
-                        <p className="text-gray-500">mysql&gt; <span className="text-green-400">SELECT * FROM users;</span></p>
+                        <p className="text-gray-500">postgres&gt; <span className="text-green-400">SELECT * FROM users;</span></p>
                         <p className="text-gray-400 mt-1">3 rows returned</p>
                       </div>
                     </div>

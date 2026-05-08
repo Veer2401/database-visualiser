@@ -92,6 +92,9 @@ export async function POST(request: NextRequest) {
     const columnDefinitions: string[] = [];
     const foreignKeys: string[] = [];
     const primaryKeys: string[] = [];
+    
+    // Normalize table name to lowercase for PostgreSQL consistency
+    const tableNameLower = tableName.trim().toLowerCase();
 
     for (const column of columns) {
       let dataType = column.dataType.toUpperCase();
@@ -143,10 +146,11 @@ export async function POST(request: NextRequest) {
         primaryKeys.push(`"${column.name}"`);
       }
 
-      // Track foreign keys
+      // Track foreign keys - normalize table name to lowercase
       if (column.isForeignKey && column.foreignKeyReference) {
+        const refTableName = column.foreignKeyReference.tableName.toLowerCase();
         foreignKeys.push(
-          `FOREIGN KEY ("${column.name}") REFERENCES "${column.foreignKeyReference.tableName}"("${column.foreignKeyReference.columnName}")`
+          `FOREIGN KEY ("${column.name}") REFERENCES "${refTableName}"("${column.foreignKeyReference.columnName}")`
         );
       }
     }
@@ -162,15 +166,16 @@ export async function POST(request: NextRequest) {
     });
 
     // Table is created in the specified schema (search_path is set by executeQueryInDatabase)
-    const query = `CREATE TABLE "${tableName.trim()}" (\n  ${columnDefinitions.join(',\n  ')}\n)`;
+    // Use lowercase table name for consistency
+    const query = `CREATE TABLE "${tableNameLower}" (\n  ${columnDefinitions.join(',\n  ')}\n)`;
 
     const result = await executeQueryInDatabase(database.trim(), query);
 
     if (result.success) {
       return NextResponse.json({
         success: true,
-        message: `Table '${tableName}' created successfully in schema '${database}'`,
-        table: tableName,
+        message: `Table '${tableNameLower}' created successfully in schema '${database}'`,
+        table: tableNameLower,
       });
     } else {
       // Handle specific PostgreSQL errors

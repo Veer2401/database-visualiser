@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
     console.log(`[Table Describe] Database: "${database}", Table: "${table}"`);
 
     // Query PostgreSQL information_schema to get table structure from the specified schema
+    // Convert table name to lowercase since unquoted identifiers are stored lowercase in PostgreSQL
+    const tableLower = table.toLowerCase();
+    
     const result = await executeQueryInDatabase(database, `
       SELECT 
         c.column_name as "Field",
@@ -77,11 +80,11 @@ export async function POST(request: NextRequest) {
           AND kcu.table_schema = tc.table_schema
           AND kcu.table_name = tc.table_name
         WHERE tc.constraint_type = 'PRIMARY KEY'
-          AND kcu.table_schema = '${database}'
-          AND kcu.table_name = '${table}'
+          AND kcu.table_schema = current_schema()
+          AND kcu.table_name = '${tableLower}'
       ) pk ON c.column_name = pk.column_name
-      WHERE c.table_schema = '${database}'
-        AND c.table_name = '${table}'
+      WHERE c.table_schema = current_schema()
+        AND c.table_name = '${tableLower}'
       ORDER BY c.ordinal_position
     `);
 

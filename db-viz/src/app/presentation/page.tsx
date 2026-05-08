@@ -231,7 +231,9 @@ function PresentationContent() {
       if (!database) return;
 
       // Query table data (search_path is already set by executeQueryInDatabase)
-      const queryStr = `SELECT * FROM "${tableName}"`;
+      // Convert table name to lowercase for PostgreSQL consistency
+      const tableNameLower = tableName.toLowerCase();
+      const queryStr = `SELECT * FROM "${tableNameLower}"`;
 
       try {
         const response = await fetch('/api/query/execute', {
@@ -249,7 +251,7 @@ function PresentationContent() {
           setQueryResults({
             results: result.results,
             query: queryStr,
-            tableName,
+            tableName: tableNameLower,
           });
         }
       } catch (error) {

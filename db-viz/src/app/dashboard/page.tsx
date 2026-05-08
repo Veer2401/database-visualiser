@@ -834,7 +834,7 @@ export default function DashboardPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
-            query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_name = '${name}'`,
+            query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${name.toLowerCase()}'`,
             userId: user?.uid,
           }),
         });
@@ -1089,9 +1089,12 @@ export default function DashboardPage() {
       }
 
       try {
-        // Add the foreign key constraint in PostgreSQL
+        // Add the foreign key constraint in PostgreSQL directly
+        // PostgreSQL will return proper errors if tables don't exist
         const constraintName = `fk_${sourceTable.name}_${sourceColumn.name}`;
         const alterQuery = `ALTER TABLE "${sourceTable.name}" ADD CONSTRAINT "${constraintName}" FOREIGN KEY ("${sourceColumn.name}") REFERENCES "${targetTable.name}"("${targetColumn.name}")`;
+
+        console.log('Adding FK with query:', alterQuery);
 
         const response = await fetch('/api/query/execute', {
           method: 'POST',
@@ -1099,10 +1102,12 @@ export default function DashboardPage() {
           body: JSON.stringify({
             database: databaseName,
             query: alterQuery,
+            userId: user?.uid,
           }),
         });
 
         const result = await response.json();
+        console.log('FK operation result:', result);
 
         if (!result.success) {
           throw new Error(result.error || 'Failed to add foreign key in PostgreSQL');
@@ -1482,77 +1487,30 @@ export default function DashboardPage() {
           if (match && match[1] && selectedDatabaseId) {
             const tableName = match[1];
             
-            // Fetch table structure from PostgreSQL
-            const describeResponse = await fetch('/api/query/execute', {
+            // Fetch table structure from PostgreSQL using the proper endpoint
+            const describeResponse = await fetch('/api/table/describe', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 database: currentDatabaseName,
-                query: `DESCRIBE "${tableName}"`,
+                table: tableName,
                 userId: user?.uid,
               }),
             });
             const describeResult = await describeResponse.json();
 
-            if (describeResult.success && Array.isArray(describeResult.results)) {
-              // Get foreign key information
-              const fkResponse = await fetch('/api/query/execute', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  database: 'information_schema',
-                  query: `
-                    SELECT 
-                      COLUMN_NAME,
-                      REFERENCED_TABLE_NAME,
-                      REFERENCED_COLUMN_NAME
-                    FROM KEY_COLUMN_USAGE
-                    WHERE TABLE_SCHEMA = '${currentDatabaseName}'
-                      AND TABLE_NAME = '${tableName}'
-                      AND REFERENCED_TABLE_NAME IS NOT NULL
-                  `,
-                }),
-              });
-              const fkResult = await fkResponse.json();
-              const foreignKeys = fkResult.success && Array.isArray(fkResult.results) ? fkResult.results : [];
-
-              const fkMap = new Map<string, { tableName: string; columnName: string }>();
-              foreignKeys.forEach((fk: any) => {
-                fkMap.set(fk.COLUMN_NAME, {
-                  tableName: fk.REFERENCED_TABLE_NAME,
-                  columnName: fk.REFERENCED_COLUMN_NAME,
-                });
-              });
-
-              const columns = describeResult.results.map((col: any) => {
+            if (describeResult.success && Array.isArray(describeResult.columns)) {
+              const columns = describeResult.columns.map((col: any) => {
                 const column: Column = {
                   id: uuidv4(),
                   name: col.Field,
-                  dataType: col.Type,
+                  dataType: col.Type.toUpperCase().replace(/\(.*\)/, '').trim(),
                   isPrimaryKey: col.Key === 'PRI',
                   isNotNull: col.Null === 'NO',
                   isUnique: col.Key === 'UNI',
                   defaultValue: col.Default,
-                  isForeignKey: col.Key === 'MUL' || fkMap.has(col.Field),
+                  isForeignKey: col.Key === 'MUL',
                 };
-
-                const fkRef = fkMap.get(col.Field);
-                if (fkRef) {
-                  const referencedTable = tables.find((t) =>
-                    t.name === fkRef.tableName && t.databaseId === selectedDatabaseId
-                  );
-                  if (referencedTable) {
-                    const referencedColumn = referencedTable.columns.find((c) =>
-                      c.name === fkRef.columnName
-                    );
-                    if (referencedColumn) {
-                      column.foreignKeyReference = {
-                        tableId: referencedTable.id,
-                        columnId: referencedColumn.id,
-                      };
-                    }
-                  }
-                }
                 return column;
               });
 
@@ -1568,7 +1526,7 @@ export default function DashboardPage() {
                 updatedAt: Timestamp.now(),
               });
 
-              addLog('info', `Table '${tableName}' added to workflow`);
+              addLog('success', `Table '${tableName}' added to canvas`);
             }
           }
         }
@@ -1602,77 +1560,33 @@ export default function DashboardPage() {
             );
 
             if (tableToUpdate) {
-              const describeResponse = await fetch('/api/query/execute', {
+              // Use the proper table/describe endpoint for PostgreSQL
+              const describeResponse = await fetch('/api/table/describe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   database: currentDatabaseName,
-                  query: `DESCRIBE \`${tableName}\``,
+                  table: tableName,
                   userId: user?.uid,
                 }),
               });
               const describeResult = await describeResponse.json();
 
-              if (describeResult.success && Array.isArray(describeResult.results)) {
-                const fkResponse = await fetch('/api/query/execute', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    database: 'information_schema',
-                    query: `
-                      SELECT 
-                        COLUMN_NAME,
-                        REFERENCED_TABLE_NAME,
-                        REFERENCED_COLUMN_NAME
-                      FROM KEY_COLUMN_USAGE
-                      WHERE TABLE_SCHEMA = '${currentDatabaseName}'
-                        AND TABLE_NAME = '${tableName}'
-                        AND REFERENCED_TABLE_NAME IS NOT NULL
-                    `,
-                  }),
-                });
-                const fkResult = await fkResponse.json();
-                const foreignKeys = fkResult.success && Array.isArray(fkResult.results) ? fkResult.results : [];
-
-                const fkMap = new Map<string, { tableName: string; columnName: string }>();
-                foreignKeys.forEach((fk: any) => {
-                  fkMap.set(fk.COLUMN_NAME, {
-                    tableName: fk.REFERENCED_TABLE_NAME,
-                    columnName: fk.REFERENCED_COLUMN_NAME,
-                  });
-                });
-
-                const updatedColumns = describeResult.results.map((col: any) => {
+              if (describeResult.success && Array.isArray(describeResult.columns)) {
+                const updatedColumns = describeResult.columns.map((col: any) => {
                   const existingColumn = tableToUpdate.columns.find((c) => c.name === col.Field);
                   
                   const column: Column = {
                     id: existingColumn?.id || uuidv4(),
                     name: col.Field,
-                    dataType: col.Type,
+                    dataType: col.Type.toUpperCase().replace(/\(.*\)/, '').trim(),
                     isPrimaryKey: col.Key === 'PRI',
                     isNotNull: col.Null === 'NO',
                     isUnique: col.Key === 'UNI',
                     defaultValue: col.Default,
-                    isForeignKey: col.Key === 'MUL' || fkMap.has(col.Field),
+                    isForeignKey: col.Key === 'MUL',
                   };
 
-                  const fkRef = fkMap.get(col.Field);
-                  if (fkRef) {
-                    const referencedTable = tables.find((t) =>
-                      t.name === fkRef.tableName && t.databaseId === selectedDatabaseId
-                    );
-                    if (referencedTable) {
-                      const referencedColumn = referencedTable.columns.find((c) =>
-                        c.name === fkRef.columnName
-                      );
-                      if (referencedColumn) {
-                        column.foreignKeyReference = {
-                          tableId: referencedTable.id,
-                          columnId: referencedColumn.id,
-                        };
-                      }
-                    }
-                  }
                   return column;
                 });
 
@@ -1681,7 +1595,7 @@ export default function DashboardPage() {
                   updatedAt: Timestamp.now(),
                 });
 
-                addLog('info', `Table '${tableName}' structure updated in workflow`);
+                addLog('success', `Table '${tableName}' structure updated on canvas`);
               }
             }
           }
@@ -1710,19 +1624,20 @@ export default function DashboardPage() {
 
       console.log('[handleViewData] Executing query with prefixed database:', { dbName: db.name, tableName });
 
-      // Query table data - quote the table name to preserve case and handle special chars
-      const query = `SELECT * FROM "${tableName}"`;
+      // Query table data - convert table name to lowercase for PostgreSQL consistency
+      const tableNameLower = tableName.toLowerCase();
+      const query = `SELECT * FROM "${tableNameLower}"`;
 
       const result = await executeQuery(db.name, query);
 
       if (result.success && result.results) {
-        addLog('success', `Retrieved ${result.results.length} rows from "${tableName}"`);
+        addLog('success', `Retrieved ${result.results.length} rows from "${tableNameLower}"`);
         setQueryResults({
           results: result.results,
           query,
         });
       } else {
-        addLog('error', result.error || `Failed to retrieve data from "${tableName}"`);
+        addLog('error', result.error || `Failed to retrieve data from "${tableNameLower}"`);
         console.error('[handleViewData] Query failed:', result.error);
       }
     },
