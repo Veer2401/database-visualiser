@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getPrefixedDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
-import { verifyAuth } from '@/lib/auth-helper';
 
 interface CreateDatabaseRequest {
   name: string;
+  userId: string;
 }
 
 /**
@@ -13,11 +13,10 @@ interface CreateDatabaseRequest {
  * Create a new PostgreSQL schema with user isolation.
  * Schema names are prefixed with userId to ensure user isolation.
  * 
- * Requires: Firebase ID token in Authorization header
- * 
  * Request body:
  * {
- *   "name": "schema_name"
+ *   "name": "schema_name",
+ *   "userId": "user_firebase_uid"
  * }
  * 
  * Response:
@@ -31,21 +30,22 @@ interface CreateDatabaseRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication - get userId from Firebase token
-    const authResult = await verifyAuth(request);
-    if (typeof authResult !== 'string') {
-      return authResult; // Return error response
-    }
-    const userId = authResult;
-
     const body: CreateDatabaseRequest = await request.json();
-    const { name } = body;
+    const { name, userId } = body;
 
-    // Validate database name
+    // Validate database name and userId
     if (!name || typeof name !== 'string') {
       const response = NextResponse.json({
         success: false,
         error: 'Schema name is required',
+      }, { status: 400 });
+      return setNoCacheHeaders(response);
+    }
+
+    if (!userId || typeof userId !== 'string') {
+      const response = NextResponse.json({
+        success: false,
+        error: 'User ID is required',
       }, { status: 400 });
       return setNoCacheHeaders(response);
     }
@@ -98,20 +98,6 @@ export async function POST(request: NextRequest) {
 
       const response = NextResponse.json({
         success: false,
-        error: errorMessage,
-        code: result.code,
-      }, { status: 400 });
-      return setNoCacheHeaders(response);
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const response = NextResponse.json({
-      success: false,
-      error: errorMessage,
-    }, { status: 500 });
-    return setNoCacheHeaders(response);
-  }
-}
         error: errorMessage,
         code: result.code,
       }, { status: 400 });

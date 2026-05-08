@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getUserDatabasePrefix, getDisplayDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
-import { verifyAuth } from '@/lib/auth-helper';
 
 /**
  * GET /api/database/list
  * 
- * List PostgreSQL schemas for the authenticated user.
+ * List PostgreSQL schemas for a specific user.
  * Filters schemas by user prefix for isolation.
  * 
- * Requires: Firebase ID token in Authorization header
+ * Query params:
+ *   userId: User's Firebase UID
  * 
  * Response:
  * {
@@ -20,12 +20,16 @@ import { verifyAuth } from '@/lib/auth-helper';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication - get userId from Firebase token
-    const authResult = await verifyAuth(request);
-    if (typeof authResult !== 'string') {
-      return setNoCacheHeaders(authResult); // Return error response
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      const response = NextResponse.json({
+        success: false,
+        error: 'User ID is required',
+      }, { status: 400 });
+      return setNoCacheHeaders(response);
     }
-    const userId = authResult;
 
     // Query PostgreSQL schemas
     const result = await executeQuery(`

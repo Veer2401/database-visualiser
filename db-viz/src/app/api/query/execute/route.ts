@@ -7,11 +7,11 @@ import {
   getPrefixedDatabaseName,
 } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
-import { verifyAuth } from '@/lib/auth-helper';
 
 interface ExecuteQueryRequest {
   database?: string;
   query: string;
+  userId?: string;
 }
 
 /**
@@ -19,8 +19,6 @@ interface ExecuteQueryRequest {
  * 
  * Execute SQL queries from the frontend terminal.
  * Supports all SQL operations: CREATE, SELECT, INSERT, UPDATE, DELETE, etc.
- * 
- * Requires: Firebase ID token in Authorization header
  * 
  * Request body:
  * {
@@ -38,15 +36,8 @@ interface ExecuteQueryRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication - get userId from Firebase token
-    const authResult = await verifyAuth(request);
-    if (typeof authResult !== 'string') {
-      return setNoCacheHeaders(authResult); // Return error response
-    }
-    const userId = authResult;
-
     const body: ExecuteQueryRequest = await request.json();
-    let { database, query } = body;
+    let { database, query, userId } = body;
 
     // Validate request
     if (!query || typeof query !== 'string') {
@@ -68,104 +59,13 @@ export async function POST(request: NextRequest) {
 
     console.log('[Query Execute] Input database:', database, 'UserId:', userId);
 
-    // Auto-prefix database name with user ID for isolation
-    if (database) {
+    // Auto-prefix database name if userId is provided
+    if (userId && database) {
       database = getPrefixedDatabaseName(database, userId);
       console.log('[Query Execute] Prefixed database to:', database);
-    }
-
-    // Handle special commands for PostgreSQL compatibility
-    let processedQuery = trimmedQuery;
-    let isSpecialCommand = false;
-    
-    // Convert SHOW DATABASES to information_schema query for PostgreSQL
-    if (trimmedQuery.toUpperCase() === 'SHOW DATABASES') {
-      processedQuery = `
-        SELECT schema_name as "Database"
-        FROM information_schema.schemata 
-        WHERE schema_name NOT LIKE 'pg_%' 
-        AND schema_name != 'information_schema'
-        ORDER BY schema_name
-      `;
-      isSpecialCommand = true;
-    }
-    
-    // Convert SHOW TABLES to PostgreSQL information_schema query
-    if (trimmedQuery.toUpperCase() === 'SHOW TABLES' || trimmedQuery.toUpperCase().startsWith('SHOW TABLES')) {
-      if (database) {
-        processedQuery = `
-          SELECT table_name as "Tables_in_${database}"
-          FROM information_schema.tables
-          WHERE table_schema = current_schema()
-          AND table_type = 'BASE TABLE'
-          ORDER BY table_name
-        `;
-      }
-      isSpecialCommand = false; // SHOW TABLES needs schema context
-    }
-
-    // Determine if we need a schema context
-    const upperQuery = processedQuery.toUpperCase();
-    const needsSchema = !(
-      upperQuery.includes('CREATE SCHEMA') ||
-      upperQuery.includes('DROP SCHEMA') ||
-      upperQuery.includes('INFORMATION_SCHEMA') ||
-      isSpecialCommand
-    );
-
-    let result;
-    
-    if (needsSchema && database) {
-      // Execute query within the specified schema
-      console.log(`[Query Execute] Running query in schema "${database}":`, processedQuery.substring(0, 100));
-      result = await executeQueryInDatabase(database, processedQuery);
-    } else if (needsSchema && !database) {
-      // Query needs a schema but none specified
-      return NextResponse.json({
-        success: false,
-        error: 'No schema selected',
-        formattedOutput: ['ERROR: No schema selected'],
-      }, { status: 400 });
     } else {
-      // Execute query without schema context
-      console.log(`[Query Execute] Running query without schema context:`, processedQuery.substring(0, 100));
-      result = await executeQuery(processedQuery);
+      console.log('[Query Execute] NO PREFIX - UserId:', userId, 'Database:', database);
     }
-
-    if (result.success) {
-      const formattedOutput = formatResultsForTerminal(result.results, trimmedQuery);
-      
-      const response = NextResponse.json({
-        success: true,
-        results: result.results,
-        formattedOutput,
-      });
-      return setNoCacheHeaders(response);
-    } else {
-      const formattedError = formatErrorForTerminal(
-        result.error || 'Unknown error',
-        result.code
-      );
-      
-      const response = NextResponse.json({
-        success: false,
-        error: result.error,
-        code: result.code,
-        sqlState: result.sqlState,
-        formattedOutput: [formattedError],
-      });
-      return setNoCacheHeaders(response);
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const response = NextResponse.json({
-      success: false,
-      error: errorMessage,
-      formattedOutput: [`ERROR: ${errorMessage}`],
-    }, { status: 500 });
-    return setNoCacheHeaders(response);
-  }
-}
 
     // Handle special commands for PostgreSQL compatibility
     let processedQuery = trimmedQuery;
