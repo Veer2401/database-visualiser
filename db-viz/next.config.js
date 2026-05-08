@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Netlify compatibility
+  output: 'standalone',
+  
   images: {
+    unoptimized: process.env.NODE_ENV === 'production', // Required for Netlify
     remotePatterns: [
       {
         protocol: 'https',
@@ -24,6 +28,10 @@ const nextConfig = {
       'lucide-react',
       'framer-motion',
     ],
+  },
+  // Increase timeout for API routes
+  serverRuntimeConfig: {
+    timeout: 30,
   },
 };
 
