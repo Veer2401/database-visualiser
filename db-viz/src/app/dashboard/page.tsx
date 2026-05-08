@@ -527,13 +527,12 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
-        // First, create the database/schema in PostgreSQL with user isolation
-        const postgresResponse = await fetch('/api/database/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, userId: user.uid }),
-        });
-        const postgresResult = await postgresResponse.json();
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
+        // Create the database/schema in PostgreSQL with user isolation
+        // userId is now extracted from Firebase token on the server side
+        const postgresResult = await apiPost('/api/database/create', { name });
 
         if (!postgresResult.success) {
           addLog('error', `PostgreSQL Error: ${postgresResult.error}`);
@@ -568,17 +567,15 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
         const dbToDelete = databases.find((d) => d.id === databaseId);
         const dbName = dbToDelete?.name;
 
         if (dbName) {
           // First, drop the schema in PostgreSQL with user isolation
-          const postgresResponse = await fetch('/api/database/drop', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: dbName, userId: user.uid }),
-          });
-          const postgresResult = await postgresResponse.json();
+          const postgresResult = await apiPost('/api/database/drop', { name: dbName });
 
           if (!postgresResult.success) {
             // Log warning but continue with Firebase deletion
@@ -612,12 +609,13 @@ export default function DashboardPage() {
     async (actualDbName: string, firebaseDbId: string) => {
       if (!user) return;
 
-      const showTablesResponse = await fetch('/api/query/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ database: actualDbName, query: 'SHOW TABLES', userId: user.uid }),
+      // Import here to avoid issues
+      const { apiPost } = await import('@/lib/api-client');
+
+      const showTablesResult = await apiPost('/api/query/execute', {
+        database: actualDbName,
+        query: 'SHOW TABLES',
       });
-      const showTablesResult = await showTablesResponse.json();
 
       if (!showTablesResult.success || !showTablesResult.results) return;
 
@@ -648,12 +646,10 @@ export default function DashboardPage() {
         const tableName = pgTableNames[i];
         if (existingNames.has(tableName)) continue; // Already in Firebase
 
-        const descResponse = await fetch('/api/table/describe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, table: tableName, userId: user.uid }),
+        const descResult = await apiPost('/api/table/describe', {
+          database: actualDbName,
+          table: tableName,
         });
-        const descResult = await descResponse.json();
 
         if (!descResult.success) {
           // Skip tables that can't be described (might not exist or access denied)
@@ -716,6 +712,9 @@ export default function DashboardPage() {
     async (sqlStatements: string[]) => {
       if (!user) throw new Error('Not authenticated');
 
+      // Import here to avoid issues
+      const { apiPost } = await import('@/lib/api-client');
+
       let dbId = chatbotDbId;
       let dbName = chatbotDbName;
       let actualDbName: string;
@@ -742,12 +741,7 @@ export default function DashboardPage() {
         // Use extracted name if available, otherwise generate one
         dbName = extractedDbName || `chatbot_db_${Date.now().toString(36)}`;
 
-        const dbResponse = await fetch('/api/database/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: dbName, userId: user.uid }),
-        });
-        const dbResult = await dbResponse.json();
+        const dbResult = await apiPost('/api/database/create', { name: dbName });
 
         if (!dbResult.success) {
           addLog('error', `Error: ${dbResult.error}`);
@@ -790,12 +784,10 @@ export default function DashboardPage() {
         if (!trimmed) continue;
         if (/^CREATE\s+DATABASE/i.test(trimmed)) continue; // Skip CREATE DATABASE
 
-        const execResponse = await fetch('/api/query/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, query: trimmed, userId: user.uid }),
+        const execResult = await apiPost('/api/query/execute', {
+          database: actualDbName,
+          query: trimmed,
         });
-        const execResult = await execResponse.json();
 
         if (!execResult.success) {
           addLog('warning', `SQL: ${execResult.error}`);
@@ -804,7 +796,7 @@ export default function DashboardPage() {
         }
       }
 
-// Sync tables from PostgreSQL → Firebase (handles new tables only, skips existing)
+      // Sync tables from PostgreSQL → Firebase (handles new tables only, skips existing)
       await syncTablesToFirebase(actualDbName, dbId);
 
       // Switch workflow to the chatbot database
@@ -820,6 +812,9 @@ export default function DashboardPage() {
       if (!selectedDatabaseId) return;
 
       try {
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
         const selectedDatabase = databases.find((d) => d.id === selectedDatabaseId);
         const databaseName = selectedDatabase?.name;
 
@@ -829,16 +824,10 @@ export default function DashboardPage() {
         }
 
         // Check if table already exists in PostgreSQL
-        const checkResponse = await fetch('/api/query/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            database: databaseName,
-            query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${name.toLowerCase()}'`,
-            userId: user?.uid,
-          }),
+        const checkResult = await apiPost('/api/query/execute', {
+          database: databaseName,
+          query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${name.toLowerCase()}'`,
         });
-        const checkResult = await checkResponse.json();
 
         if (checkResult.success && checkResult.results && checkResult.results.length > 0) {
           addLog('error', `Table '${name}' already exists. Use DROP TABLE \`${name}\` to remove it first.`);
@@ -866,17 +855,11 @@ export default function DashboardPage() {
           };
         });
 
-        const response = await fetch('/api/table/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            database: databaseName,
-            tableName: name,
-            columns: pgColumns,
-            userId: user?.uid,
-          }),
+        const result = await apiPost('/api/table/create', {
+          database: databaseName,
+          tableName: name,
+          columns: pgColumns,
         });
-        const result = await response.json();
 
         if (!result.success) {
           addLog('error', `Error: ${result.error}`);
@@ -927,6 +910,9 @@ export default function DashboardPage() {
   const handleDeleteTable = useCallback(
     async (tableId: string) => {
       try {
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
         const tableToDelete = tables.find((t) => t.id === tableId);
         const tableName = tableToDelete?.name;
         const databaseId = tableToDelete?.databaseId;
@@ -935,16 +921,10 @@ export default function DashboardPage() {
 
         if (tableName && databaseName) {
           // First, drop the table in PostgreSQL
-          const response = await fetch('/api/query/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              database: databaseName,
-              query: `DROP TABLE "${tableName}"`,
-              userId: user?.uid,
-            }),
+          const result = await apiPost('/api/query/execute', {
+            database: databaseName,
+            query: `DROP TABLE "${tableName}"`,
           });
-          const result = await response.json();
 
           if (!result.success) {
             // Log warning but continue with Firebase deletion
@@ -1089,6 +1069,9 @@ export default function DashboardPage() {
       }
 
       try {
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
         // Add the foreign key constraint in PostgreSQL directly
         // PostgreSQL will return proper errors if tables don't exist
         const constraintName = `fk_${sourceTable.name}_${sourceColumn.name}`;
@@ -1096,17 +1079,11 @@ export default function DashboardPage() {
 
         console.log('Adding FK with query:', alterQuery);
 
-        const response = await fetch('/api/query/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            database: databaseName,
-            query: alterQuery,
-            userId: user?.uid,
-          }),
+        const result = await apiPost('/api/query/execute', {
+          database: databaseName,
+          query: alterQuery,
         });
 
-        const result = await response.json();
         console.log('FK operation result:', result);
 
         if (!result.success) {
@@ -1173,20 +1150,16 @@ export default function DashboardPage() {
 
       try {
         // Remove the foreign key constraint from PostgreSQL
+        // Import here to avoid issues
+        const { apiPost } = await import('@/lib/api-client');
+
         const constraintName = `fk_${table.name}_${column.name}`;
         const alterQuery = `ALTER TABLE "${table.name}" DROP CONSTRAINT "${constraintName}"`;
 
-        const response = await fetch('/api/query/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            database: databaseName,
-            query: alterQuery,
-            userId: user?.uid,
-          }),
+        const result = await apiPost('/api/query/execute', {
+          database: databaseName,
+          query: alterQuery,
         });
-
-        const result = await response.json();
 
         // Even if PostgreSQL fails (constraint might have different name), update Firebase
         if (!result.success) {
@@ -1264,16 +1237,12 @@ export default function DashboardPage() {
           } else {
             // Create the database from SQL
             addLog('info', `📁 Creating database: ${targetDatabaseName}`);
-            const dbResponse = await fetch('/api/database/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: targetDatabaseName,
-                userId: user.uid,
-              }),
-            });
+          // Import here to avoid issues
+          const { apiPost: apiPostImport } = await import('@/lib/api-client');
 
-            const dbResult = await dbResponse.json();
+            const dbResult = await apiPostImport('/api/database/create', {
+              name: targetDatabaseName,
+            });
 
             if (!dbResult.success) {
               throw new Error(`Failed to create database: ${dbResult.error}`);
@@ -1304,16 +1273,11 @@ export default function DashboardPage() {
             targetDatabaseName = generatedDbName;
 
             addLog('info', `📁 Creating database: ${generatedDbName}`);
-            const dbResponse = await fetch('/api/database/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: generatedDbName,
-                userId: user.uid,
-              }),
+            
+            const { apiPost: apiPost2 } = await import('@/lib/api-client');
+            const dbResult = await apiPost2('/api/database/create', {
+              name: generatedDbName,
             });
-
-            const dbResult = await dbResponse.json();
 
             if (!dbResult.success) {
               throw new Error(`Failed to create database: ${dbResult.error}`);
@@ -1345,21 +1309,17 @@ export default function DashboardPage() {
         const actualDatabaseName = databases.find((d) => d.id === targetDatabaseId)?.name || targetDatabaseName;
 
         // Create tables by executing the CREATE TABLE statements
+        // Import here to avoid issues
+        const { apiPost: apiPostImportTables } = await import('@/lib/api-client');
+
         for (const tableStatement of parsedSQL.createTableStatements) {
           addLog('info', `📋 Creating table: ${tableStatement.tableName}`);
 
           // Execute CREATE TABLE statement in PostgreSQL
-          const createResponse = await fetch('/api/query/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              database: actualDatabaseName,
-              query: tableStatement.sql,
-              userId: user.uid,
-            }),
+          const createResult = await apiPostImportTables('/api/query/execute', {
+            database: actualDatabaseName,
+            query: tableStatement.sql,
           });
-
-          const createResult = await createResponse.json();
 
           if (!createResult.success) {
             addLog('warning', `⚠️ CREATE TABLE warning: ${createResult.error}`);
@@ -1373,17 +1333,10 @@ export default function DashboardPage() {
           addLog('info', `📝 Executing ${parsedSQL.insertStatements.length} INSERT statement(s)`);
 
           for (const insertStmt of parsedSQL.insertStatements) {
-            const insertResponse = await fetch('/api/query/execute', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                database: actualDatabaseName,
-                query: insertStmt.sql,
-                userId: user.uid,
-              }),
+            const insertResult = await apiPostImportTables('/api/query/execute', {
+              database: actualDatabaseName,
+              query: insertStmt.sql,
             });
-
-            const insertResult = await insertResponse.json();
 
             if (!insertResult.success) {
               addLog('warning', `⚠️ INSERT warning: ${insertResult.error}`);
@@ -1399,17 +1352,10 @@ export default function DashboardPage() {
 
           for (const stmt of parsedSQL.otherStatements) {
             try {
-              const response = await fetch('/api/query/execute', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  database: actualDatabaseName,
-                  query: stmt.sql,
-                  userId: user.uid,
-                }),
+              const result = await apiPostImportTables('/api/query/execute', {
+                database: actualDatabaseName,
+                query: stmt.sql,
               });
-
-              const result = await response.json();
 
               if (!result.success) {
                 addLog('warning', `⚠️ Statement executed with warning: ${result.error}`);
@@ -1443,12 +1389,10 @@ export default function DashboardPage() {
         const userId = user?.uid;
         console.log('[executeQuery] Database:', database, 'UserId:', userId, 'HasUser:', !!user);
         
-        const response = await fetch('/api/query/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database, query, userId }),
-        });
-        const result = await response.json();
+        // Import here to avoid issues
+        const { apiPost: apiPostExport } = await import('@/lib/api-client');
+
+        const result = await apiPostExport('/api/query/execute', { database, query });
 
         if (result.success) {
           addLog('success', `Query executed: ${query.substring(0, 50)}${query.length > 50 ? '...' : ''}`);
@@ -1488,16 +1432,13 @@ export default function DashboardPage() {
             const tableName = match[1];
             
             // Fetch table structure from PostgreSQL using the proper endpoint
-            const describeResponse = await fetch('/api/table/describe', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                database: currentDatabaseName,
-                table: tableName,
-                userId: user?.uid,
-              }),
+            // Import here to avoid issues
+            const { apiPost: apiPostDescribe1 } = await import('@/lib/api-client');
+            
+            const describeResult = await apiPostDescribe1('/api/table/describe', {
+              database: currentDatabaseName,
+              table: tableName,
             });
-            const describeResult = await describeResponse.json();
 
             if (describeResult.success && Array.isArray(describeResult.columns)) {
               const columns = describeResult.columns.map((col: any) => {
@@ -1934,13 +1875,10 @@ export default function DashboardPage() {
             addLog('info', `Executing: ${trimmedCommand}`);
 
             // Create schema in PostgreSQL
-            const response = await fetch('/api/database/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: dbName, userId: user?.uid }),
-            });
+            // Import here to avoid issues
+            const { apiPost: apiPostDbCreate } = await import('@/lib/api-client');
 
-            const result = await response.json();
+            const result = await apiPostDbCreate('/api/database/create', { name: dbName });
 
             if (result.success) {
               addLog('success', `Schema '${dbName}' created successfully`);

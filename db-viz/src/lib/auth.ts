@@ -37,3 +37,22 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void): (()
 export const getCurrentUser = (): FirebaseUser | null => {
   return auth.currentUser;
 };
+
+/**
+ * Get the ID token for the currently authenticated user
+ * This token is used to authenticate API requests
+ */
+export const getIdToken = async (): Promise<string | null> => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn('No authenticated user found');
+      return null;
+    }
+    const token = await user.getIdToken(true); // force refresh
+    return token;
+  } catch (error) {
+    console.error('Error getting ID token:', error);
+    return null;
+  }
+};

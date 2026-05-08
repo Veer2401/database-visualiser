@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQueryInDatabase, getPrefixedDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface DescribeTableRequest {
   database: string;
   table: string;
-  userId?: string;
 }
 
 /**
@@ -13,6 +13,8 @@ interface DescribeTableRequest {
  * 
  * Get the structure of a table from PostgreSQL.
  * Returns column information including name, type, nullable, and default values.
+ * 
+ * Requires: Firebase ID token in Authorization header
  * 
  * Request body:
  * {
@@ -29,8 +31,15 @@ interface DescribeTableRequest {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication - get userId from Firebase token
+    const authResult = await verifyAuth(request);
+    if (typeof authResult !== 'string') {
+      return setNoCacheHeaders(authResult); // Return error response
+    }
+    const userId = authResult;
+
     const body: DescribeTableRequest = await request.json();
-    let { database, table, userId } = body;
+    let { database, table } = body;
 
     // Validate request
     if (!database || typeof database !== 'string') {
@@ -49,10 +58,8 @@ export async function POST(request: NextRequest) {
       return setNoCacheHeaders(response);
     }
 
-    // Auto-prefix database name if userId is provided
-    if (userId) {
-      database = getPrefixedDatabaseName(database, userId);
-    }
+    // Auto-prefix database name with user ID for isolation
+    database = getPrefixedDatabaseName(database, userId);
 
     console.log(`[Table Describe] Database: "${database}", Table: "${table}"`);
 
@@ -98,6 +105,20 @@ export async function POST(request: NextRequest) {
       console.error(`[Table Describe] Error: ${result.error} (Schema: ${database}, Table: ${table})`);
       const response = NextResponse.json({
         success: false,
+        error: result.error || 'Failed to describe table',
+        code: result.code,
+      }, { status: 400 });
+      return setNoCacheHeaders(response);
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const response = NextResponse.json({
+      success: false,
+      error: errorMessage,
+    }, { status: 500 });
+    return setNoCacheHeaders(response);
+  }
+}
         error: result.error,
         code: result.code,
       }, { status: 400 });

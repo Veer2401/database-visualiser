@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getPrefixedDatabaseName } from '@/lib/postgresql';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface DropDatabaseRequest {
   name: string;
-  userId: string;
 }
 
 /**
@@ -12,10 +12,11 @@ interface DropDatabaseRequest {
  * Drop (delete) a PostgreSQL schema.
  * Called when user deletes a schema from the UI.
  * 
+ * Requires: Firebase ID token in Authorization header
+ * 
  * Request body:
  * {
- *   "name": "schema_name",
- *   "userId": "user_id"
+ *   "name": "schema_name"
  * }
  * 
  * Response:
@@ -27,21 +28,21 @@ interface DropDatabaseRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: DropDatabaseRequest = await request.json();
-    const { name, userId } = body;
+    // Verify authentication - get userId from Firebase token
+    const authResult = await verifyAuth(request);
+    if (typeof authResult !== 'string') {
+      return authResult; // Return error response
+    }
+    const userId = authResult;
 
-    // Validate schema name and userId
+    const body: DropDatabaseRequest = await request.json();
+    const { name } = body;
+
+    // Validate schema name
     if (!name || typeof name !== 'string') {
       return NextResponse.json({
         success: false,
         error: 'Schema name is required',
-      }, { status: 400 });
-    }
-
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID is required',
       }, { status: 400 });
     }
 
