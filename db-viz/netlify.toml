@@ -1,37 +1,11 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
-  publish = ".next"
+  environment = { NODE_VERSION = "20" }
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-# API redirects for Next.js server functions
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-
-# Rewrite all non-file routes to index.html for Next.js routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
 
-# Configure Edge Functions for better performance (optional)
-[functions."api"]
-  patterns = ["/api/*"]
-
-# Timeout settings
-[functions]
-  timeout = 30
-
-# Increase deployment timeout for builds
-[build]
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
-
-# Environment variables template
 [context.production.environment]
   NODE_ENV = "production"
