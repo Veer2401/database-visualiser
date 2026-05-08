@@ -99,7 +99,10 @@ export default function Sidebar({
   }, [databases, allTables]);
 
   const getTablesForDatabase = (databaseId: string) => {
-    return tables.filter((t) => t.databaseId === databaseId);
+    // Use allTables which contains tables from all databases
+    // The dashboard filters 'tables' by selectedDatabaseId, but Sidebar needs to show
+    // tables for any database being viewed, not just the currently selected one
+    return allTables.filter((t) => t.databaseId === databaseId);
   };
 
   const sqlButtons = [
