@@ -2,7 +2,7 @@
 
 ## Migration Completed ✅
 
-Your database visualizer has been successfully migrated from **MySQL** to **PostgreSQL** (Neon).
+Your Schema View application has been successfully migrated from **MySQL** to **PostgreSQL** (Neon).
 
 ### What Changed:
 

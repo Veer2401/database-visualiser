@@ -52,7 +52,7 @@ export default function DocumentationPage() {
                 },
                 {
                     subtitle: 'Relationship Types',
-                    text: 'DB Visualiser supports one-to-one, one-to-many, and many-to-many relationships. The relationship type is determined by your column constraints.'
+                    text: 'Schema View supports one-to-one, one-to-many, and many-to-many relationships. The relationship type is determined by your column constraints.'
                 },
                 {
                     subtitle: 'Viewing Relationships',
@@ -109,7 +109,7 @@ export default function DocumentationPage() {
                                 <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
                                     <Database className="w-5 h-5 text-white" />
                                 </div>
-                                <span className="text-xl font-bold text-black" style={{ fontFamily: 'var(--font-geist-sans)' }}>DB Visualiser</span>
+                                <span className="text-xl font-bold text-black" style={{ fontFamily: 'var(--font-geist-sans)' }}>Schema View</span>
                             </div>
                         </div>
                     </div>
@@ -129,7 +129,7 @@ export default function DocumentationPage() {
                             <span className="text-sm text-gray-600" style={{ fontFamily: 'var(--font-geist-sans)' }}>Documentation</span>
                         </div>
                         <h1 className="text-4xl sm:text-5xl font-bold text-black mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                            Learn DB Visualiser
+                            Learn Schema View
                         </h1>
                         <p className="text-xl text-gray-600 max-w-2xl mx-auto" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                             Everything you need to know to design beautiful database schemas with our visual editor.
@@ -205,7 +205,7 @@ export default function DocumentationPage() {
                         Can&apos;t find what you&apos;re looking for? Reach out to our support team.
                     </p>
                     <a
-                        href="mailto:support@dbvisualiser.com"
+                        href="mailto:support@schemaview.app"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                         style={{ fontFamily: 'var(--font-geist-sans)' }}
                     >
@@ -217,7 +217,7 @@ export default function DocumentationPage() {
             {/* Footer */}
             <footer className="py-8 px-4 bg-black text-gray-500">
                 <div className="max-w-7xl mx-auto text-center">
-                    <p className="text-sm" style={{ fontFamily: 'var(--font-geist-sans)' }}>© 2026 DB Visualiser. All rights reserved.</p>
+                    <p className="text-sm" style={{ fontFamily: 'var(--font-geist-sans)' }}>© 2026 Schema View. All rights reserved.</p>
                 </div>
             </footer>
         </div>

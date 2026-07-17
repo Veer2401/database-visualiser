@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
                 <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
                   <Database className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-black">DB Visualiser</span>
+                <span className="text-xl font-bold text-black">Schema View</span>
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@ export default function TermsOfServicePage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">Agreement to Terms</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  By accessing and using DB Visualiser, you agree to be bound by these Terms of Service and all
+                  By accessing and using Schema View, you agree to be bound by these Terms of Service and all
                   applicable laws and regulations. If you do not agree with any of these terms, you are prohibited
                   from using or accessing this service.
                 </p>
@@ -56,13 +56,13 @@ export default function TermsOfServicePage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">Use License</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  Permission is granted to temporarily use DB Visualiser for personal and commercial purposes.
+                  Permission is granted to temporarily use Schema View for personal and commercial purposes.
                   This is the grant of a license, not a transfer of title, and under this license you may not:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
                   <li>Modify or copy the materials</li>
                   <li>Use the materials for any commercial purpose without proper authorization</li>
-                  <li>Attempt to reverse engineer any software contained in DB Visualiser</li>
+                  <li>Attempt to reverse engineer any software contained in Schema View</li>
                   <li>Remove any copyright or other proprietary notations from the materials</li>
                   <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
                 </ul>
@@ -85,7 +85,7 @@ export default function TermsOfServicePage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">Acceptable Use</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  You agree not to use DB Visualiser:
+                  You agree not to use Schema View:
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
                   <li>For any unlawful purpose or to solicit others to perform unlawful acts</li>
@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-black mb-4">Intellectual Property</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   The service and its original content, features, and functionality are and will remain the exclusive
-                  property of DB Visualiser and its licensors. The service is protected by copyright, trademark, and
+                  property of Schema View and its licensors. The service is protected by copyright, trademark, and
                   other laws of both the United States and foreign countries.
                 </p>
               </section>
@@ -111,7 +111,7 @@ export default function TermsOfServicePage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">User Content</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  You retain all rights to the database designs, schemas, and other content you create using DB Visualiser.
+                  You retain all rights to the database designs, schemas, and other content you create using Schema View.
                   By using our service, you grant us a license to store, display, and process your content solely for the
                   purpose of providing the service to you.
                 </p>
@@ -129,7 +129,7 @@ export default function TermsOfServicePage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">Limitation of Liability</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  In no event shall DB Visualiser, nor its directors, employees, partners, agents, suppliers, or affiliates,
+                  In no event shall Schema View, nor its directors, employees, partners, agents, suppliers, or affiliates,
                   be liable for any indirect, incidental, special, consequential, or punitive damages, including without
                   limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access
                   to or use of or inability to access or use the service.
@@ -168,7 +168,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-black mb-4">Governing Law</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   These Terms shall be governed and construed in accordance with the laws of the jurisdiction in which
-                  DB Visualiser operates, without regard to its conflict of law provisions.
+                  Schema View operates, without regard to its conflict of law provisions.
                 </p>
               </section>
 
@@ -176,8 +176,8 @@ export default function TermsOfServicePage() {
                 <h2 className="text-2xl font-bold text-black mb-4">Contact Us</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   If you have any questions about these Terms, please contact us at{' '}
-                  <a href="mailto:legal@dbvisualiser.com" className="text-black underline hover:text-gray-700">
-                    legal@dbvisualiser.com
+                  <a href="mailto:legal@schemaview.app" className="text-black underline hover:text-gray-700">
+                    legal@schemaview.app
                   </a>
                 </p>
               </section>
@@ -189,7 +189,7 @@ export default function TermsOfServicePage() {
       {/* Footer */}
       <footer className="py-8 px-4 bg-black text-gray-500">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm">© 2026 DB Visualiser. All rights reserved.</p>
+          <p className="text-sm">© 2026 Schema View. All rights reserved.</p>
         </div>
       </footer>
     </div>

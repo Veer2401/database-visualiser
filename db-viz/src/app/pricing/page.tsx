@@ -141,7 +141,7 @@ export default function PricingPage() {
                     >
                         <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                             Need help choosing a plan?{' '}
-                            <a href="mailto:support@dbviz.app" className="text-gray-900 font-medium hover:underline">
+                            <a href="mailto:support@schemaview.app" className="text-gray-900 font-medium hover:underline">
                                 Contact us
                             </a>
                         </p>

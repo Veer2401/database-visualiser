@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
                 <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
                   <Database className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-black">DB Visualiser</span>
+                <span className="text-xl font-bold text-black">Schema View</span>
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold text-black mb-4">Introduction</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  Welcome to DB Visualiser. We respect your privacy and are committed to protecting your personal data.
+                  Welcome to Schema View. We respect your privacy and are committed to protecting your personal data.
                   This privacy policy will inform you about how we look after your personal data when you visit our
                   website and use our services, and tell you about your privacy rights and how the law protects you.
                 </p>
@@ -145,8 +145,8 @@ export default function PrivacyPolicyPage() {
                 <h2 className="text-2xl font-bold text-black mb-4">Contact Us</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   If you have any questions about this Privacy Policy, please contact us at{' '}
-                  <a href="mailto:privacy@dbvisualiser.com" className="text-black underline hover:text-gray-700">
-                    privacy@dbvisualiser.com
+                  <a href="mailto:privacy@schemaview.app" className="text-black underline hover:text-gray-700">
+                    privacy@schemaview.app
                   </a>
                 </p>
               </section>
@@ -158,7 +158,7 @@ export default function PrivacyPolicyPage() {
       {/* Footer */}
       <footer className="py-8 px-4 bg-black text-gray-500">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm">© 2026 DB Visualiser. All rights reserved.</p>
+          <p className="text-sm">© 2026 Schema View. All rights reserved.</p>
         </div>
       </footer>
     </div>

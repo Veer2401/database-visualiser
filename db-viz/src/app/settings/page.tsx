@@ -117,7 +117,7 @@ export default function SettingsPage() {
                                     Display Name
                                 </h3>
                                 <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                                    This is your visible name within DB Visualiser.
+                                    This is your visible name within Schema View.
                                 </p>
                                 <input
                                     type="text"
@@ -475,7 +475,7 @@ export default function SettingsPage() {
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             <div className="p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                                    DB Visualiser
+                                    Schema View
                                 </h3>
                                 <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                                     A modern database schema design and visualization tool.

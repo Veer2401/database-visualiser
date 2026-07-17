@@ -1,5 +1,5 @@
 {
-  "name": "db-viz",
+  "name": "schema-view",
   "version": "0.1.0",
   "private": true,
   "scripts": {

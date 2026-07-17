@@ -226,7 +226,7 @@ export default function LoginPage() {
             <Database className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold text-black">
-            DB Visualiser
+            Schema View
           </span>
         </div>
 

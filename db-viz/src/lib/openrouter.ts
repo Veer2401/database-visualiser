@@ -14,7 +14,7 @@ const MODELS = {
 } as const;
 
 // System prompt that enforces SQL/DBMS focus
-const SYSTEM_PROMPT = `You are a friendly and professional SQL and Database Management System (DBMS) assistant integrated into a database visualiser app.
+const SYSTEM_PROMPT = `You are a friendly and professional SQL and Database Management System (DBMS) assistant integrated into the Schema View app.
 
 IMPORTANT RULES:
 1. You PRIMARILY answer questions related to SQL, databases, and DBMS concepts.
@@ -176,8 +176,8 @@ async function callOpenRouter(
         headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://database-visualiser.app', // Site URL for OpenRouter rankings
-            'X-Title': 'Database Visualiser', // App name for OpenRouter dashboard
+            'HTTP-Referer': 'https://schemaview.app', // Site URL for OpenRouter rankings
+            'X-Title': 'Schema View', // App name for OpenRouter dashboard
         },
         body: JSON.stringify({
             model,

@@ -80,7 +80,7 @@ export default function Navbar({
         </div>
         <div className="min-w-0">
           <h1 className={`text-lg sm:text-xl font-light truncate ${theme?.text || 'text-gray-900'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
-            DB Visualiser
+            Schema View
           </h1>
           <p className={`text-[10px] sm:text-xs font-light hidden sm:block ${theme?.textSecondary || 'text-gray-500'}`}>
             {/* PostgreSQL Workbench */}

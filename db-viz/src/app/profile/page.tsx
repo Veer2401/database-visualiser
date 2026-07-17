@@ -86,7 +86,7 @@ export default function ProfilePage() {
                                                 {user.displayName || 'User'}
                                             </h2>
                                             <p className="text-gray-500 mt-1" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                                                Database Visualizer Member
+                                                Schema View Member
                                             </p>
                                         </div>
                                     </div>

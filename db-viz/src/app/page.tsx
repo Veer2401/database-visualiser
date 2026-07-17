@@ -356,7 +356,7 @@ const terminalQueries = [
 
 const faqItems = [
   { q: 'Do I need to know SQL?', a: 'No. You can create databases, tables, and relationships entirely by point-and-click. SQL is optional for when you want to run custom queries or export.' },
-  { q: 'Is my data stored in DB Visualiser?', a: "Schema and structure are stored so you can edit and sync. You connect your own PostgreSQL for live data; we don't store your actual database contents." },
+  { q: 'Is my data stored in Schema View?', a: "Schema and structure are stored so you can edit and sync. You connect your own PostgreSQL for live data; we don't store your actual database contents." },
   { q: 'Can I export my schema?', a: 'Yes. Export to SQL scripts, Word (DOCX), or PDF so you can use the schema in other tools or share with your team.' },
   { q: 'What’s the difference between Dashboard and Terminal mode?', a: 'Dashboard is the visual canvas for designing. Terminal mode focuses on running SQL and viewing results—same project, different view.' },
 ];
@@ -382,7 +382,7 @@ export default function LandingPage() {
               <Database className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm font-semibold text-gray-900">
-              DB Visualiser
+              Schema View
             </span>
           </div>
         }
@@ -393,7 +393,7 @@ export default function LandingPage() {
               <Database className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm font-semibold text-gray-900">
-              DB Visualiser
+              Schema View
             </span>
           </div>
 
@@ -484,7 +484,7 @@ export default function LandingPage() {
               <div className="rounded-[28px] overflow-hidden shadow-[0_30px_90px_-60px_rgba(0,0,0,0.45)]">
                 <Image
                   src={screenshotImg}
-                  alt="DB Visualiser canvas preview"
+                  alt="Schema View canvas preview"
                   priority
                   className="w-full h-auto"
                 />
@@ -839,7 +839,7 @@ export default function LandingPage() {
             <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center shrink-0">
               <Database className="w-3 h-3 text-black" />
             </div>
-            <span className="text-sm text-white font-light" style={{ fontFamily: 'var(--font-geist-sans)' }}>DB Visualiser</span>
+            <span className="text-sm text-white font-light" style={{ fontFamily: 'var(--font-geist-sans)' }}>Schema View</span>
           </div>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 sm:gap-6">
             <button
