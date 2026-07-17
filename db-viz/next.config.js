@@ -1,5 +1,11 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Avoid picking ~/package-lock.json as workspace root (breaks tailwindcss resolve)
+  turbopack: {
+    root: path.join(__dirname),
+  },
   images: {
     unoptimized: true, // Required for Netlify
     remotePatterns: [

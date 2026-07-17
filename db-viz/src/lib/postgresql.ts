@@ -16,7 +16,8 @@ function getPool() {
       connectionString: DATABASE_URL,
       max: 20, // Maximum pool size
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      // Neon/serverless Postgres often needs >2s on cold start
+      connectionTimeoutMillis: 15000,
     });
 
     pool.on('error', (err) => {
