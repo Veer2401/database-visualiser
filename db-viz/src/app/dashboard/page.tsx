@@ -40,6 +40,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Terminal from '@/components/layout/Terminal';
 
 import CreateDatabaseModal from '@/components/database/CreateDatabaseModal';
+import UpgradePlanModal from '@/components/common/UpgradePlanModal';
 import CreateTableModal from '@/components/database/CreateTableModal';
 import EditTableModal from '@/components/database/EditTableModal';
 import InsertDataModal from '@/components/database/InsertDataModal';
@@ -136,6 +137,8 @@ export default function DashboardPage() {
   const [isCreateChoiceModalOpen, setIsCreateChoiceModalOpen] = useState(false);
   const [isCreateDbModalOpen, setIsCreateDbModalOpen] = useState(false);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'database' | 'table'>('database');
   const [isEditTableModalOpen, setIsEditTableModalOpen] = useState(false);
   const [isInsertDataModalOpen, setIsInsertDataModalOpen] = useState(false);
   const [isUpdateDataModalOpen, setIsUpdateDataModalOpen] = useState(false);
@@ -521,6 +524,25 @@ export default function DashboardPage() {
     ]);
   }, []);
 
+  // Plan limits checks
+  const handleOpenCreateDatabase = useCallback(() => {
+    if (databases.length >= 3) {
+      setUpgradeReason('database');
+      setIsUpgradeModalOpen(true);
+    } else {
+      setIsCreateDbModalOpen(true);
+    }
+  }, [databases.length]);
+
+  const handleOpenCreateTable = useCallback(() => {
+    if (tables.length >= 10) {
+      setUpgradeReason('table');
+      setIsUpgradeModalOpen(true);
+    } else {
+      setIsCreateTableModalOpen(true);
+    }
+  }, [tables.length]);
+
   // Create database
   const handleCreateDatabase = useCallback(
     async (name: string) => {
@@ -841,8 +863,11 @@ export default function DashboardPage() {
         const checkResult = await checkResponse.json();
 
         if (checkResult.success && checkResult.results && checkResult.results.length > 0) {
-          addLog('error', `Table '${name}' already exists. Use DROP TABLE \`${name}\` to remove it first.`);
-          return;
+          const count = Number(checkResult.results[0].count);
+          if (count > 0) {
+            addLog('error', `Table '${name}' already exists. Use DROP TABLE \`${name}\` to remove it first.`);
+            return;
+          }
         }
 
         // First, create the table in PostgreSQL
@@ -2279,7 +2304,7 @@ export default function DashboardPage() {
         case 'CREATE':
           // If no databases exist, automatically create database
           if (databases.length === 0) {
-            setIsCreateDbModalOpen(true);
+            handleOpenCreateDatabase();
           } else {
             // Show choice modal
             setIsCreateChoiceModalOpen(true);
@@ -2400,11 +2425,11 @@ export default function DashboardPage() {
                     setIsMobileSidebarOpen(false);
                   }}
                   onCreateDatabase={() => {
-                    setIsCreateDbModalOpen(true);
+                    handleOpenCreateDatabase();
                     setIsMobileSidebarOpen(false);
                   }}
                   onCreateTable={() => {
-                    setIsCreateTableModalOpen(true);
+                    handleOpenCreateTable();
                     setIsMobileSidebarOpen(false);
                   }}
                   onDeleteDatabase={handleDeleteDatabase}
@@ -2454,8 +2479,8 @@ export default function DashboardPage() {
           user={user}
           onSelectDatabase={setSelectedDatabaseId}
           onSelectTable={setSelectedTableId}
-          onCreateDatabase={() => setIsCreateDbModalOpen(true)}
-          onCreateTable={() => setIsCreateTableModalOpen(true)}
+          onCreateDatabase={() => handleOpenCreateDatabase()}
+          onCreateTable={() => handleOpenCreateTable()}
           onDeleteDatabase={handleDeleteDatabase}
           onDeleteTable={handleDeleteTable}
           onQuickSQL={handleQuickSQL}
@@ -2568,7 +2593,7 @@ export default function DashboardPage() {
                     transition={{ delay: 0.2, duration: 0.3 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsCreateDbModalOpen(true)}
+                    onClick={() => handleOpenCreateDatabase()}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 ${currentTheme === 'dark' ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'} rounded-lg transition-colors text-sm font-medium`}
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
@@ -2682,9 +2707,9 @@ export default function DashboardPage() {
         onClose={() => setIsCreateChoiceModalOpen(false)}
         onChoose={(choice) => {
           if (choice === 'database') {
-            setIsCreateDbModalOpen(true);
+            handleOpenCreateDatabase();
           } else {
-            setIsCreateTableModalOpen(true);
+            handleOpenCreateTable();
           }
         }}
         hasSelectedDatabase={!!selectedDatabaseId}
@@ -2814,6 +2839,14 @@ export default function DashboardPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleSQLImport}
+        theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+      />
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        reason={upgradeReason}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
 

@@ -99,20 +99,18 @@ export async function POST(request: NextRequest) {
 
     // Determine if we need a schema context
     const upperQuery = processedQuery.toUpperCase();
-    const needsSchema = !(
+    const skipSchemaContext = 
       upperQuery.includes('CREATE SCHEMA') ||
       upperQuery.includes('DROP SCHEMA') ||
-      upperQuery.includes('INFORMATION_SCHEMA') ||
-      isSpecialCommand
-    );
+      isSpecialCommand;
 
     let result;
     
-    if (needsSchema && database) {
+    if (database && !skipSchemaContext) {
       // Execute query within the specified schema
       console.log(`[Query Execute] Running query in schema "${database}":`, processedQuery.substring(0, 100));
       result = await executeQueryInDatabase(database, processedQuery);
-    } else if (needsSchema && !database) {
+    } else if (!database && !skipSchemaContext && !upperQuery.includes('INFORMATION_SCHEMA')) {
       // Query needs a schema but none specified
       return NextResponse.json({
         success: false,

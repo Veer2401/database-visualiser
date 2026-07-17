@@ -234,6 +234,33 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
+                        {/* Current Plan */}
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-geist-sans)' }}>
+                                    Current Plan
+                                </h3>
+                                <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'var(--font-geist-sans)' }}>
+                                    You are currently on the Free plan.
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    <span className="px-3 py-1 rounded-full bg-gray-900 text-white text-sm font-medium">
+                                        Free Plan
+                                    </span>
+                                    <span className="text-sm text-gray-500">Up to 3 databases, 10 tables each</span>
+                                </div>
+                            </div>
+                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                                <button
+                                    onClick={() => router.push('/pricing')}
+                                    className="px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors"
+                                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                                >
+                                    Upgrade Plan
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Logout */}
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             <div className="p-6">
