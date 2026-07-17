@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   title: "Schema View - PostgreSQL Database Design Tool",
   description: "A visual PostgreSQL database design tool for creating, managing, and visualizing database schemas with an intuitive drag-and-drop interface.",
   keywords: ["PostgreSQL", "database", "schema", "design", "tables", "relationships", "visualizer"],
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ]
+  }
 };
 
 export const viewport: Viewport = {
