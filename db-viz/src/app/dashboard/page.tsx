@@ -39,23 +39,26 @@ import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import Terminal from '@/components/layout/Terminal';
 
-import CreateDatabaseModal from '@/components/database/CreateDatabaseModal';
-import UpgradePlanModal from '@/components/common/UpgradePlanModal';
-import CreateTableModal from '@/components/database/CreateTableModal';
-import EditTableModal from '@/components/database/EditTableModal';
-import InsertDataModal from '@/components/database/InsertDataModal';
-import UpdateDataModal from '@/components/database/UpdateDataModal';
-import DeleteDataModal from '@/components/database/DeleteDataModal';
-import SelectDataModal from '@/components/database/SelectDataModal';
-import DropModal from '@/components/database/DropModal';
-import CreateChoiceModal from '@/components/database/CreateChoiceModal';
+import dynamic from 'next/dynamic';
+
+const CreateDatabaseModal = dynamic(() => import('@/components/database/CreateDatabaseModal'));
+const UpgradePlanModal = dynamic(() => import('@/components/common/UpgradePlanModal'));
+const CreateTableModal = dynamic(() => import('@/components/database/CreateTableModal'));
+const EditTableModal = dynamic(() => import('@/components/database/EditTableModal'));
+const InsertDataModal = dynamic(() => import('@/components/database/InsertDataModal'));
+const UpdateDataModal = dynamic(() => import('@/components/database/UpdateDataModal'));
+const DeleteDataModal = dynamic(() => import('@/components/database/DeleteDataModal'));
+const SelectDataModal = dynamic(() => import('@/components/database/SelectDataModal'));
+const DropModal = dynamic(() => import('@/components/database/DropModal'));
+const CreateChoiceModal = dynamic(() => import('@/components/database/CreateChoiceModal'));
+const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyModal'));
+const ExportModal = dynamic(() => import('@/components/database/ExportModal'));
+const ImportModal = dynamic(() => import('@/components/database/ImportModal'));
+const SQLChatbot = dynamic(() => import('@/components/chatbot/SQLChatbot'));
+
 import TableNode from '@/components/database/TableNode';
 import RelationshipEdge from '@/components/database/RelationshipEdge';
 import QueryResultsPanel from '@/components/database/QueryResultsPanel';
-import ForeignKeyModal from '@/components/database/ForeignKeyModal';
-import ExportModal from '@/components/database/ExportModal';
-import ImportModal from '@/components/database/ImportModal';
-import SQLChatbot from '@/components/chatbot/SQLChatbot';
 import { ChatMessage } from '@/components/chatbot/SQLChatbot';
 
 // Hooks and Types
@@ -122,6 +125,12 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, logout } = useAuth();
 
+  useEffect(() => {
+    router.prefetch('/settings');
+    router.prefetch('/profile');
+    router.prefetch('/login');
+  }, [router]);
+
   // Track intentional logout to prevent redirect to login
   const isLoggingOut = useRef(false);
 
@@ -159,6 +168,13 @@ export default function DashboardPage() {
   const [tables, setTables] = useState<TableType[]>([]);
   const [allTables, setAllTables] = useState<TableType[]>([]); // All tables for sidebar counts
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedDatabaseId) {
+      router.prefetch(`/terminal-mode?db=${selectedDatabaseId}`);
+      router.prefetch(`/presentation?db=${selectedDatabaseId}&theme=${currentTheme}`);
+    }
+  }, [router, selectedDatabaseId, currentTheme]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([]);
 

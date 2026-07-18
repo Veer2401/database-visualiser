@@ -1,8 +1,55 @@
 [build]
   command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# ──────────────────────────────────────────────────────────────
+# Cache static JS/CSS chunks forever (they're content-hashed)
+# ──────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache public assets (images, fonts, icons)
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+[[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# HTML pages — short cache so deploys propagate fast
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# ──────────────────────────────────────────────────────────────
+# Redirect old routes (if any) with 301
+# ──────────────────────────────────────────────────────────────
+# Example: [[redirects]]
+#   from = "/old-path"
+#   to = "/new-path"
+#   status = 301

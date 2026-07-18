@@ -366,6 +366,13 @@ export default function LandingPage() {
   const [selectedFeature, setSelectedFeature] = useState<typeof features[0] | null>(null);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
+  useEffect(() => {
+    router.prefetch('/login');
+    router.prefetch('/pricing');
+    router.prefetch('/presentation');
+  }, [router]);
+
+
   return (
     <SmoothScroll>
       <div className="min-h-screen bg-white">
