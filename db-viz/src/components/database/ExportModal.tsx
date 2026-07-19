@@ -16,7 +16,7 @@ import {
 import Button from '@/components/common/Button';
 import { Table as TableType } from '@/types/database';
 import { formatFKDisplay } from '@/lib/fk-helpers';
-import html2canvas from 'html2canvas';
+import { toCanvas } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel, AlignmentType, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
@@ -54,63 +54,21 @@ export default function ExportModal({
   const captureWorkflow = async (): Promise<HTMLCanvasElement | null> => {
     if (!workflowRef.current) return null;
 
-    // Suppress console errors during capture
-    const originalConsoleError = console.error;
-    const suppressedErrors: string[] = [];
-    
-    console.error = (...args: any[]) => {
-      const errorMsg = args.join(' ');
-      // Suppress LAB color parsing errors
-      if (errorMsg.includes('Attempting to parse an unsupported color function')) {
-        suppressedErrors.push(errorMsg);
-        return;
-      }
-      originalConsoleError.apply(console, args);
-    };
-
     try {
-      const canvas = await html2canvas(workflowRef.current, {
+      const canvas = await toCanvas(workflowRef.current, {
         backgroundColor: '#f9fafb',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-        foreignObjectRendering: false,
-        // Ignore elements that might cause parsing issues
-        ignoreElements: (element) => {
-          return element.hasAttribute('data-html2canvas-ignore');
-        },
-        // Handle errors during rendering
-        onclone: (clonedDoc) => {
-          // Remove any problematic styles from cloned document
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el) => {
-            if (el instanceof HTMLElement) {
-              try {
-                // Reset problematic CSS properties to safe values
-                el.style.color = el.style.color || '';
-                el.style.backgroundColor = el.style.backgroundColor || '';
-                el.style.borderColor = el.style.borderColor || '';
-              } catch (e) {
-                // Ignore
-              }
-            }
-          });
+        pixelRatio: 2,
+        filter: (node: any) => {
+          if (node?.hasAttribute && node.hasAttribute('data-html2canvas-ignore')) {
+            return false;
+          }
+          return true;
         },
       });
       
-      // Restore console.error
-      console.error = originalConsoleError;
-      
-      if (suppressedErrors.length > 0) {
-        console.log(`Suppressed ${suppressedErrors.length} LAB color parsing warnings during canvas capture`);
-      }
-      
       return canvas;
     } catch (error) {
-      // Restore console.error
-      console.error = originalConsoleError;
-      console.log('Workflow capture skipped due to rendering limitations. Export will continue without visualization.');
+      console.error('Workflow capture skipped due to rendering limitations. Export will continue without visualization.', error);
       return null;
     }
   };
@@ -271,10 +229,9 @@ export default function ExportModal({
           // Add workflow image to Word document
           if (canvas) {
             try {
-              // Convert canvas to blob and then to base64
-              const imageBlob = await new Promise<Blob | null>((resolve) => {
-                canvas.toBlob((blob) => resolve(blob), 'image/png');
-              });
+              const dataUrl = canvas.toDataURL('image/png');
+              const res = await fetch(dataUrl);
+              const imageBlob = await res.blob();
               
               if (imageBlob) {
                 const imageBuffer = await imageBlob.arrayBuffer();
@@ -283,8 +240,8 @@ export default function ExportModal({
                 // Calculate image dimensions to fit page width (600px)
                 const maxWidth = 600;
                 const aspectRatio = canvas.height / canvas.width;
-                const imageWidth = Math.min(canvas.width, maxWidth);
-                const imageHeight = imageWidth * aspectRatio;
+                const imageWidth = Math.round(Math.min(canvas.width, maxWidth));
+                const imageHeight = Math.round(imageWidth * aspectRatio);
                 
                 docChildren.push(
                   new Paragraph({
@@ -407,12 +364,11 @@ export default function ExportModal({
 
         case 'png': {
           if (canvas) {
-            canvas.toBlob((blob) => {
-              if (blob) {
-                saveAs(blob, `${databaseName}_workflow.png`);
-                setExportSuccess(type);
-              }
-            }, 'image/png');
+            const dataUrl = canvas.toDataURL('image/png');
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            saveAs(blob, `${databaseName}_workflow.png`);
+            setExportSuccess(type);
           }
           break;
         }

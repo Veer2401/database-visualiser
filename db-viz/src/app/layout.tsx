@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { WebVitalsMonitor } from "@/components/WebVitalsMonitor";
 import PageLoader from "@/components/PageLoader";
+import FontProvider from "@/components/common/FontProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,9 +50,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
       >
-        <PageLoader />
-        <WebVitalsMonitor />
-        {children}
+        <FontProvider>
+          <PageLoader />
+          <WebVitalsMonitor />
+          {children}
+        </FontProvider>
       </body>
     </html>
   );

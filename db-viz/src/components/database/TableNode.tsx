@@ -47,17 +47,7 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
         border-2 ${selected || isSelected ? (theme?.navbar?.includes('slate') ? 'border-blue-400' : 'border-blue-500') : (theme?.navbar?.includes('slate') ? 'border-slate-700' : 'border-gray-200')}
         min-w-[220px]
       `}
-      style={{
-        transform: 'perspective(1000px) rotateX(2deg)',
-        transformStyle: 'preserve-3d',
-      }}
     >
-      {/* 3D Effect Shadow */}
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 pointer-events-none"
-        style={{ transform: 'translateZ(-1px)' }}
-      />
-
       {/* Table Header */}
       <div className={`${theme?.button || 'bg-black'} px-4 py-3 flex items-center justify-between group rounded-t-xl`}>
         <div className="flex items-center gap-2">

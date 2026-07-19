@@ -2544,10 +2544,11 @@ export default function DashboardPage() {
                   proOptions={{ hideAttribution: true }}
                   className={THEMES[currentTheme as keyof typeof THEMES]?.bg || THEMES.light.bg}
                 >
-
-                  <Controls
-                    className="bg-white border border-gray-200 rounded-lg"
-                  />
+                  <div data-html2canvas-ignore="true">
+                    <Controls
+                      className="bg-white border border-gray-200 rounded-lg"
+                    />
+                  </div>
                 </ReactFlow>
               </motion.div>
             ) : (
@@ -2642,6 +2643,7 @@ export default function DashboardPage() {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                   className="absolute top-8 right-8 space-y-3 z-10"
+                  data-html2canvas-ignore="true"
                 >
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
