@@ -108,6 +108,85 @@ function TerminalModeContent() {
     const queryText = (queryToExecute || queryInput).trim();
     if (!queryText || !database || isExecuting) return;
 
+    const upperQuery = queryText.toUpperCase();
+
+    // Intercept SHOW DATABASES to only show user's databases
+    if (upperQuery === 'SHOW DATABASES' || upperQuery === 'SHOW DATABASES;') {
+      const startTime = Date.now();
+      setIsExecuting(true);
+      setQueryResult(null);
+      
+      try {
+        const response = await fetch(`/api/database/list?userId=${user?.uid}`);
+        const result = await response.json();
+        const duration = Date.now() - startTime;
+        
+        if (result.success && result.databases) {
+          const dbData = result.databases.map((db: { name: string }) => ({ Database: db.name }));
+          
+          setQueryResult({
+            success: true,
+            results: dbData,
+          });
+          
+          // Add to history
+          const historyItem: QueryHistoryItem = {
+            id: Date.now().toString(),
+            query: queryText,
+            timestamp: new Date(),
+            success: true,
+            duration,
+            rowCount: dbData.length,
+          };
+          setQueryHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
+        } else {
+          throw new Error(result.error || 'Failed to fetch databases');
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        setQueryResult({
+          success: false,
+          error: errorMsg,
+        });
+        
+        const historyItem: QueryHistoryItem = {
+          id: Date.now().toString(),
+          query: queryText,
+          timestamp: new Date(),
+          success: false,
+          duration: Date.now() - startTime,
+        };
+        setQueryHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
+      } finally {
+        setIsExecuting(false);
+      }
+      return;
+    }
+
+    // Check limits before executing CREATE TABLE
+    if (/^CREATE\s+TABLE/i.test(upperQuery)) {
+      const tablesSnap = await getDocs(
+        query(collection(db, 'tables'), where('databaseId', '==', databaseId))
+      );
+      if (tablesSnap.size >= 10) {
+        setQueryResult({
+          success: false,
+          error: 'Free plan limit reached. Maximum 10 tables allowed per database.',
+        });
+        
+        // Add to history
+        const historyItem: QueryHistoryItem = {
+          id: Date.now().toString(),
+          query: queryText,
+          timestamp: new Date(),
+          success: false,
+          duration: 0,
+        };
+        setQueryHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
+        return;
+      }
+    }
+
     const startTime = Date.now();
     setIsExecuting(true);
     setQueryResult(null);
@@ -151,7 +230,7 @@ function TerminalModeContent() {
 
         try {
           // Handle CREATE TABLE - sync new table to Firebase
-          if (upperQuery.startsWith('CREATE TABLE')) {
+          if (/^CREATE\s+TABLE/i.test(upperQuery)) {
             const match = queryText.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
             if (match && match[1]) {
               const tableName = match[1];

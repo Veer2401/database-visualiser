@@ -10,6 +10,7 @@ interface NavbarProps {
   showModeButtons?: boolean;
   theme?: any;
   onMobileMenuToggle?: () => void;
+  selectedDatabaseName?: string | null;
 }
 
 export default function Navbar({
@@ -18,6 +19,7 @@ export default function Navbar({
   showModeButtons = false,
   theme,
   onMobileMenuToggle,
+  selectedDatabaseName,
 }: NavbarProps) {
   const initialHeight = 64; // px (h-16)
   const maxExtra = 24; // max extra px to expand
@@ -54,7 +56,7 @@ export default function Navbar({
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
       style={{ height: `${height}px`, paddingTop: `${paddingTop}px`, paddingBottom: `12px` }}
-      className={`${theme?.navbar || 'bg-white/95 border-gray-200/50'} backdrop-blur-2xl border-b px-4 sm:px-6 flex items-start justify-between shadow-lg shadow-gray-200/20 z-50 transition-[height,padding] duration-200 ease-out`}
+      className={`${theme?.navbar || 'bg-white/95 border-gray-200/50'} backdrop-blur-2xl border-b px-4 sm:px-6 flex items-start justify-between shadow-lg shadow-gray-200/20 z-50 transition-[height,padding] duration-200 ease-out relative`}
     >
       {/* Logo and App Name */}
       <motion.div
@@ -87,6 +89,23 @@ export default function Navbar({
           </p>
         </div>
       </motion.div>
+
+      {/* Centered Database Name */}
+      {selectedDatabaseName && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center"
+          style={{ top: `${paddingTop}px` }}
+        >
+          <div className={`px-4 py-1.5 rounded-full ${theme?.buttonSecondary || 'bg-gray-100'} border ${theme?.navbar?.includes('slate') ? 'border-slate-700' : 'border-gray-200'} shadow-sm flex items-center gap-2`}>
+            <div className={`w-2 h-2 rounded-full ${theme?.navbar?.includes('slate') ? 'bg-emerald-400' : 'bg-emerald-500'}`}></div>
+            <span className={`text-sm font-medium ${theme?.text || 'text-gray-900'} truncate max-w-[200px] lg:max-w-[300px]`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
+              {selectedDatabaseName}
+            </span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Right Side Actions */}
       <motion.div

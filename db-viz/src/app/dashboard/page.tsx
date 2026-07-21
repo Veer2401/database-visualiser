@@ -84,7 +84,7 @@ import {
 import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
 
 // Icons
-import { Upload } from 'lucide-react';
+import { Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Node and Edge types for React Flow
 const nodeTypes = {
@@ -139,6 +139,7 @@ export default function DashboardPage() {
 
   // Mobile Sidebar State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // UI State
 
@@ -1966,7 +1967,14 @@ export default function DashboardPage() {
       }
 
       // Handle CREATE DATABASE (convert to PostgreSQL CREATE SCHEMA)
-      if (upperCommand.startsWith('CREATE DATABASE')) {
+      if (/^CREATE\s+DATABASE/i.test(upperCommand)) {
+        if (databases.length >= 3) {
+          setUpgradeReason('database');
+          setIsUpgradeModalOpen(true);
+          addLog('error', 'Error: Free plan limit reached. Maximum 3 databases allowed.');
+          return;
+        }
+
         const match = trimmedCommand.match(/CREATE\s+DATABASE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
         if (match && match[1]) {
           const dbName = match[1];
@@ -2025,6 +2033,19 @@ export default function DashboardPage() {
 
       // Execute query against PostgreSQL
       try {
+        // Check limits before executing CREATE TABLE
+        if (/^CREATE\s+TABLE/i.test(upperCommand)) {
+          const currentDbId = terminalDbRef.current?.id || selectedDatabaseId;
+          const currentTables = allTables.filter((t) => t.databaseId === currentDbId);
+          
+          if (currentTables.length >= 10) {
+            setUpgradeReason('table');
+            setIsUpgradeModalOpen(true);
+            addLog('error', 'Error: Free plan limit reached. Maximum 10 tables allowed per database.');
+            return;
+          }
+        }
+
         addLog('info', `Executing: ${trimmedCommand}`);
 
         const response = await fetch('/api/query/execute', {
@@ -2066,7 +2087,7 @@ export default function DashboardPage() {
           }
 
           // Handle schema-changing queries to update UI immediately
-          if (upperCommand.startsWith('CREATE TABLE')) {
+          if (/^CREATE\s+TABLE/i.test(upperCommand)) {
             // Extract table name from CREATE TABLE query
             const match = trimmedCommand.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
             if (match && match[1]) {
@@ -2395,6 +2416,7 @@ export default function DashboardPage() {
         onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         showModeButtons={!!selectedDatabaseId}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+        selectedDatabaseName={databases.find(db => db.id === selectedDatabaseId)?.name}
       />
 
       {/* Main Content */}
@@ -2517,7 +2539,27 @@ export default function DashboardPage() {
           showModeButtons={!!selectedDatabaseId}
           onLogout={handleLogout}
           theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+          isCollapsed={isSidebarCollapsed}
         />
+
+        {/* Toggle Sidebar Button */}
+        <div className="relative z-40 hidden md:flex items-center w-0 h-full">
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className={`absolute top-1/2 -translate-y-1/2 w-6 h-16 flex items-center justify-center shadow-md transition-all duration-300 z-50 cursor-pointer ${
+              currentTheme === 'dark'
+                ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+            } ${
+              isSidebarCollapsed
+                ? 'left-0 rounded-r-md border-l-0 border-y border-r'
+                : '-left-3 rounded-full border'
+            }`}
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
 
         {/* Canvas Area */}
         <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4">
