@@ -14,13 +14,17 @@ function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString: DATABASE_URL,
-      max: 20, // Maximum pool size
+      // Keep pool small for serverless environments (Neon, Railway, Vercel)
+      max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      // Allow enough time for cold starts on Neon/serverless Postgres
+      connectionTimeoutMillis: 15000,
+      // Allow SSL for hosted Postgres providers
+      ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
     });
 
     pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
+      console.error('[DB] Unexpected error on idle client:', err.message);
     });
   }
   return pool;
@@ -81,12 +85,12 @@ export async function getConnectionWithDatabase(database: string) {
   const connection = await getPool().connect();
   // For PostgreSQL, set the search_path to the specific database schema
   // Note: PostgreSQL doesn't have "databases" like MySQL, but schemas within a database
-  // If using separate databases, create a new pool with the specific database
   try {
     await connection.query(`SET search_path TO "${database}"`);
   } catch (err) {
-    // If schema doesn't exist, just continue with default
-    console.log(`Schema ${database} not found, using default`);
+    // Schema may not exist yet — log and continue with default
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[DB] Schema "${database}" not found, using default: ${errorMsg}`);
   }
   return connection;
 }

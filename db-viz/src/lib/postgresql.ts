@@ -14,14 +14,18 @@ function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString: DATABASE_URL,
-      max: 20, // Maximum pool size
+      // Keep pool small for serverless environments (Neon, Railway, Vercel)
+      // Large pools on serverless cause connection exhaustion
+      max: 10,
       idleTimeoutMillis: 30000,
-      // Neon/serverless Postgres often needs >2s on cold start
+      // Allow enough time for cold starts on Neon/serverless Postgres
       connectionTimeoutMillis: 15000,
+      // Allow SSL for hosted Postgres providers (Neon, Railway, Supabase)
+      ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false },
     });
 
     pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
+      console.error('[PostgreSQL] Unexpected error on idle client:', err.message);
     });
   }
   return pool;
@@ -79,6 +83,13 @@ export async function getConnection() {
  * Used for operations within a schema like CREATE TABLE, INSERT, SELECT, etc.
  */
 export async function getConnectionWithDatabase(database: string) {
+  // Guard against SQL injection in schema name — must be alphanumeric/underscore/hyphen only
+  // The prefix already contains underscores, schema names are validated at create-time,
+  // but we add this defence-in-depth check here at the lowest level.
+  if (!/^[a-zA-Z0-9_-]+$/.test(database)) {
+    throw new Error(`Invalid schema identifier: "${database}"`);
+  }
+
   const connection = await getPool().connect();
   // For PostgreSQL, set the search_path to the specific schema
   // Each "database" in the app is actually a schema in PostgreSQL
@@ -87,7 +98,6 @@ export async function getConnectionWithDatabase(database: string) {
     await connection.query(`CREATE SCHEMA IF NOT EXISTS "${database}"`);
     // Then set search_path to use this schema
     await connection.query(`SET search_path TO "${database}"`);
-    console.log(`[PostgreSQL] Connected to schema: "${database}"`);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[PostgreSQL] Error setting schema "${database}": ${errorMsg}`);
@@ -126,10 +136,8 @@ export async function executeQuery(query: string) {
 export async function executeQueryInDatabase(database: string, query: string) {
   let connection: PoolClient | null = null;
   try {
-    console.log(`[executeQueryInDatabase] Executing in schema "${database}":`, query.substring(0, 150));
     connection = await getConnectionWithDatabase(database);
     const result = await connection.query(query);
-    console.log(`[executeQueryInDatabase] Query succeeded in schema "${database}"`);
     
     // Format the result to include field information
     const fields = result.fields || Object.keys(result.rows[0] || {}).map(name => ({ name }));
@@ -137,7 +145,7 @@ export async function executeQueryInDatabase(database: string, query: string) {
     return { success: true, results: result.rows, fields };
   } catch (error: unknown) {
     const pgError = error as { message: string; code?: string; errno?: number; sqlState?: string };
-    console.error(`[executeQueryInDatabase] Error in schema "${database}":`, pgError.message);
+    console.error(`[PostgreSQL] Error in schema "${database}":`, pgError.message);
     return {
       success: false,
       error: pgError.message,
