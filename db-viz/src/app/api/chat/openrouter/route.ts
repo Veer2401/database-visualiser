@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getOpenRouterResponse, MAX_INPUT_LENGTH } from '@/lib/openrouter';
+import { verifyAuth } from '@/lib/auth-helper';
 
 // Request body type
 interface ChatRequest {
@@ -20,6 +21,10 @@ interface ChatRequest {
  * Returns: { success: boolean, message: string, error?: string }
  */
 export async function POST(request: NextRequest) {
+    // Require authentication — prevents anonymous abuse of OpenRouter credits
+    const authResult = await verifyAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         // Parse request body
         const body: ChatRequest = await request.json();

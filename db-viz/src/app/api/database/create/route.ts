@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getPrefixedDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface CreateDatabaseRequest {
   name: string;
-  userId: string;
 }
 
 /**
@@ -29,23 +29,19 @@ interface CreateDatabaseRequest {
  * }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
     const body: CreateDatabaseRequest = await request.json();
-    const { name, userId } = body;
+    const { name } = body;
 
-    // Validate database name and userId
+    // Validate database name
     if (!name || typeof name !== 'string') {
       const response = NextResponse.json({
         success: false,
         error: 'Schema name is required',
-      }, { status: 400 });
-      return setNoCacheHeaders(response);
-    }
-
-    if (!userId || typeof userId !== 'string') {
-      const response = NextResponse.json({
-        success: false,
-        error: 'User ID is required',
       }, { status: 400 });
       return setNoCacheHeaders(response);
     }

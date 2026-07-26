@@ -18,11 +18,11 @@ export default function GoogleLoginButton({ onClick, isLoading = false }: Google
       disabled={isLoading}
       className="
         flex items-center justify-center gap-3 w-full
-        px-6 py-3 rounded-lg
+        px-5 py-2.5 rounded-xl
         bg-white
         border border-gray-300
         text-gray-800
-        font-medium text-base
+        font-medium text-sm sm:text-base
         shadow-sm hover:shadow-md
         transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed

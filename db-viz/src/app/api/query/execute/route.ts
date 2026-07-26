@@ -7,11 +7,14 @@ import {
   getPrefixedDatabaseName,
 } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
+import { verifyAuth } from '@/lib/auth-helper';
+
+// System schemas that must never be user-prefixed
+const SYSTEM_SCHEMAS = new Set(['information_schema', 'pg_catalog', 'public', 'db_viz_system']);
 
 interface ExecuteQueryRequest {
   database?: string;
   query: string;
-  userId?: string;
 }
 
 /**
@@ -35,9 +38,14 @@ interface ExecuteQueryRequest {
  * }
  */
 export async function POST(request: NextRequest) {
+  // Verify Firebase auth token – returns userId string or a 401 NextResponse
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
     const body: ExecuteQueryRequest = await request.json();
-    let { database, query, userId } = body;
+    let { database, query } = body;
 
     // Validate request
     if (!query || typeof query !== 'string') {
@@ -57,15 +65,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('[Query Execute] Input database:', database, 'UserId:', userId);
-
-    // Auto-prefix database name if userId is provided
-    if (userId && database) {
+    // Auto-prefix database name with user's namespace (skip system schemas)
+    if (database && !SYSTEM_SCHEMAS.has(database.toLowerCase())) {
       database = getPrefixedDatabaseName(database, userId);
-      console.log('[Query Execute] Prefixed database to:', database);
-    } else {
-      console.log('[Query Execute] NO PREFIX - UserId:', userId, 'Database:', database);
     }
+    console.log('[Query Execute] Resolved database:', database);
 
     // Handle special commands for PostgreSQL compatibility
     let processedQuery = trimmedQuery;

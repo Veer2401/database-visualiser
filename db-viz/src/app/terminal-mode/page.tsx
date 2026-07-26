@@ -13,6 +13,7 @@ import { db } from '@/lib/firebase';
 // Hooks and Types
 import { useAuth } from '@/hooks/useAuth';
 import { Database as DatabaseType, Column } from '@/types/database';
+import { authFetch } from '@/lib/api-client';
 
 interface QueryHistoryItem {
   id: string;
@@ -117,7 +118,7 @@ function TerminalModeContent() {
       setQueryResult(null);
       
       try {
-        const response = await fetch(`/api/database/list?userId=${user?.uid}`);
+        const response = await authFetch(`/api/database/list`);
         const result = await response.json();
         const duration = Date.now() - startTime;
         
@@ -192,13 +193,12 @@ function TerminalModeContent() {
     setQueryResult(null);
 
     try {
-      const response = await fetch('/api/query/execute', {
+      const response = await authFetch('/api/query/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           database: database.name,
           query: queryText,
-          userId: user?.uid,
         }),
       });
 
@@ -236,20 +236,19 @@ function TerminalModeContent() {
               const tableName = match[1];
 
               // Fetch table structure from PostgreSQL
-              const describeResponse = await fetch('/api/query/execute', {
+              const describeResponse = await authFetch('/api/query/execute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   database: currentDatabaseName,
                   query: `DESCRIBE \`${tableName}\``,
-                  userId: user?.uid,
                 }),
               });
               const describeResult = await describeResponse.json();
 
               if (describeResult.success && Array.isArray(describeResult.results)) {
                 // Get foreign key information
-                const fkResponse = await fetch('/api/query/execute', {
+                const fkResponse = await authFetch('/api/query/execute', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -335,20 +334,19 @@ function TerminalModeContent() {
               const tableName = match[1];
 
               // Fetch updated table structure
-              const describeResponse = await fetch('/api/query/execute', {
+              const describeResponse = await authFetch('/api/query/execute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   database: currentDatabaseName,
                   query: `DESCRIBE \`${tableName}\``,
-                  userId: user?.uid,
                 }),
               });
               const describeResult = await describeResponse.json();
 
               if (describeResult.success && Array.isArray(describeResult.results)) {
                 // Get foreign key information
-                const fkResponse = await fetch('/api/query/execute', {
+                const fkResponse = await authFetch('/api/query/execute', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

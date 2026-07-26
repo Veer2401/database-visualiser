@@ -129,6 +129,21 @@ export async function apiPublicGet(url: string): Promise<any> {
 }
 
 /**
+ * Authenticated fetch – mirrors native fetch() but auto-attaches the Firebase
+ * Bearer token. Use this instead of raw fetch() for all /api/* calls.
+ */
+export async function authFetch(url: string, options?: RequestInit): Promise<Response> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('User not authenticated. Please log in.');
+  }
+  const token = await user.getIdToken();
+  const headers = new Headers(options?.headers || {});
+  headers.set('Authorization', `Bearer ${token}`);
+  return fetch(url, { ...options, headers });
+}
+
+/**
  * Check if user is authenticated
  */
 export function isAuthenticated(): boolean {

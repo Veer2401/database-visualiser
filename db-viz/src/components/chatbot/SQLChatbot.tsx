@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Bot, User, Copy, Check, Loader2, Play, Trash2 } from 'lucide-react';
 import { findMatchingIntent, SQLIntent } from '@/data/sqlKnowledgeBase';
+import { authFetch } from '@/lib/api-client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -205,7 +206,7 @@ export default function SQLChatbot({
             // AI fallback via OpenRouter
             setIsLoading(true);
             try {
-                const response = await fetch('/api/chat/openrouter', {
+                const response = await authFetch('/api/chat/openrouter', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: currentInput }),

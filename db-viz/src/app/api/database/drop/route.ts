@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getPrefixedDatabaseName } from '@/lib/postgresql';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface DropDatabaseRequest {
   name: string;
-  userId: string;
 }
 
 /**
@@ -26,22 +26,19 @@ interface DropDatabaseRequest {
  * }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
     const body: DropDatabaseRequest = await request.json();
-    const { name, userId } = body;
+    const { name } = body;
 
-    // Validate schema name and userId
+    // Validate schema name
     if (!name || typeof name !== 'string') {
       return NextResponse.json({
         success: false,
         error: 'Schema name is required',
-      }, { status: 400 });
-    }
-
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json({
-        success: false,
-        error: 'User ID is required',
       }, { status: 400 });
     }
 

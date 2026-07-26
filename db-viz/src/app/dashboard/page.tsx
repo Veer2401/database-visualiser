@@ -85,6 +85,7 @@ import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
 
 // Icons
 import { Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { authFetch } from '@/lib/api-client';
 
 // Node and Edge types for React Flow
 const nodeTypes = {
@@ -567,10 +568,10 @@ export default function DashboardPage() {
 
       try {
         // First, create the database/schema in PostgreSQL with user isolation
-        const postgresResponse = await fetch('/api/database/create', {
+        const postgresResponse = await authFetch('/api/database/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, userId: user.uid }),
+          body: JSON.stringify({ name }),
         });
         const postgresResult = await postgresResponse.json();
 
@@ -612,10 +613,10 @@ export default function DashboardPage() {
 
         if (dbName) {
           // First, drop the schema in PostgreSQL with user isolation
-          const postgresResponse = await fetch('/api/database/drop', {
+          const postgresResponse = await authFetch('/api/database/drop', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: dbName, userId: user.uid }),
+            body: JSON.stringify({ name: dbName }),
           });
           const postgresResult = await postgresResponse.json();
 
@@ -651,10 +652,10 @@ export default function DashboardPage() {
     async (actualDbName: string, firebaseDbId: string) => {
       if (!user) return;
 
-      const showTablesResponse = await fetch('/api/query/execute', {
+      const showTablesResponse = await authFetch('/api/query/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ database: actualDbName, query: 'SHOW TABLES', userId: user.uid }),
+        body: JSON.stringify({ database: actualDbName, query: 'SHOW TABLES' }),
       });
       const showTablesResult = await showTablesResponse.json();
 
@@ -687,10 +688,10 @@ export default function DashboardPage() {
         const tableName = pgTableNames[i];
         if (existingNames.has(tableName)) continue; // Already in Firebase
 
-        const descResponse = await fetch('/api/table/describe', {
+        const descResponse = await authFetch('/api/table/describe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, table: tableName, userId: user.uid }),
+          body: JSON.stringify({ database: actualDbName, table: tableName }),
         });
         const descResult = await descResponse.json();
 
@@ -781,10 +782,10 @@ export default function DashboardPage() {
         // Use extracted name if available, otherwise generate one
         dbName = extractedDbName || `chatbot_db_${Date.now().toString(36)}`;
 
-        const dbResponse = await fetch('/api/database/create', {
+        const dbResponse = await authFetch('/api/database/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: dbName, userId: user.uid }),
+          body: JSON.stringify({ name: dbName }),
         });
         const dbResult = await dbResponse.json();
 
@@ -829,10 +830,10 @@ export default function DashboardPage() {
         if (!trimmed) continue;
         if (/^CREATE\s+DATABASE/i.test(trimmed)) continue; // Skip CREATE DATABASE
 
-        const execResponse = await fetch('/api/query/execute', {
+        const execResponse = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, query: trimmed, userId: user.uid }),
+          body: JSON.stringify({ database: actualDbName, query: trimmed }),
         });
         const execResult = await execResponse.json();
 
@@ -868,13 +869,12 @@ export default function DashboardPage() {
         }
 
         // Check if table already exists in PostgreSQL
-        const checkResponse = await fetch('/api/query/execute', {
+        const checkResponse = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${name.toLowerCase()}'`,
-            userId: user?.uid,
           }),
         });
         const checkResult = await checkResponse.json();
@@ -908,14 +908,13 @@ export default function DashboardPage() {
           };
         });
 
-        const response = await fetch('/api/table/create', {
+        const response = await authFetch('/api/table/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             tableName: name,
             columns: pgColumns,
-            userId: user?.uid,
           }),
         });
         const result = await response.json();
@@ -977,13 +976,12 @@ export default function DashboardPage() {
 
         if (tableName && databaseName) {
           // First, drop the table in PostgreSQL
-          const response = await fetch('/api/query/execute', {
+          const response = await authFetch('/api/query/execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               database: databaseName,
               query: `DROP TABLE "${tableName}"`,
-              userId: user?.uid,
             }),
           });
           const result = await response.json();
@@ -1138,13 +1136,12 @@ export default function DashboardPage() {
 
         console.log('Adding FK with query:', alterQuery);
 
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             query: alterQuery,
-            userId: user?.uid,
           }),
         });
 
@@ -1218,13 +1215,12 @@ export default function DashboardPage() {
         const constraintName = `fk_${table.name}_${column.name}`;
         const alterQuery = `ALTER TABLE "${table.name}" DROP CONSTRAINT "${constraintName}"`;
 
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             query: alterQuery,
-            userId: user?.uid,
           }),
         });
 
@@ -1306,12 +1302,11 @@ export default function DashboardPage() {
           } else {
             // Create the database from SQL
             addLog('info', `📁 Creating database: ${targetDatabaseName}`);
-            const dbResponse = await fetch('/api/database/create', {
+            const dbResponse = await authFetch('/api/database/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 name: targetDatabaseName,
-                userId: user.uid,
               }),
             });
 
@@ -1346,12 +1341,11 @@ export default function DashboardPage() {
             targetDatabaseName = generatedDbName;
 
             addLog('info', `📁 Creating database: ${generatedDbName}`);
-            const dbResponse = await fetch('/api/database/create', {
+            const dbResponse = await authFetch('/api/database/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 name: generatedDbName,
-                userId: user.uid,
               }),
             });
 
@@ -1391,13 +1385,12 @@ export default function DashboardPage() {
           addLog('info', `📋 Creating table: ${tableStatement.tableName}`);
 
           // Execute CREATE TABLE statement in PostgreSQL
-          const createResponse = await fetch('/api/query/execute', {
+          const createResponse = await authFetch('/api/query/execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               database: actualDatabaseName,
               query: tableStatement.sql,
-              userId: user.uid,
             }),
           });
 
@@ -1415,13 +1408,12 @@ export default function DashboardPage() {
           addLog('info', `📝 Executing ${parsedSQL.insertStatements.length} INSERT statement(s)`);
 
           for (const insertStmt of parsedSQL.insertStatements) {
-            const insertResponse = await fetch('/api/query/execute', {
+            const insertResponse = await authFetch('/api/query/execute', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 database: actualDatabaseName,
                 query: insertStmt.sql,
-                userId: user.uid,
               }),
             });
 
@@ -1441,13 +1433,12 @@ export default function DashboardPage() {
 
           for (const stmt of parsedSQL.otherStatements) {
             try {
-              const response = await fetch('/api/query/execute', {
+              const response = await authFetch('/api/query/execute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   database: actualDatabaseName,
                   query: stmt.sql,
-                  userId: user.uid,
                 }),
               });
 
@@ -1482,13 +1473,10 @@ export default function DashboardPage() {
   const executeQuery = useCallback(
     async (database: string, query: string): Promise<{ success: boolean; results?: unknown[]; error?: string }> => {
       try {
-        const userId = user?.uid;
-        console.log('[executeQuery] Database:', database, 'UserId:', userId, 'HasUser:', !!user);
-        
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database, query, userId }),
+          body: JSON.stringify({ database, query }),
         });
         const result = await response.json();
 
@@ -1508,7 +1496,7 @@ export default function DashboardPage() {
         return { success: false, error: errMsg };
       }
     },
-    [addLog, user?.uid]
+    [addLog]
   );
 
   // Execute query with automatic schema synchronization to Firebase/Canvas
@@ -1530,13 +1518,12 @@ export default function DashboardPage() {
             const tableName = match[1];
             
             // Fetch table structure from PostgreSQL using the proper endpoint
-            const describeResponse = await fetch('/api/table/describe', {
+            const describeResponse = await authFetch('/api/table/describe', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 database: currentDatabaseName,
                 table: tableName,
-                userId: user?.uid,
               }),
             });
             const describeResult = await describeResponse.json();
@@ -1603,13 +1590,12 @@ export default function DashboardPage() {
 
             if (tableToUpdate) {
               // Use the proper table/describe endpoint for PostgreSQL
-              const describeResponse = await fetch('/api/table/describe', {
+              const describeResponse = await authFetch('/api/table/describe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   database: currentDatabaseName,
                   table: tableName,
-                  userId: user?.uid,
                 }),
               });
               const describeResult = await describeResponse.json();
@@ -1861,7 +1847,7 @@ export default function DashboardPage() {
         addLog('info', 'Executing: SHOW DATABASES');
 
         try {
-          const response = await fetch(`/api/database/list?userId=${user?.uid}`);
+          const response = await authFetch(`/api/database/list`);
           const result = await response.json();
 
           if (result.success && result.databases) {
@@ -1983,10 +1969,10 @@ export default function DashboardPage() {
             addLog('info', `Executing: ${trimmedCommand}`);
 
             // Create schema in PostgreSQL
-            const response = await fetch('/api/database/create', {
+            const response = await authFetch('/api/database/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: dbName, userId: user?.uid }),
+              body: JSON.stringify({ name: dbName }),
             });
 
             const result = await response.json();
@@ -2048,13 +2034,12 @@ export default function DashboardPage() {
 
         addLog('info', `Executing: ${trimmedCommand}`);
 
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: currentDatabaseName,
             query: trimmedCommand,
-            userId: user?.uid,
           }),
         });
 
@@ -2101,13 +2086,12 @@ export default function DashboardPage() {
 
               // Fetch table structure from PostgreSQL
               try {
-                const describeResponse = await fetch('/api/table/describe', {
+                const describeResponse = await authFetch('/api/table/describe', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     database: currentDatabaseName,
                     table: tableName,
-                    userId: user?.uid,
                   }),
                 });
                 const describeResult = await describeResponse.json();
@@ -2200,13 +2184,12 @@ export default function DashboardPage() {
               if (tableToUpdate) {
                 // Fetch updated table structure from PostgreSQL
                 try {
-                  const describeResponse = await fetch('/api/table/describe', {
+                  const describeResponse = await authFetch('/api/table/describe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       database: currentDatabaseName,
                       table: tableName,
-                      userId: user?.uid,
                     }),
                   });
                   const describeResult = await describeResponse.json();

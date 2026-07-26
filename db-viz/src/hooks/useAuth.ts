@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { onAuthChange, signInWithGoogle, signInWithGithub, signOut } from '@/lib/auth';
+import {
+  onAuthChange,
+  signInWithGoogle,
+  signInWithGithub,
+  signInWithEmail,
+  signUpWithEmail,
+  sendPasswordReset,
+  signOut,
+} from '@/lib/auth';
 import { User } from '@/types/database';
 
 interface UseAuthReturn {
@@ -11,6 +19,9 @@ interface UseAuthReturn {
   error: string | null;
   signIn: () => Promise<void>;
   signInGithub: () => Promise<void>;
+  signInEmail: (email: string, password: string) => Promise<void>;
+  signUpEmail: (email: string, password: string, displayName?: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -61,6 +72,42 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
+  const signInEmail = useCallback(async (email: string, password: string) => {
+    try {
+      setError(null);
+      setLoading(true);
+      await signInWithEmail(email, password);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign in');
+      throw err; // Re-throw so the UI can show specific error messages
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signUpEmail = useCallback(async (email: string, password: string, displayName?: string) => {
+    try {
+      setError(null);
+      setLoading(true);
+      await signUpWithEmail(email, password, displayName);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create account');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      setError(null);
+      await sendPasswordReset(email);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email');
+      throw err;
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       setError(null);
@@ -70,5 +117,5 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
-  return { user, loading, error, signIn, signInGithub, logout };
+  return { user, loading, error, signIn, signInGithub, signInEmail, signUpEmail, resetPassword, logout };
 }

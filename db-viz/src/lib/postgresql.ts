@@ -137,6 +137,8 @@ export async function executeQueryInDatabase(database: string, query: string) {
   let connection: PoolClient | null = null;
   try {
     connection = await getConnectionWithDatabase(database);
+    // Limit each user query to 10 seconds to prevent DoS / runaway queries
+    await connection.query("SET statement_timeout = '10000'");
     const result = await connection.query(query);
     
     // Format the result to include field information

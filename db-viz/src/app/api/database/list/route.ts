@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getUserDatabasePrefix, getDisplayDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
+import { verifyAuth } from '@/lib/auth-helper';
 
 /**
  * GET /api/database/list
@@ -19,18 +20,11 @@ import { setNoCacheHeaders } from '@/lib/cache-headers';
  * }
  */
 export async function GET(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      const response = NextResponse.json({
-        success: false,
-        error: 'User ID is required',
-      }, { status: 400 });
-      return setNoCacheHeaders(response);
-    }
-
     // Query PostgreSQL schemas
     const result = await executeQuery(`
       SELECT schema_name 
@@ -39,6 +33,7 @@ export async function GET(request: NextRequest) {
       AND schema_name != 'information_schema'
       ORDER BY schema_name
     `);
+
 
     if (result.success) {
       // Extract schema names from result

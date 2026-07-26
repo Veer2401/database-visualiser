@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQueryInDatabase, getPrefixedDatabaseName } from '@/lib/postgresql';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface Column {
   name: string;
@@ -23,7 +24,6 @@ interface CreateTableRequest {
   database: string;
   tableName: string;
   columns: Column[];
-  userId?: string;
 }
 
 /**
@@ -55,9 +55,13 @@ interface CreateTableRequest {
  * }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
     const body: CreateTableRequest = await request.json();
-    let { database, tableName, columns, userId } = body;
+    let { database, tableName, columns } = body;
 
     // Validate request
     if (!database || typeof database !== 'string') {
@@ -67,12 +71,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Auto-prefix database name if userId is provided
-    if (userId && typeof userId === 'string') {
-      database = getPrefixedDatabaseName(database.trim(), userId);
-    } else {
-      database = database.trim();
-    }
+    // Always prefix the database name with the user's namespace
+    database = getPrefixedDatabaseName(database.trim(), userId);
 
     if (!tableName || typeof tableName !== 'string') {
       return NextResponse.json({

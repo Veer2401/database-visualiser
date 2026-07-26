@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQueryInDatabase, getPrefixedDatabaseName } from '@/lib/postgresql';
 import { setNoCacheHeaders } from '@/lib/cache-headers';
+import { verifyAuth } from '@/lib/auth-helper';
 
 interface DescribeTableRequest {
   database: string;
   table: string;
-  userId?: string;
 }
 
 /**
@@ -28,9 +28,13 @@ interface DescribeTableRequest {
  * }
  */
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const userId = authResult;
+
   try {
     const body: DescribeTableRequest = await request.json();
-    let { database, table, userId } = body;
+    let { database, table } = body;
 
     // Validate request
     if (!database || typeof database !== 'string') {
@@ -49,17 +53,24 @@ export async function POST(request: NextRequest) {
       return setNoCacheHeaders(response);
     }
 
-    // Auto-prefix database name if userId is provided
-    if (userId) {
-      database = getPrefixedDatabaseName(database, userId);
+    // Always prefix the database with the user's namespace
+    database = getPrefixedDatabaseName(database, userId);
+
+    // SQL Injection prevention: validate table name is a safe identifier
+    // (only letters, numbers, underscores — no quotes, dashes, semicolons, etc.)
+    const tableLower = table.trim().toLowerCase();
+    if (!/^[a-zA-Z0-9_]+$/.test(tableLower)) {
+      const response = NextResponse.json({
+        success: false,
+        error: 'Invalid table name',
+      }, { status: 400 });
+      return setNoCacheHeaders(response);
     }
 
-    console.log(`[Table Describe] Database: "${database}", Table: "${table}"`);
+    console.log(`[Table Describe] Database: "${database}", Table: "${tableLower}"`);
 
     // Query PostgreSQL information_schema to get table structure from the specified schema
-    // Convert table name to lowercase since unquoted identifiers are stored lowercase in PostgreSQL
-    const tableLower = table.toLowerCase();
-    
+    // tableLower has been validated to contain only safe identifier characters above
     const result = await executeQueryInDatabase(database, `
       SELECT 
         c.column_name as "Field",

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Database, Table, Loader2 } from 'lucide-react';
 import Button from '@/components/common/Button';
 import { Database as DatabaseType, Table as TableType } from '@/types/database';
+import { authFetch } from '@/lib/api-client';
 
 interface InsertDataModalProps {
   isOpen: boolean;
@@ -78,20 +79,13 @@ export default function InsertDataModal({
     setIsFetchingColumns(true);
     setError(null);
     try {
-      // Compute prefixed database name if userId is provided
-      let databaseToUse = selectedDatabase;
-      if (userId) {
-        const prefix = `user_${userId.substring(0, 8)}_`;
-        databaseToUse = `${prefix}${selectedDatabase}`;
-      }
-
-      const response = await fetch('/api/table/describe', {
+      // The backend prefixes the database name using the verified auth token
+      const response = await authFetch('/api/table/describe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          database: databaseToUse,
+          database: selectedDatabase,
           table: selectedTable,
-          userId: userId,
         }),
       });
       const result = await response.json();

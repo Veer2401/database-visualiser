@@ -32,6 +32,7 @@ import RelationshipEdge from '@/components/database/RelationshipEdge';
 
 // Hooks and Types
 import { useAuth } from '@/hooks/useAuth';
+import { authFetch } from '@/lib/api-client';
 import { useWorkflowLayouts } from '@/hooks/useWorkflowLayouts';
 import {
   Database as DatabaseType,
@@ -236,13 +237,12 @@ function PresentationContent() {
       const queryStr = `SELECT * FROM "${tableNameLower}"`;
 
       try {
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: database.name,
             query: queryStr,
-            userId: user?.uid,
           }),
         });
         const result = await response.json();
