@@ -35,16 +35,29 @@ const nextConfig = {
     optimizePackageImports: [
       'lucide-react',
       'framer-motion',
+      'motion',
       '@tabler/icons-react',
       'firebase/firestore',
       'firebase/auth',
       'firebase/app',
       'radix-ui',
+      'reactflow',
+      '@reactflow/core',
+      '@reactflow/controls',
+      'gsap',
+      'lenis',
     ],
   },
-  // ─── HTTP Security Headers ─────────────────────────────────────────────────
+  // ─── HTTP Security & Caching Headers ───────────────────────────────────────
   async headers() {
     return [
+      {
+        // Cache static JS/CSS assets immutably for max performance
+        source: '/_next/static/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
       {
         // Apply security headers to every page and API route
         source: '/(.*)',

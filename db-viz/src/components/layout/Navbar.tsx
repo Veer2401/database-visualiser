@@ -29,12 +29,18 @@ export default function Navbar({
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
+    let lastHeight = initialHeight;
+
     function onScroll() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
         const y = window.scrollY || window.pageYOffset;
         const extra = Math.min(y, expandScrollRange) / expandScrollRange * maxExtra;
-        setHeight(Math.round(initialHeight + extra));
+        const newHeight = Math.round(initialHeight + extra);
+        if (newHeight !== lastHeight) {
+          lastHeight = newHeight;
+          setHeight(newHeight);
+        }
       });
     }
 

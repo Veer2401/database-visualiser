@@ -25,56 +25,24 @@ function PageLoaderInner() {
     }
   }, [pathname, searchParams]);
 
-  // Expose a way to start loading from link clicks
+  // Minimal, fast navigation indication without artificial delay loops
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a');
       if (!target) return;
       const href = target.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('mailto') || href.startsWith('http')) return;
-      if (href === pathname) return;
+      if (!href || href.startsWith('#') || href.startsWith('mailto') || href.startsWith('http') || href === pathname) return;
 
       setIsLoading(true);
-      setProgress(15);
-
-      // Simulate progressive loading
-      let current = 15;
-      intervalRef.current = setInterval(() => {
-        current += Math.random() * 12;
-        if (current >= 85) {
-          current = 85;
-          if (intervalRef.current) clearInterval(intervalRef.current);
-        }
-        setProgress(current);
-      }, 150);
-    };
-
-    // Also listen for router.push via button clicks that trigger navigation
-    const handleRouterPush = () => {
-      if (!isLoading) {
-        setIsLoading(true);
-        setProgress(15);
-        let current = 15;
-        intervalRef.current = setInterval(() => {
-          current += Math.random() * 12;
-          if (current >= 85) {
-            current = 85;
-            if (intervalRef.current) clearInterval(intervalRef.current);
-          }
-          setProgress(current);
-        }, 150);
-      }
+      setProgress(40);
     };
 
     document.addEventListener('click', handleClick);
-    window.addEventListener('beforeunload', handleRouterPush);
-
     return () => {
       document.removeEventListener('click', handleClick);
-      window.removeEventListener('beforeunload', handleRouterPush);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [pathname, isLoading]);
+  }, [pathname]);
 
   if (!isLoading && progress === 0) return null;
 

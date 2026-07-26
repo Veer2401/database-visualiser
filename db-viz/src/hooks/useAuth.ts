@@ -12,6 +12,7 @@ import {
   signOut,
 } from '@/lib/auth';
 import { User } from '@/types/database';
+import { auth } from '@/lib/firebase';
 
 interface UseAuthReturn {
   user: User | null;
@@ -26,8 +27,24 @@ interface UseAuthReturn {
 }
 
 export function useAuth(): UseAuthReturn {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined' && auth.currentUser) {
+      const u = auth.currentUser;
+      return {
+        uid: u.uid,
+        email: u.email,
+        displayName: u.displayName,
+        photoURL: u.photoURL,
+      };
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && auth.currentUser) {
+      return false;
+    }
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

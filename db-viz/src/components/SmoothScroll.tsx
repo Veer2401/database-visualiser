@@ -8,23 +8,30 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const pathname = usePathname();
 
   useEffect(() => {
+    // Disable smooth scroll on heavy dynamic canvas app pages to ensure max FPS and responsiveness
+    if (['/dashboard', '/presentation', '/terminal-mode'].includes(pathname)) {
+      return;
+    }
+
     const lenis = new Lenis({
-      duration: 1.2,
+      duration: 0.7,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.8, // Slightly slower for better control
-      touchMultiplier: 2,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
       infinite: false,
     });
 
+    let animationFrameId: number;
+
     function raf(time: number) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      animationFrameId = requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    animationFrameId = requestAnimationFrame(raf);
 
     // Handle anchor links with smooth scroll
     const handleAnchorClick = (e: MouseEvent) => {
@@ -41,18 +48,18 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
           if (targetElement) {
             lenis.scrollTo(targetElement, {
               offset: -80, // Account for fixed navbar
-              duration: 1.5,
+              duration: 0.8,
             });
           }
         } else if (href === '#') {
           // Scroll to top
           e.preventDefault();
-          lenis.scrollTo(0, { duration: 1.5 });
+          lenis.scrollTo(0, { duration: 0.8 });
         }
       }
     };
 
-    // Handle hash on page load (with delay to ensure DOM is ready)
+    // Handle hash on page load
     const handleHashOnLoad = () => {
       if (window.location.hash) {
         const hash = window.location.hash.substring(1);
@@ -61,14 +68,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
           setTimeout(() => {
             lenis.scrollTo(targetElement, {
               offset: -80,
-              duration: 1.5,
+              duration: 0.8,
             });
-          }, 300);
+          }, 150);
         }
       }
     };
 
-    // Wait for DOM to be ready
     if (document.readyState === 'complete') {
       handleHashOnLoad();
     } else {
@@ -76,11 +82,10 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     }
 
     document.addEventListener('click', handleAnchorClick);
-
-    // Scroll to top on route change
     lenis.scrollTo(0, { immediate: true });
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       lenis.destroy();
       document.removeEventListener('click', handleAnchorClick);
       window.removeEventListener('load', handleHashOnLoad);

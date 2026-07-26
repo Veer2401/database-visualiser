@@ -41,24 +41,24 @@ import Terminal from '@/components/layout/Terminal';
 
 import dynamic from 'next/dynamic';
 
-const CreateDatabaseModal = dynamic(() => import('@/components/database/CreateDatabaseModal'));
-const UpgradePlanModal = dynamic(() => import('@/components/common/UpgradePlanModal'));
-const CreateTableModal = dynamic(() => import('@/components/database/CreateTableModal'));
-const EditTableModal = dynamic(() => import('@/components/database/EditTableModal'));
-const InsertDataModal = dynamic(() => import('@/components/database/InsertDataModal'));
-const UpdateDataModal = dynamic(() => import('@/components/database/UpdateDataModal'));
-const DeleteDataModal = dynamic(() => import('@/components/database/DeleteDataModal'));
-const SelectDataModal = dynamic(() => import('@/components/database/SelectDataModal'));
-const DropModal = dynamic(() => import('@/components/database/DropModal'));
-const CreateChoiceModal = dynamic(() => import('@/components/database/CreateChoiceModal'));
-const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyModal'));
-const ExportModal = dynamic(() => import('@/components/database/ExportModal'));
-const ImportModal = dynamic(() => import('@/components/database/ImportModal'));
-const SQLChatbot = dynamic(() => import('@/components/chatbot/SQLChatbot'));
+const CreateDatabaseModal = dynamic(() => import('@/components/database/CreateDatabaseModal'), { ssr: false });
+const UpgradePlanModal = dynamic(() => import('@/components/common/UpgradePlanModal'), { ssr: false });
+const CreateTableModal = dynamic(() => import('@/components/database/CreateTableModal'), { ssr: false });
+const EditTableModal = dynamic(() => import('@/components/database/EditTableModal'), { ssr: false });
+const InsertDataModal = dynamic(() => import('@/components/database/InsertDataModal'), { ssr: false });
+const UpdateDataModal = dynamic(() => import('@/components/database/UpdateDataModal'), { ssr: false });
+const DeleteDataModal = dynamic(() => import('@/components/database/DeleteDataModal'), { ssr: false });
+const SelectDataModal = dynamic(() => import('@/components/database/SelectDataModal'), { ssr: false });
+const DropModal = dynamic(() => import('@/components/database/DropModal'), { ssr: false });
+const CreateChoiceModal = dynamic(() => import('@/components/database/CreateChoiceModal'), { ssr: false });
+const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyModal'), { ssr: false });
+const ExportModal = dynamic(() => import('@/components/database/ExportModal'), { ssr: false });
+const ImportModal = dynamic(() => import('@/components/database/ImportModal'), { ssr: false });
+const SQLChatbot = dynamic(() => import('@/components/chatbot/SQLChatbot'), { ssr: false });
+const QueryResultsPanel = dynamic(() => import('@/components/database/QueryResultsPanel'), { ssr: false });
 
 import TableNode from '@/components/database/TableNode';
 import RelationshipEdge from '@/components/database/RelationshipEdge';
-import QueryResultsPanel from '@/components/database/QueryResultsPanel';
 import { ChatMessage } from '@/components/chatbot/SQLChatbot';
 
 // Hooks and Types
