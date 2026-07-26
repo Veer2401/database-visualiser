@@ -37,9 +37,12 @@ export async function POST(req: Request) {
           admin.initializeApp({
             credential: admin.credential.cert({
               projectId,
+              project_id: projectId,
               clientEmail,
+              client_email: clientEmail,
               privateKey: privateKey.replace(/\\n/g, '\n'),
-            }),
+              private_key: privateKey.replace(/\\n/g, '\n'),
+            } as any),
           });
         }
         const userRecord = await admin.auth().getUserByEmail(email.toLowerCase().trim());
