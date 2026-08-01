@@ -55,6 +55,7 @@ const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyMo
 const ExportModal = dynamic(() => import('@/components/database/ExportModal'), { ssr: false });
 const ImportModal = dynamic(() => import('@/components/database/ImportModal'), { ssr: false });
 const SQLChatbot = dynamic(() => import('@/components/chatbot/SQLChatbot'), { ssr: false });
+const DBComposer = dynamic(() => import('@/components/database/DBComposer'), { ssr: false });
 const QueryResultsPanel = dynamic(() => import('@/components/database/QueryResultsPanel'), { ssr: false });
 
 import TableNode from '@/components/database/TableNode';
@@ -84,7 +85,7 @@ import {
 import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
 
 // Icons
-import { Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
 import { authFetch } from '@/lib/api-client';
 
 // Node and Edge types for React Flow
@@ -186,6 +187,9 @@ export default function DashboardPage() {
   const [chatbotDbName, setChatbotDbName] = useState<string | null>(null);
   const [chatLoaded, setChatLoaded] = useState(false);
 
+  // DB Composer sidebar state
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+
   // React Flow state
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges] = useEdgesState([]);
@@ -257,6 +261,23 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // ⌘K / ⌘I / Ctrl+K / Ctrl+I keyboard shortcut to toggle DB Composer
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      const key = e.key ? e.key.toLowerCase() : '';
+      const code = e.code ? e.code.toLowerCase() : '';
+
+      if (isCmdOrCtrl && (key === 'k' || key === 'i' || code === 'keyk' || code === 'keyi')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsComposerOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => window.removeEventListener('keydown', handler, { capture: true });
+  }, []);
+
   // Theme change handler
   const handleThemeChange = useCallback((themeId: string) => {
     setCurrentTheme(themeId);
@@ -294,19 +315,25 @@ export default function DashboardPage() {
         const unsub = onSnapshot(chatRef, (snap) => {
           if (snap.exists()) {
             const data = snap.data();
-            if (data.messages && Array.isArray(data.messages)) {
-              const loaded: ChatMessage[] = data.messages.map((m: Record<string, unknown>) => ({
-                id: m.id as string,
-                type: m.type as 'user' | 'bot',
-                content: m.content as string,
-                sql: m.sql as string[] | undefined,
-                executed: m.executed as boolean | undefined,
-                timestamp: m.timestamp instanceof Timestamp
-                  ? (m.timestamp as Timestamp).toDate()
-                  : new Date(m.timestamp as string),
-              }));
+              const SCHEMA_PILOT_WELCOME = "⚡ **Schema Pilot Ready**\n\nI am Schema Pilot, your AI database copilot. Tell me what you want to build:\n\n• *\"Create a car dealership database with cars and sales tables\"*\n• *\"Build a student management system with 3 sample records\"*\n• *\"Add an orders table with a foreign key to users\"*\n\nI will generate the SQL and automatically render the tables onto your interactive canvas!";
+
+              const loaded: ChatMessage[] = data.messages.map((m: Record<string, unknown>) => {
+                let content = m.content as string;
+                if (m.id === 'welcome' || (typeof content === 'string' && (content.includes('AI Composer') || content.includes('Cursor-like')))) {
+                  content = SCHEMA_PILOT_WELCOME;
+                }
+                return {
+                  id: m.id as string,
+                  type: m.type as 'user' | 'bot',
+                  content,
+                  sql: m.sql as string[] | undefined,
+                  executed: m.executed as boolean | undefined,
+                  timestamp: m.timestamp instanceof Timestamp
+                    ? (m.timestamp as Timestamp).toDate()
+                    : new Date(m.timestamp as string),
+                };
+              });
               setChatMessages(loaded);
-            }
             if (data.activeDatabaseId) {
               setChatbotDbId(data.activeDatabaseId);
             }
@@ -2397,6 +2424,8 @@ export default function DashboardPage() {
           }
         }}
         onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        onComposerToggle={() => setIsComposerOpen(prev => !prev)}
+        isComposerOpen={isComposerOpen}
         showModeButtons={!!selectedDatabaseId}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
         selectedDatabaseName={databases.find(db => db.id === selectedDatabaseId)?.name}
@@ -2893,13 +2922,40 @@ export default function DashboardPage() {
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
 
-      {/* SQL Chatbot Assistant */}
-      <SQLChatbot
+      {/* Floating DB Composer Trigger Button (Bottom-Right) */}
+      {!isComposerOpen && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.06, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsComposerOpen(true)}
+          className={`fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl transition-all border font-medium text-sm ${
+            currentTheme === 'dark'
+              ? 'bg-slate-800 hover:bg-slate-700 text-white shadow-black/40 border-slate-600'
+              : 'bg-gray-900 hover:bg-black text-white shadow-gray-900/25 border-gray-800'
+          }`}
+        >
+          <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+            <Wand2 className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span>Schema Pilot</span>
+          <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-mono font-medium">⌘K</span>
+        </motion.button>
+      )}
+
+      {/* DB Composer Sidebar */}
+      <DBComposer
+        isOpen={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+        onOpen={() => setIsComposerOpen(true)}
+        userId={user?.uid}
+        databases={databases}
+        tables={tables}
+        selectedDatabaseId={selectedDatabaseId}
+        setSelectedDatabaseId={setSelectedDatabaseId}
+        addLog={addLog}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
-        onExecuteSQL={handleExecuteSQL}
-        savedMessages={chatLoaded ? chatMessages : undefined}
-        onMessagesChange={handleChatMessagesChange}
-        activeDatabaseName={chatbotDbName || undefined}
       />
     </motion.div>
   );

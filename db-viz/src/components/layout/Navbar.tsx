@@ -2,11 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Presentation, Terminal, Menu } from 'lucide-react';
+import { Presentation, Terminal, Menu, Wand2 } from 'lucide-react';
 
 interface NavbarProps {
   onPresentationMode?: () => void;
   onTerminalMode?: () => void;
+  onComposerToggle?: () => void;
+  isComposerOpen?: boolean;
   showModeButtons?: boolean;
   theme?: any;
   onMobileMenuToggle?: () => void;
@@ -16,6 +18,8 @@ interface NavbarProps {
 export default function Navbar({
   onPresentationMode,
   onTerminalMode,
+  onComposerToggle,
+  isComposerOpen,
   showModeButtons = false,
   theme,
   onMobileMenuToggle,
@@ -130,6 +134,34 @@ export default function Navbar({
             aria-label="Toggle menu"
           >
             <Menu className={`w-5 h-5 ${theme?.text || 'text-gray-900'}`} />
+          </motion.button>
+        )}
+
+        {/* DB Composer Toggle */}
+        {onComposerToggle && (
+          <motion.button
+            whileHover={{ scale: 1.05, y: -1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onComposerToggle}
+            className={`relative p-2.5 rounded-xl border shadow-md transition-all group ${
+              isComposerOpen
+                ? theme?.navbar?.includes('slate')
+                  ? 'bg-slate-800 border-slate-600 text-white shadow-slate-900/50'
+                  : 'bg-gray-900 border-gray-800 text-white shadow-gray-900/20'
+                : `${theme?.buttonSecondary || 'bg-white hover:bg-gray-50 border-gray-200/80 hover:border-gray-300'}`
+            }`}
+            aria-label="Toggle DB Composer"
+          >
+            <Wand2 className={`w-5 h-5 ${
+              isComposerOpen
+                ? 'text-white'
+                : `${theme?.text || 'text-gray-600'} group-hover:text-gray-900 transition-colors`
+            }`} />
+            {/* Tooltip */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-light rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
+              {isComposerOpen ? 'Close' : 'Open'} DB Composer
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-slate-900" />
+            </div>
           </motion.button>
         )}
 

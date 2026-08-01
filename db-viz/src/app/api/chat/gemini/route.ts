@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
-import { getGeminiResponse, MAX_INPUT_LENGTH } from '@/lib/gemini';
+import { getGeminiResponse, getComposerResponse, MAX_INPUT_LENGTH } from '@/lib/gemini';
 
 /**
  * POST /api/chat/gemini
  * Next.js API route for Gemini AI Composer
+ * 
+ * Supports two modes:
+ * - Default: returns SQL statements (legacy chatbot)
+ * - mode: 'composer': returns structured ComposerResponse actions
  */
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { message, contextSchema } = body;
+        const { message, contextSchema, mode, chatHistory, canvasContext } = body;
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json(
@@ -32,6 +36,26 @@ export async function POST(request: Request) {
             );
         }
 
+        // ── Composer Mode ──────────────────────────────────────────────
+        if (mode === 'composer') {
+            const result = await getComposerResponse(trimmed, chatHistory, canvasContext);
+
+            if (!result.success || !result.data) {
+                return NextResponse.json(
+                    { success: false, error: result.error || 'Failed to get composer response' },
+                    { status: 500 }
+                );
+            }
+
+            return NextResponse.json({
+                success: true,
+                summary: result.data.summary,
+                actions: result.data.actions,
+                model: result.model,
+            });
+        }
+
+        // ── Legacy SQL Mode ────────────────────────────────────────────
         const response = await getGeminiResponse(trimmed, contextSchema);
 
         if (!response.success) {
@@ -56,3 +80,4 @@ export async function POST(request: Request) {
         );
     }
 }
+
