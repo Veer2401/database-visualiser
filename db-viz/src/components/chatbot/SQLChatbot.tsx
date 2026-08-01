@@ -82,7 +82,7 @@ export default function SQLChatbot({
         id: 'welcome',
         type: 'bot',
         content:
-            "Hi! I'm your SQL Assistant. I can help you with:\n\n• Creating databases & tables\n• SELECT, INSERT, UPDATE, DELETE\n• JOINs and relationships\n• Constraints & indexes\n• SQL functions\n\nAsk me anything about SQL!",
+            "⚡ **AI Composer Ready**\n\nI act as a Cursor-like Composer for your database. Tell me what you want to build:\n\n• *\"Create a car dealership database with cars and sales tables\"*\n• *\"Build a student management system with 3 sample records\"*\n• *\"Add an orders table with a foreign key to users\"*\n\nI will generate the SQL and automatically render the tables onto your interactive canvas!",
         timestamp: new Date(),
     };
 
@@ -203,22 +203,25 @@ export default function SQLChatbot({
                 });
             }, 300);
         } else {
-            // AI fallback via OpenRouter
+            // AI Composer via Direct Gemini API
             setIsLoading(true);
             try {
-                const response = await authFetch('/api/chat/openrouter', {
+                const response = await authFetch('/api/chat/gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: currentInput }),
+                    body: JSON.stringify({
+                        message: currentInput,
+                        contextSchema: activeDatabaseName ? `Active Database: ${activeDatabaseName}` : undefined
+                    }),
                 });
                 const data = await response.json();
 
-                let sqlQueries: string[] = data.sql || [];
+                let sqlQueries: string[] = data.sql_statements || [];
 
-                if (sqlQueries.length === 0 && data.success && data.message) {
+                if (sqlQueries.length === 0 && data.success && data.explanation) {
                     const codeBlockRegex = /```(?:sql)?\s*([\s\S]*?)```/gi;
                     let match;
-                    while ((match = codeBlockRegex.exec(data.message)) !== null) {
+                    while ((match = codeBlockRegex.exec(data.explanation)) !== null) {
                         const sqlContent = match[1].trim();
                         if (
                             sqlContent &&
@@ -229,35 +232,42 @@ export default function SQLChatbot({
                     }
                 }
 
-                // Split each block into individual statements
+                // Split into individual executable statements
                 sqlQueries = sqlQueries.flatMap(s => splitSQLStatements(s));
 
-                let cleanMessage = data.message || '';
-                if (sqlQueries.length > 0) {
-                    cleanMessage = cleanMessage.replace(/```(?:sql)?\s*[\s\S]*?```/gi, '');
-                    for (const sql of sqlQueries) {
-                        const escaped = sql.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        cleanMessage = cleanMessage.replace(new RegExp(escaped, 'gi'), '');
-                    }
-                    cleanMessage = cleanMessage.replace(/\n{3,}/g, '\n\n').trim();
-                }
-
+                const botMsgId = `b-${Date.now()}`;
                 const finalSql = sqlQueries.length > 0 ? sqlQueries : undefined;
+
                 addMessages({
-                    id: `b-${Date.now()}`,
+                    id: botMsgId,
                     type: 'bot',
                     content: data.success
-                        ? cleanMessage || data.message
-                        : "I'm sorry, I couldn't process your request right now. Please try again.",
+                        ? data.explanation || "Database schema instructions processed."
+                        : (data.error || "I'm sorry, I couldn't process your request right now. Please try again."),
                     sql: finalSql,
                     timestamp: new Date(),
                 });
+
+                // Auto-execute SQL statements on the Canvas (Cursor-like composer feature)
+                if (data.auto_execute && finalSql && finalSql.length > 0 && onExecuteSQL) {
+                    setExecutingId(botMsgId);
+                    try {
+                        await onExecuteSQL(finalSql);
+                        setMessages(prev =>
+                            prev.map(m => (m.id === botMsgId ? { ...m, executed: true } : m))
+                        );
+                    } catch (execErr) {
+                        console.error('Failed auto-executing Composer SQL:', execErr);
+                    } finally {
+                        setExecutingId(null);
+                    }
+                }
             } catch (error) {
-                console.error('OpenRouter API error:', error);
+                console.error('Gemini AI API error:', error);
                 addMessages({
                     id: `b-${Date.now()}`,
                     type: 'bot',
-                    content: "I'm having trouble connecting to the AI service. Please check your connection.",
+                    content: "I'm having trouble connecting to the Gemini AI service. Please verify your internet connection or GEMINI_API_KEY.",
                     timestamp: new Date(),
                 });
             } finally {
@@ -336,11 +346,12 @@ export default function SQLChatbot({
                                         <Bot className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                                            SQL Assistant
+                                        <h3 className={`font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
+                                            AI Composer
+                                            <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">Composer</span>
                                         </h3>
                                         <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                                            {activeDatabaseName ? `DB: ${activeDatabaseName}` : 'AI-powered SQL helper'}
+                                            {activeDatabaseName ? `DB: ${activeDatabaseName} • Auto Canvas` : 'Cursor Auto-Canvas Mode'}
                                         </p>
                                     </div>
                                 </div>

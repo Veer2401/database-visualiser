@@ -90,7 +90,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.googleusercontent.com",
-              "connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://openrouter.ai wss://*.firebaseio.com",
+              "connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://generativelanguage.googleapis.com https://openrouter.ai wss://*.firebaseio.com",
               "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",
