@@ -27,6 +27,7 @@ export type ComposerAction =
   | { type: 'ADD_RELATIONSHIP'; fromTable: string; fromColumn: string; toTable: string; toColumn: string }
   | { type: 'DELETE_TABLE'; tableName: string }
   | { type: 'RENAME_TABLE'; oldName: string; newName: string }
+  | { type: 'EXECUTE_SQL'; sql: string[]; explanation?: string }
   | { type: 'EXPLAIN'; message: string };
 
 export type ComposerResponse = {
@@ -41,4 +42,14 @@ export type ComposerChatMessage = {
   actions?: ComposerAction[];
   timestamp: number;
   status: 'pending' | 'done' | 'error';
+};
+
+export type ComposerSession = {
+  id: string;
+  userId?: string;
+  databaseId?: string | null;
+  title: string;
+  createdAt: number;   // unix ms
+  updatedAt: number;   // unix ms
+  messages: ComposerChatMessage[];
 };

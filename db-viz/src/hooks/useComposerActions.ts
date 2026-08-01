@@ -55,7 +55,7 @@ function columnDefToColumn(colDef: ColumnDef, tables: Array<{ id: string; name: 
   let foreignKeyReference: Column['foreignKeyReference'] | undefined;
   if (colDef.isForeign && colDef.references) {
     const refTableName = sanitizeIdentifier(colDef.references.table);
-    const refColName = sanitizeIdentifier(colDef.references.column);
+    const refColName = sanitizeIdentifier(colDef.references.column || 'id');
     const refTable = tables.find(t => sanitizeIdentifier(t.name) === refTableName);
     if (refTable) {
       const refCol = refTable.columns.find(c => sanitizeIdentifier(c.name) === refColName);
@@ -65,18 +65,27 @@ function columnDefToColumn(colDef: ColumnDef, tables: Array<{ id: string; name: 
     }
   }
 
-  return {
+  const col: Column = {
     id: uuidv4(),
     name: sanitizedColName,
     dataType: (colDef.type?.toUpperCase().replace(/\(.*\)/, '').trim() || 'VARCHAR') as DataType,
     isPrimaryKey: !!colDef.isPrimary,
     isForeignKey: !!colDef.isForeign,
-    foreignKeyReference,
     isNotNull: !!colDef.isNotNull || !!colDef.isPrimary,
     isUnique: !!colDef.isUnique,
-    isAutoIncrement: !!colDef.isPrimary, // auto-increment PKs by default
-    defaultValue: colDef.defaultValue,
+    isAutoIncrement: !!colDef.isPrimary,
   };
+
+  // Only attach optional fields if defined (Firebase setDoc rejects undefined)
+  if (foreignKeyReference) {
+    col.foreignKeyReference = foreignKeyReference;
+  }
+
+  if (colDef.defaultValue !== undefined && colDef.defaultValue !== null && colDef.defaultValue !== '') {
+    col.defaultValue = String(colDef.defaultValue);
+  }
+
+  return col;
 }
 
 // ─── Build the PG column definition for the /api/table/create body ────────
@@ -92,14 +101,17 @@ function columnDefToPgColumn(
     isNotNull: !!colDef.isNotNull || !!colDef.isPrimary,
     isUnique: !!colDef.isUnique,
     isAutoIncrement: !!colDef.isPrimary,
-    defaultValue: colDef.defaultValue,
     isForeignKey: !!colDef.isForeign,
   };
+
+  if (colDef.defaultValue !== undefined && colDef.defaultValue !== null && colDef.defaultValue !== '') {
+    pgCol.defaultValue = String(colDef.defaultValue);
+  }
 
   if (colDef.isForeign && colDef.references) {
     pgCol.foreignKeyReference = {
       tableName: sanitizeIdentifier(colDef.references.table),
-      columnName: sanitizeIdentifier(colDef.references.column),
+      columnName: sanitizeIdentifier(colDef.references.column || 'id'),
     };
   }
 
@@ -174,17 +186,24 @@ export function useComposerActions(params: UseComposerActionsParams) {
                 setSelectedDatabaseId(dbId);
               }
 
-              // 3. Create each table in this database
-              const createdTables: Array<{ id: string; name: string; databaseId: string; columns: Column[] }> = [];
+              // 3. Topological sort: tables referenced by FKs come first
+              const inputTables = action.tables || [];
+              const tableNamesSet = new Set(inputTables.map(t => sanitizeIdentifier(t.name)));
+              
+              const sortedTables = [...inputTables].sort((a, b) => {
+                const aName = sanitizeIdentifier(a.name);
+                const bName = sanitizeIdentifier(b.name);
+                // Check if a references b
+                const aRefsB = a.columns.some(c => c.isForeign && c.references && sanitizeIdentifier(c.references.table) === bName);
+                // Check if b references a
+                const bRefsA = b.columns.some(c => c.isForeign && c.references && sanitizeIdentifier(c.references.table) === aName);
 
-              // Sort tables: non-FK tables first, FK tables later
-              const sortedTables = [...(action.tables || [])].sort((a, b) => {
-                const aHasFK = a.columns.some(c => c.isForeign);
-                const bHasFK = b.columns.some(c => c.isForeign);
-                if (aHasFK && !bHasFK) return 1;
-                if (!aHasFK && bHasFK) return -1;
+                if (aRefsB && !bRefsA) return 1;
+                if (!aRefsB && bRefsA) return -1;
                 return 0;
               });
+
+              const createdTables: Array<{ id: string; name: string; databaseId: string; columns: Column[] }> = [];
 
               for (let i = 0; i < sortedTables.length; i++) {
                 const tableDef = sortedTables[i];
@@ -194,6 +213,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
                   const allTables = [...tables, ...createdTables];
                   const pgCols = tableDef.columns.map(c => columnDefToPgColumn(c, allTables));
 
+                  // Create table in PostgreSQL
                   const tblRes = await authFetch('/api/table/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -212,23 +232,40 @@ export function useComposerActions(params: UseComposerActionsParams) {
                     continue;
                   }
 
-                  // Save to Firebase
-                  const tableId = uuidv4();
                   const columns = tableDef.columns.map(c => columnDefToColumn(c, [...tables, ...createdTables]));
-                  const position = calcPosition(tables.length + createdTables.length, 0);
 
-                  await setDoc(doc(db, 'tables', tableId), {
-                    name: sanitizedTableName,
-                    databaseId: dbId,
-                    columns,
-                    position,
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now(),
-                  });
+                  // Check if table doc ALREADY exists in Firebase for this database
+                  const existingTableDoc = tables.find(
+                    t => t.databaseId === dbId && sanitizeIdentifier(t.name) === sanitizedTableName
+                  );
 
-                  createdTables.push({ id: tableId, name: sanitizedTableName, databaseId: dbId, columns });
-                  results.push({ action: `ADD_TABLE ${sanitizedTableName}`, success: true, detail: `${columns.length} columns` });
-                  addLog('success', `Table '${sanitizedTableName}' created (${columns.length} cols)`);
+                  if (existingTableDoc) {
+                    // Update existing table in Firebase
+                    await updateDoc(doc(db, 'tables', existingTableDoc.id), {
+                      columns,
+                      updatedAt: Timestamp.now(),
+                    });
+                    createdTables.push({ id: existingTableDoc.id, name: sanitizedTableName, databaseId: dbId, columns });
+                    results.push({ action: `ADD_TABLE ${sanitizedTableName}`, success: true, detail: `Updated (${columns.length} cols)` });
+                    addLog('success', `Table '${sanitizedTableName}' updated on canvas`);
+                  } else {
+                    // Create new table doc in Firebase
+                    const tableId = uuidv4();
+                    const position = calcPosition(tables.length + createdTables.length, 0);
+
+                    await setDoc(doc(db, 'tables', tableId), {
+                      name: sanitizedTableName,
+                      databaseId: dbId,
+                      columns,
+                      position,
+                      createdAt: Timestamp.now(),
+                      updatedAt: Timestamp.now(),
+                    });
+
+                    createdTables.push({ id: tableId, name: sanitizedTableName, databaseId: dbId, columns });
+                    results.push({ action: `ADD_TABLE ${sanitizedTableName}`, success: true, detail: `${columns.length} columns` });
+                    addLog('success', `Table '${sanitizedTableName}' created (${columns.length} cols)`);
+                  }
                 } catch (err: any) {
                   results.push({ action: `ADD_TABLE ${sanitizedTableName}`, success: false, detail: err.message });
                   anyFailure = true;
@@ -446,6 +483,66 @@ export function useComposerActions(params: UseComposerActionsParams) {
               break;
             }
 
+            // ────────── EXECUTE_SQL ──────────────────────────────────
+            case 'EXECUTE_SQL': {
+              let targetDbId = selectedDatabaseId;
+              let targetDb = databases.find(d => d.id === targetDbId);
+
+              // Fallback to first existing database if none selected
+              if (!targetDbId || !targetDb) {
+                if (databases.length > 0) {
+                  targetDb = databases[0];
+                  targetDbId = targetDb.id;
+                  setSelectedDatabaseId(targetDbId);
+                }
+              }
+
+              if (!targetDb) {
+                results.push({ action: 'EXECUTE_SQL', success: false, detail: 'No database found' });
+                anyFailure = true;
+                break;
+              }
+
+              const sqlStatements = action.sql || [];
+              let executedCount = 0;
+              let execSuccess = true;
+
+              for (const sql of sqlStatements) {
+                try {
+                  const queryRes = await authFetch('/api/query/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      database: sanitizeIdentifier(targetDb.name),
+                      query: sql,
+                    }),
+                  });
+                  const queryData = await queryRes.json();
+                  if (queryData.success) {
+                    executedCount++;
+                  } else {
+                    execSuccess = false;
+                    addLog('warning', `SQL Execution: ${queryData.error || 'Failed query'}`);
+                  }
+                } catch (err: any) {
+                  execSuccess = false;
+                  addLog('error', `SQL Execution error: ${err.message}`);
+                }
+              }
+
+              if (!execSuccess && executedCount === 0) {
+                anyFailure = true;
+              }
+
+              results.push({
+                action: `EXECUTE_SQL`,
+                success: executedCount > 0,
+                detail: `Executed ${executedCount}/${sqlStatements.length} queries in '${targetDb.name}'`,
+              });
+              addLog('success', `Executed ${executedCount} SQL statements in database '${targetDb.name}'`);
+              break;
+            }
+
             // ────────── EXPLAIN ──────────────────────────────────────
             case 'EXPLAIN': {
               results.push({ action: 'EXPLAIN', success: true, detail: action.message });
@@ -459,10 +556,20 @@ export function useComposerActions(params: UseComposerActionsParams) {
         }
       }
 
-      const successCount = results.filter(r => r.success).length;
+      const tableActions = results.filter(r => r.action.startsWith('ADD_TABLE'));
+      let summaryText = '';
+
+      if (tableActions.length > 0) {
+        const successfulTables = tableActions.filter(r => r.success).length;
+        summaryText = `${successfulTables}/${tableActions.length} tables created successfully.`;
+      } else {
+        const successCount = results.filter(r => r.success).length;
+        summaryText = `${successCount}/${results.length} actions completed successfully.`;
+      }
+
       return {
         success: !anyFailure,
-        summary: `${successCount}/${results.length} actions completed successfully.`,
+        summary: summaryText,
         actionResults: results,
       };
     },

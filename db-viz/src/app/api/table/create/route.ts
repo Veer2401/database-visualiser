@@ -88,8 +88,34 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+function normalizePostgresDataType(rawType: string, isAutoIncrement?: boolean): string {
+  let type = (rawType || 'VARCHAR').toUpperCase().replace(/\(.*\)/, '').trim();
+
+  if (isAutoIncrement && (type === 'INT' || type === 'INTEGER' || type === 'BIGINT' || type === 'SMALLINT')) {
+    if (type === 'BIGINT') return 'BIGSERIAL';
+    if (type === 'SMALLINT') return 'SMALLSERIAL';
+    return 'SERIAL';
+  }
+
+  if (type === 'DATETIME') return 'TIMESTAMP';
+  if (type === 'TINYINT') return 'SMALLINT';
+  if (type === 'DOUBLE') return 'DOUBLE PRECISION';
+  if (type === 'FLOAT') return 'REAL';
+  if (type === 'LONGTEXT' || type === 'MEDIUMTEXT' || type === 'TINYTEXT') return 'TEXT';
+  if (type === 'BLOB' || type === 'LONGBLOB' || type === 'MEDIUMBLOB') return 'BYTEA';
+  if (type === 'ENUM' || type === 'SET') return 'VARCHAR(255)';
+  if (type === 'YEAR') return 'INT';
+  if (type === 'INT' || type === 'INTEGER') return 'INT';
+  if (type === 'DECIMAL' || type === 'NUMERIC') return 'DECIMAL(10,2)';
+  if (type === 'VARCHAR') return 'VARCHAR(255)';
+  if (type === 'CHAR') return 'CHAR(1)';
+
+  return type;
+}
+
     // Build CREATE TABLE query
     const columnDefinitions: string[] = [];
+    const columnDefinitionsNoFK: string[] = [];
     const foreignKeys: string[] = [];
     const primaryKeys: string[] = [];
     
@@ -97,22 +123,11 @@ export async function POST(request: NextRequest) {
     const tableNameLower = tableName.trim().toLowerCase();
 
     for (const column of columns) {
-      let dataType = column.dataType.toUpperCase();
-      
-      // Convert column definitions to PostgreSQL types
-      if (dataType === 'INT' && column.isAutoIncrement) {
-        dataType = 'SERIAL';
-      }
-      
-      let definition = `"${column.name}" ${dataType}`;
-
-      // Add length for VARCHAR only (PostgreSQL supports VARCHAR without length)
-      if (dataType.includes('VARCHAR') && !dataType.includes('(')) {
-        definition += '(255)';
-      }
+      const pgType = normalizePostgresDataType(column.dataType, column.isAutoIncrement);
+      let definition = `"${column.name}" ${pgType}`;
 
       // Add constraints (skip NOT NULL for SERIAL columns as they're implicitly NOT NULL)
-      if (column.isNotNull && dataType !== 'SERIAL') {
+      if (column.isNotNull && !pgType.includes('SERIAL')) {
         definition += ' NOT NULL';
       }
 
@@ -127,11 +142,12 @@ export async function POST(request: NextRequest) {
         } else if (column.defaultValue.toUpperCase() === 'CURRENT_TIMESTAMP') {
           definition += ' DEFAULT CURRENT_TIMESTAMP';
         } else if (
-          dataType.includes('INT') ||
-          dataType.includes('FLOAT') ||
-          dataType.includes('DOUBLE') ||
-          dataType.includes('DECIMAL') ||
-          dataType.includes('NUMERIC')
+          pgType.includes('INT') ||
+          pgType.includes('FLOAT') ||
+          pgType.includes('DOUBLE') ||
+          pgType.includes('DECIMAL') ||
+          pgType.includes('REAL') ||
+          pgType.includes('SERIAL')
         ) {
           definition += ` DEFAULT ${column.defaultValue}`;
         } else {
@@ -140,6 +156,7 @@ export async function POST(request: NextRequest) {
       }
 
       columnDefinitions.push(definition);
+      columnDefinitionsNoFK.push(definition);
 
       // Track primary keys
       if (column.isPrimaryKey) {
@@ -148,16 +165,20 @@ export async function POST(request: NextRequest) {
 
       // Track foreign keys - normalize table name to lowercase
       if (column.isForeignKey && column.foreignKeyReference) {
-        const refTableName = column.foreignKeyReference.tableName.toLowerCase();
-        foreignKeys.push(
-          `FOREIGN KEY ("${column.name}") REFERENCES "${refTableName}"("${column.foreignKeyReference.columnName}")`
-        );
+        const refTableName = (column.foreignKeyReference.tableName || '').toLowerCase();
+        const refColName = (column.foreignKeyReference.columnName || 'id').toLowerCase();
+        if (refTableName && refColName) {
+          foreignKeys.push(
+            `FOREIGN KEY ("${column.name}") REFERENCES "${refTableName}"("${refColName}")`
+          );
+        }
       }
     }
 
     // Add primary key constraint
     if (primaryKeys.length > 0) {
       columnDefinitions.push(`PRIMARY KEY (${primaryKeys.join(', ')})`);
+      columnDefinitionsNoFK.push(`PRIMARY KEY (${primaryKeys.join(', ')})`);
     }
 
     // Add foreign key constraints
@@ -169,7 +190,13 @@ export async function POST(request: NextRequest) {
     // Use lowercase table name for consistency
     const query = `CREATE TABLE "${tableNameLower}" (\n  ${columnDefinitions.join(',\n  ')}\n)`;
 
-    const result = await executeQueryInDatabase(database.trim(), query);
+    let result = await executeQueryInDatabase(database.trim(), query);
+
+    // If query failed due to FK dependency ordering or missing referenced table, attempt without FKs
+    if (!result.success && foreignKeys.length > 0) {
+      const fallbackQuery = `CREATE TABLE "${tableNameLower}" (\n  ${columnDefinitionsNoFK.join(',\n  ')}\n)`;
+      result = await executeQueryInDatabase(database.trim(), fallbackQuery);
+    }
 
     if (result.success) {
       return NextResponse.json({
