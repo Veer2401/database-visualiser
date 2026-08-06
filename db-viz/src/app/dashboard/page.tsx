@@ -2922,27 +2922,6 @@ export default function DashboardPage() {
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
 
-      {/* Floating DB Composer Trigger Button (Bottom-Right) */}
-      {!isComposerOpen && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileHover={{ scale: 1.06, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsComposerOpen(true)}
-          className={`fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl transition-all border font-medium text-sm ${
-            currentTheme === 'dark'
-              ? 'bg-slate-800 hover:bg-slate-700 text-white shadow-black/40 border-slate-600'
-              : 'bg-gray-900 hover:bg-black text-white shadow-gray-900/25 border-gray-800'
-          }`}
-        >
-          <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
-            <Wand2 className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span>Schema Pilot</span>
-          <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-mono font-medium">⌘K</span>
-        </motion.button>
-      )}
 
       {/* DB Composer Sidebar */}
       <DBComposer
