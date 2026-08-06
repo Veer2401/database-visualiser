@@ -424,21 +424,17 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [user]);
 
+  // Stable key for database IDs to prevent listener tear-down/re-subscription thrashing
+  const dbIdsKey = useMemo(() => databases.map(d => d.id).sort().join(','), [databases]);
+
   // Firebase: Subscribe to ALL tables for the user (for sidebar counts)
   useEffect(() => {
-    if (!user) {
+    if (!user || !dbIdsKey) {
       setAllTables([]);
       return;
     }
 
-    // Get all database IDs for this user
-    const dbIds = databases.map((d) => d.id);
-    if (dbIds.length === 0) {
-      setAllTables([]);
-      return;
-    }
-
-    // Subscribe to all tables for all user databases
+    const dbIds = dbIdsKey.split(',');
     const unsubscribes: (() => void)[] = [];
     const tablesByDb: Record<string, TableType[]> = {};
 
@@ -459,7 +455,6 @@ export default function DashboardPage() {
           });
         });
         tablesByDb[dbId] = tbls;
-        // Combine all tables from all databases
         const allTablesArray = Object.values(tablesByDb).flat();
         setAllTables(allTablesArray);
       });
@@ -469,7 +464,7 @@ export default function DashboardPage() {
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [user, databases]);
+  }, [user, dbIdsKey]);
 
   // Firebase: Subscribe to tables for selected database (for workflow canvas)
   useEffect(() => {
@@ -499,7 +494,7 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [selectedDatabaseId]);
 
-  // Convert foreign key relationships to edges
+  // Convert foreign key relationships to edges (only update if edge structure changes)
   useEffect(() => {
     const newEdges: Edge[] = [];
 
@@ -536,8 +531,12 @@ export default function DashboardPage() {
       });
     });
 
-    setEdges(newEdges);
-  }, [tables]);
+    setEdges((prevEdges) => {
+      const prevKey = prevEdges.map(e => e.id).sort().join(',');
+      const nextKey = newEdges.map(e => e.id).sort().join(',');
+      return prevKey === nextKey ? prevEdges : newEdges;
+    });
+  }, [tables, setEdges]);
 
   // Handle node position changes (for immediate visual updates)
   const onNodesChange = useCallback(

@@ -53,6 +53,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for OpenRouter AI API — warms DNS before first chat request */}
         <link rel="dns-prefetch" href="https://openrouter.ai" />
+        {/* Preload critical landing page images for instant LCP */}
+        <link rel="preload" href="/screenshot.jpg" as="image" type="image/jpeg" />
+        <link rel="preload" href="/background.jpg" as="image" type="image/jpeg" />
         {/* Theme color for mobile browser chrome */}
         <meta name="theme-color" content="#000000" />
       </head>

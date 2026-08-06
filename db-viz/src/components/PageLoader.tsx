@@ -14,18 +14,18 @@ function PageLoaderInner() {
   useEffect(() => {
     const currentPath = pathname + searchParams.toString();
     if (currentPath !== prevPathRef.current) {
-      // Route changed — finish the bar
+      // Route changed — finish the bar fast
       setProgress(100);
       const timer = setTimeout(() => {
         setIsLoading(false);
         setProgress(0);
-      }, 300);
+      }, 150);
       prevPathRef.current = currentPath;
       return () => clearTimeout(timer);
     }
   }, [pathname, searchParams]);
 
-  // Minimal, fast navigation indication without artificial delay loops
+  // Instant navigation feedback
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a');
@@ -34,7 +34,7 @@ function PageLoaderInner() {
       if (!href || href.startsWith('#') || href.startsWith('mailto') || href.startsWith('http') || href === pathname) return;
 
       setIsLoading(true);
-      setProgress(40);
+      setProgress(70);
     };
 
     document.addEventListener('click', handleClick);
@@ -63,11 +63,11 @@ function PageLoaderInner() {
         style={{
           height: '100%',
           width: `${progress}%`,
-          background: 'linear-gradient(90deg, #18181b, #52525b)',
+          background: 'linear-gradient(90deg, #18181b, #6366f1, #3b82f6)',
           borderRadius: '0 2px 2px 0',
-          transition: progress === 100 ? 'width 0.2s ease-out, opacity 0.3s ease' : 'width 0.15s ease-out',
+          transition: progress === 100 ? 'width 0.1s ease-out, opacity 0.15s ease' : 'width 0.08s ease-out',
           opacity: progress === 100 ? 0 : 1,
-          boxShadow: '0 0 8px rgba(0,0,0,0.3)',
+          boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
         }}
       />
     </div>

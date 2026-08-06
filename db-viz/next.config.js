@@ -28,6 +28,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
   },
   productionBrowserSourceMaps: false,
+  reactStrictMode: true,
   // Compress responses
   compress: true,
   // Aggressive tree-shaking for large packages
@@ -51,6 +52,13 @@ const nextConfig = {
   // ─── HTTP Security & Caching Headers ───────────────────────────────────────
   async headers() {
     return [
+      {
+        // Cache static public images and media assets immutably
+        source: '/:all*(jpg|jpeg|png|svg|webp|ico|woff2)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
       {
         // Cache static JS/CSS assets immutably for max performance
         source: '/_next/static/(.*)',

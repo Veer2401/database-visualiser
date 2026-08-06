@@ -37,13 +37,10 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
   const { table, onDelete, onViewData, isSelected, theme } = data;
 
   return (
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.02 }}
+    <div
       className={`
         relative ${theme?.modal || 'bg-white'} rounded-xl overflow-visible
-        shadow-lg hover:shadow-xl transition-shadow duration-300
+        shadow-lg hover:shadow-xl transition-all duration-150
         border-2 ${selected || isSelected ? (theme?.navbar?.includes('slate') ? 'border-blue-400' : 'border-blue-500') : (theme?.navbar?.includes('slate') ? 'border-slate-700' : 'border-gray-200')}
         min-w-[220px]
       `}
@@ -168,7 +165,7 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
       >
         <ChevronRight className="w-4 h-4" />
       </motion.button>
-    </motion.div>
+    </div>
   );
 }
 

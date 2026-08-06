@@ -8,7 +8,7 @@ import { Database, Table, GitBranch, Terminal, ArrowRight, X, Presentation, File
 import Button from '@/components/common/Button';
 import { Navbar as LandingNavbar, NavBody, NavItems, NavbarButton } from '@/components/ui/landing-navbar';
 import SmoothScroll from '@/components/SmoothScroll';
-import screenshotImg from '../../public/screenshot.png';
+import screenshotImg from '../../public/screenshot.jpg';
 
 function CountUp({ value, suffix = '', duration = 1.5, decimals = 0 }: { value: number; suffix?: string; duration?: number; decimals?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -367,6 +367,7 @@ export default function LandingPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
   useEffect(() => {
+    router.prefetch('/dashboard');
     router.prefetch('/login');
     router.prefetch('/pricing');
     router.prefetch('/presentation');
@@ -422,7 +423,7 @@ export default function LandingPage() {
       </LandingNavbar>
 
       {/* Hero + Numbers */}
-      <section className="relative overflow-hidden bg-white bg-[url('/background.png')] bg-cover bg-center bg-no-repeat">
+      <section className="relative overflow-hidden bg-white bg-[url('/background.jpg')] bg-cover bg-center bg-no-repeat">
 
         {/* Hero Section */}
         <div className="pt-44 sm:pt-52 pb-12 sm:pb-14 px-4 relative z-10">

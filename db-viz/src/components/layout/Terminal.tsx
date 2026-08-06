@@ -25,8 +25,10 @@ export default function Terminal({
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
+    if (logs.length > 0) {
+      logsEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }
+  }, [logs.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
