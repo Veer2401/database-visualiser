@@ -27,7 +27,7 @@ export type ComposerAction =
   | { type: 'ADD_RELATIONSHIP'; fromTable: string; fromColumn: string; toTable: string; toColumn: string }
   | { type: 'DELETE_TABLE'; tableName: string }
   | { type: 'RENAME_TABLE'; oldName: string; newName: string }
-  | { type: 'EXECUTE_SQL'; sql: string[]; explanation?: string }
+  | { type: 'EXECUTE_SQL'; databaseName?: string; sql: string[]; explanation?: string }
   | { type: 'EXPLAIN'; message: string };
 
 export type ComposerResponse = {

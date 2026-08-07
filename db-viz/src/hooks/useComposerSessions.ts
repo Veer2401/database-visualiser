@@ -6,12 +6,13 @@
  *
  * Features:
  * - Real-time synchronization via onSnapshot
- * - Creates, appends, updates, deletes chat sessions per user & database
+ * - Creates, appends, updates, deletes chat sessions per user
+ * - Atomic message persistence (appendMessages) to eliminate race conditions
  * - Automatically derives session title from the first user prompt
  * - Firestore safe: strips undefined values to prevent serialization errors
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   collection,
   doc,
@@ -64,8 +65,13 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
 
   const effectiveUserId = userId || 'anonymous';
   const effectiveDbId = databaseId || 'default';
+  const activeSessionIdRef = useRef<string | null>(activeSessionId);
 
-  // Listen to Firestore composer_sessions in real-time
+  useEffect(() => {
+    activeSessionIdRef.current = activeSessionId;
+  }, [activeSessionId]);
+
+  // Listen to Firestore composer_sessions in real-time by userId
   useEffect(() => {
     if (!effectiveUserId) {
       setSessions([]);
@@ -77,8 +83,7 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
     const colRef = collection(db, 'composer_sessions');
     const q = query(
       colRef,
-      where('userId', '==', effectiveUserId),
-      where('databaseId', '==', effectiveDbId)
+      where('userId', '==', effectiveUserId)
     );
 
     const unsubscribe = onSnapshot(
@@ -112,6 +117,14 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
 
         setSessions(list);
         setIsLoading(false);
+
+        // Keep active session in sync if not set or invalid
+        if (list.length > 0) {
+          const current = activeSessionIdRef.current;
+          if (!current || !list.some(s => s.id === current)) {
+            setActiveSessionId(list[0].id);
+          }
+        }
       },
       err => {
         console.error('[useComposerSessions] Firestore listener error:', err);
@@ -121,15 +134,6 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
 
     return () => unsubscribe();
   }, [effectiveUserId, effectiveDbId]);
-
-  // Keep activeSessionId in sync (default to newest session if activeSessionId is invalid)
-  useEffect(() => {
-    if (sessions.length > 0) {
-      if (!activeSessionId || !sessions.some(s => s.id === activeSessionId)) {
-        setActiveSessionId(sessions[0].id);
-      }
-    }
-  }, [sessions, activeSessionId]);
 
   // Active session object
   const activeSession = useMemo(() => {
@@ -161,15 +165,15 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
 
   // Auto-create a first session if none exist after loading
   useEffect(() => {
-    if (!isLoading && sessions.length === 0 && effectiveUserId) {
+    if (!isLoading && sessions.length === 0 && effectiveUserId !== 'anonymous') {
       createNewSession();
     }
   }, [isLoading, sessions.length, effectiveUserId, createNewSession]);
 
-  // ── Append a message ───────────────────────────────────────────────────────
-  const appendMessage = useCallback(
-    async (sessionId: string, message: ComposerChatMessage) => {
-      if (!sessionId) return;
+  // ── Append multiple messages atomically ────────────────────────────────────
+  const appendMessages = useCallback(
+    async (sessionId: string, newMessages: ComposerChatMessage[]) => {
+      if (!sessionId || newMessages.length === 0) return;
       const targetDoc = doc(db, 'composer_sessions', sessionId);
       const docSnap = await getDoc(targetDoc);
 
@@ -183,13 +187,14 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
         currentTitle = data.title || 'New Chat';
       }
 
-      // If this is the first user message, generate title automatically
+      // If this session is named "New Chat", auto-generate title from first user message
       let newTitle = currentTitle;
-      if (currentTitle === 'New Chat' && message.role === 'user' && message.content) {
-        newTitle = message.content.slice(0, 40) + (message.content.length > 40 ? '…' : '');
+      const firstUserMsg = newMessages.find(m => m.role === 'user' && m.content);
+      if ((currentTitle === 'New Chat' || !currentTitle) && firstUserMsg) {
+        newTitle = firstUserMsg.content.slice(0, 36) + (firstUserMsg.content.length > 36 ? '…' : '');
       }
 
-      const updatedMessages = [...currentMessages, message];
+      const updatedMessages = [...currentMessages, ...newMessages];
 
       await setDoc(
         targetDoc,
@@ -204,6 +209,14 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
       );
     },
     [effectiveUserId, effectiveDbId]
+  );
+
+  // ── Append a single message ─────────────────────────────────────────────────
+  const appendMessage = useCallback(
+    async (sessionId: string, message: ComposerChatMessage) => {
+      await appendMessages(sessionId, [message]);
+    },
+    [appendMessages]
   );
 
   // ── Update a specific message ─────────────────────────────────────────────
@@ -244,7 +257,7 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
         if (remaining.length > 0) {
           setActiveSessionId(remaining[0].id);
         } else {
-          // If it was the last session, create a new one first
+          // If it was the last session, create a new one
           const newId = await createNewSession();
           setActiveSessionId(newId);
         }
@@ -261,6 +274,7 @@ export function useComposerSessions(userId: string | undefined, databaseId: stri
     activeSessionId,
     setActiveSessionId,
     createNewSession,
+    appendMessages,
     appendMessage,
     updateMessage,
     deleteSession,

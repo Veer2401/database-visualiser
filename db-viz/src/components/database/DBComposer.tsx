@@ -112,7 +112,7 @@ export default function DBComposer(props: DBComposerProps) {
     activeSessionId,
     setActiveSessionId,
     createNewSession,
-    appendMessage,
+    appendMessages,
     updateMessage,
     deleteSession,
     isLoading: isSessionsLoading,
@@ -219,9 +219,8 @@ export default function DBComposer(props: DBComposerProps) {
     setInputValue('');
     setIsPending(true);
 
-    // Persist user + pending assistant turn into Firestore
-    await appendMessage(targetSessionId, userMsg);
-    await appendMessage(targetSessionId, pendingAssistantMsg);
+    // Persist user + pending assistant turn into Firestore atomically
+    await appendMessages(targetSessionId, [userMsg, pendingAssistantMsg]);
 
     try {
       // 3. Call API in composer mode
@@ -282,7 +281,7 @@ export default function DBComposer(props: DBComposerProps) {
     isPending,
     activeSessionId,
     createNewSession,
-    appendMessage,
+    appendMessages,
     chatHistory,
     canvasContext,
     executeActions,

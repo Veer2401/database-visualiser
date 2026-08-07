@@ -13,6 +13,7 @@ import ReactFlow, {
   MarkerType,
   NodeChange,
   applyNodeChanges,
+  ReactFlowInstance,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -190,9 +191,48 @@ export default function DashboardPage() {
   // DB Composer sidebar state
   const [isComposerOpen, setIsComposerOpen] = useState(false);
 
-  // React Flow state
+  // React Flow state & instance
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges] = useEdgesState([]);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+
+  // Compute current screen/viewport center in canvas coordinates for Schema Pilot table placement
+  const viewportCenter = useMemo(() => {
+    if (!reactFlowInstance) return undefined;
+    try {
+      const viewport = reactFlowInstance.getViewport();
+      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const zoom = viewport.zoom || 1;
+      return {
+        x: Math.round((-viewport.x + (windowWidth / 2)) / zoom - 160),
+        y: Math.round((-viewport.y + (windowHeight / 2)) / zoom - 120),
+      };
+    } catch {
+      return undefined;
+    }
+  }, [reactFlowInstance, nodes]);
+
+  // Smooth fitView handler for DB Composer actions
+  const handleActionsExecuted = useCallback(() => {
+    if (reactFlowInstance) {
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
+      }, 200);
+    }
+  }, [reactFlowInstance]);
+
+  // Auto fitView whenever new tables are added
+  const prevTablesCountRef = useRef(tables.length);
+  useEffect(() => {
+    if (tables.length > prevTablesCountRef.current && reactFlowInstance) {
+      const timer = setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+    prevTablesCountRef.current = tables.length;
+  }, [tables.length, reactFlowInstance]);
 
   // Workflow layouts for position persistence
   const {
@@ -2590,6 +2630,7 @@ export default function DashboardPage() {
                   onNodeDragStop={onNodeDragStop}
                   nodeTypes={nodeTypes}
                   edgeTypes={edgeTypes}
+                  onInit={setReactFlowInstance}
                   fitViewOptions={{
                     padding: 0.2,
                   }}
@@ -2933,6 +2974,8 @@ export default function DashboardPage() {
         selectedDatabaseId={selectedDatabaseId}
         setSelectedDatabaseId={setSelectedDatabaseId}
         addLog={addLog}
+        viewportCenter={viewportCenter}
+        onActionsExecuted={handleActionsExecuted}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
     </motion.div>

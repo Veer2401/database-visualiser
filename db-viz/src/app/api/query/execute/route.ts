@@ -114,6 +114,34 @@ export async function POST(request: NextRequest) {
       // Execute query within the specified schema
       console.log(`[Query Execute] Running query in schema "${database}":`, processedQuery.substring(0, 100));
       result = await executeQueryInDatabase(database, processedQuery);
+
+      // Self-healing fallback: If relation does not exist in target schema, check user's other schemas
+      if (!result.success && result.error && /relation "[^"]+" does not exist/i.test(result.error)) {
+        const match = result.error.match(/relation "([^"]+)" does not exist/i);
+        if (match && match[1]) {
+          const missingTable = match[1];
+          console.log(`[Query Execute] Table "${missingTable}" not found in schema "${database}". Searching user schemas...`);
+          try {
+            const findSchemaSql = `
+              SELECT table_schema 
+              FROM information_schema.tables 
+              WHERE LOWER(table_name) = '${missingTable.toLowerCase()}' 
+              AND table_schema LIKE 'user_%' 
+              LIMIT 1
+            `;
+            const findRes = await executeQuery(findSchemaSql);
+            const resAny = findRes.results as any;
+            const foundRows: any[] = Array.isArray(resAny) ? resAny : (resAny?.rows || []);
+            if (findRes.success && foundRows.length > 0) {
+              const actualSchema = foundRows[0].table_schema;
+              console.log(`[Query Execute] Self-healing success! Found "${missingTable}" in schema "${actualSchema}". Re-running query...`);
+              result = await executeQueryInDatabase(actualSchema, processedQuery);
+            }
+          } catch (healErr) {
+            console.error('[Query Execute] Self-healing lookup failed:', healErr);
+          }
+        }
+      }
     } else if (!database && !skipSchemaContext && !upperQuery.includes('INFORMATION_SCHEMA')) {
       // Query needs a schema but none specified
       return NextResponse.json({

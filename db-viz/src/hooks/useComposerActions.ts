@@ -28,6 +28,8 @@ export interface UseComposerActionsParams {
   selectedDatabaseId: string | null;
   setSelectedDatabaseId: (id: string | null) => void;
   addLog: (type: 'success' | 'error' | 'info' | 'warning', message: string) => void;
+  viewportCenter?: { x: number; y: number };
+  onActionsExecuted?: () => void;
 }
 
 export interface ActionResult {
@@ -119,21 +121,29 @@ function columnDefToPgColumn(
 }
 
 // ─── Grid position calculator ─────────────────────────────────────────────
-function calcPosition(existingCount: number, index: number): { x: number; y: number } {
-  const COLS = 4;
-  const TABLE_W = 300;
-  const SPACING = 50;
-  const ROW_H = 350;
+function calcPosition(
+  existingCount: number,
+  index: number,
+  viewportCenter?: { x: number; y: number }
+): { x: number; y: number } {
+  const COLS = 3;
+  const TABLE_W = 320;
+  const SPACING = 60;
+  const ROW_H = 380;
   const i = existingCount + index;
+
+  const baseX = viewportCenter ? viewportCenter.x : 100;
+  const baseY = viewportCenter ? viewportCenter.y : 100;
+
   return {
-    x: 100 + (i % COLS) * (TABLE_W + SPACING),
-    y: 100 + Math.floor(i / COLS) * ROW_H,
+    x: Math.round(baseX + (i % COLS) * (TABLE_W + SPACING)),
+    y: Math.round(baseY + Math.floor(i / COLS) * ROW_H),
   };
 }
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
 export function useComposerActions(params: UseComposerActionsParams) {
-  const { userId, databases, tables, selectedDatabaseId, setSelectedDatabaseId, addLog } = params;
+  const { userId, databases, tables, selectedDatabaseId, setSelectedDatabaseId, addLog, viewportCenter, onActionsExecuted } = params;
 
   const executeActions = useCallback(
     async (actions: ComposerAction[]): Promise<ActionResult> => {
@@ -141,6 +151,11 @@ export function useComposerActions(params: UseComposerActionsParams) {
 
       const results: ActionResult['actionResults'] = [];
       let anyFailure = false;
+
+      // Track the most recently created/used database within this batch of actions.
+      // React state (selectedDatabaseId) won't update mid-loop, so EXECUTE_SQL
+      // needs this local reference to target the right database.
+      let lastCreatedDb: { id: string; name: string } | null = null;
 
       for (const action of actions) {
         try {
@@ -155,6 +170,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
               if (existingDb) {
                 dbId = existingDb.id;
                 setSelectedDatabaseId(dbId);
+                lastCreatedDb = { id: dbId, name: existingDb.name };
                 addLog('info', `Using existing database '${sanitizedDbName}'`);
               } else {
                 // 1. Create PG schema
@@ -184,6 +200,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
 
                 addLog('success', `Database '${sanitizedDbName}' created`);
                 setSelectedDatabaseId(dbId);
+                lastCreatedDb = { id: dbId, name: sanitizedDbName };
               }
 
               // 3. Topological sort: tables referenced by FKs come first
@@ -251,7 +268,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
                   } else {
                     // Create new table doc in Firebase
                     const tableId = uuidv4();
-                    const position = calcPosition(tables.length + createdTables.length, 0);
+                    const position = calcPosition(0, createdTables.length, viewportCenter);
 
                     await setDoc(doc(db, 'tables', tableId), {
                       name: sanitizedTableName,
@@ -279,8 +296,17 @@ export function useComposerActions(params: UseComposerActionsParams) {
             // ────────── ADD_TABLE ────────────────────────────────────
             case 'ADD_TABLE': {
               const sanitizedTableName = sanitizeIdentifier(action.tableName);
-              let targetDbId = selectedDatabaseId;
-              let targetDb = databases.find(d => d.id === targetDbId);
+              let targetDbId: string | null = null;
+              let targetDb: { id: string; name: string } | undefined;
+
+              // Prefer database created in this same batch
+              if (lastCreatedDb) {
+                targetDbId = lastCreatedDb.id;
+                targetDb = lastCreatedDb;
+              } else {
+                targetDbId = selectedDatabaseId;
+                targetDb = databases.find(d => d.id === targetDbId);
+              }
 
               // Auto-fallback: if no database selected, pick first or create default
               if (!targetDbId || !targetDb) {
@@ -306,6 +332,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
                   targetDbId = newDbId;
                   targetDb = { id: newDbId, name: defaultDbName };
                   setSelectedDatabaseId(targetDbId);
+                  lastCreatedDb = targetDb;
                   addLog('info', `Created database '${defaultDbName}'`);
                 }
               }
@@ -333,7 +360,7 @@ export function useComposerActions(params: UseComposerActionsParams) {
               const tableId = uuidv4();
               const columns = action.columns.map(c => columnDefToColumn(c, tables));
               const existingInDb = tables.filter(t => t.databaseId === targetDbId).length;
-              const position = calcPosition(existingInDb, 0);
+              const position = calcPosition(0, existingInDb, viewportCenter);
 
               await setDoc(doc(db, 'tables', tableId), {
                 name: sanitizedTableName,
@@ -485,15 +512,32 @@ export function useComposerActions(params: UseComposerActionsParams) {
 
             // ────────── EXECUTE_SQL ──────────────────────────────────
             case 'EXECUTE_SQL': {
-              let targetDbId = selectedDatabaseId;
-              let targetDb = databases.find(d => d.id === targetDbId);
+              let targetDb: { id: string; name: string } | undefined;
 
-              // Fallback to first existing database if none selected
-              if (!targetDbId || !targetDb) {
-                if (databases.length > 0) {
+              // 1. Explicit databaseName specified on the action
+              if (action.databaseName) {
+                const sanitizedActionDb = sanitizeIdentifier(action.databaseName);
+                const matched = databases.find(d => sanitizeIdentifier(d.name) === sanitizedActionDb);
+                if (matched) {
+                  targetDb = matched;
+                } else {
+                  targetDb = { id: sanitizedActionDb, name: sanitizedActionDb };
+                }
+              }
+
+              // 2. Database created/used in this same action batch
+              if (!targetDb && lastCreatedDb) {
+                targetDb = lastCreatedDb;
+              }
+
+              // 3. Currently selected database in React state
+              if (!targetDb) {
+                const foundDb = databases.find(d => d.id === selectedDatabaseId);
+                if (foundDb) {
+                  targetDb = foundDb;
+                } else if (databases.length > 0) {
                   targetDb = databases[0];
-                  targetDbId = targetDb.id;
-                  setSelectedDatabaseId(targetDbId);
+                  setSelectedDatabaseId(targetDb.id);
                 }
               }
 
@@ -567,13 +611,19 @@ export function useComposerActions(params: UseComposerActionsParams) {
         summaryText = `${successCount}/${results.length} actions completed successfully.`;
       }
 
+      if (onActionsExecuted) {
+        setTimeout(() => {
+          onActionsExecuted();
+        }, 150);
+      }
+
       return {
         success: !anyFailure,
         summary: summaryText,
         actionResults: results,
       };
     },
-    [userId, databases, tables, selectedDatabaseId, setSelectedDatabaseId, addLog]
+    [userId, databases, tables, selectedDatabaseId, setSelectedDatabaseId, addLog, viewportCenter, onActionsExecuted]
   );
 
   return { executeActions };
