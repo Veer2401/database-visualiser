@@ -6,12 +6,40 @@
  */
 
 const CANDIDATE_MODELS = [
-    'gemini-flash-latest',
-    'gemini-pro-latest',
     'gemini-2.0-flash',
     'gemini-1.5-flash',
-    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro',
 ];
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+function formatGeminiError(rawError: string): string {
+    if (!rawError) {
+        return 'All Gemini AI models in fallback chain exceeded quota or failed.';
+    }
+
+    const isQuotaError = rawError.includes('Quota exceeded') || 
+                         rawError.includes('429') || 
+                         rawError.includes('rate-limits') || 
+                         rawError.includes('limit: 0') ||
+                         rawError.includes('RESOURCE_EXHAUSTED');
+
+    if (isQuotaError) {
+        const retryMatch = rawError.match(/retry in ([\d.]+)\s*s/i);
+        let timeHint = '';
+        if (retryMatch && retryMatch[1]) {
+            const seconds = Math.ceil(parseFloat(retryMatch[1]));
+            timeHint = ` Please retry in ~${seconds} second${seconds === 1 ? '' : 's'}.`;
+        } else {
+            timeHint = ' Please wait a few seconds and try again.';
+        }
+
+        return `Schema Pilot rate limit or free tier quota reached.${timeHint} (Tip: Upgrade your Google Gemini API key to Pay-As-You-Go in Google AI Studio to increase rate limits).`;
+    }
+
+    return rawError;
+}
 
 export const MAX_INPUT_LENGTH = 1500;
 
@@ -78,12 +106,13 @@ export async function getGeminiResponse(userMessage: string, contextSchema?: str
     let lastErrorMessage = '';
 
     // Loop through candidate models in fallback order
-    for (const model of CANDIDATE_MODELS) {
+    for (let i = 0; i < CANDIDATE_MODELS.length; i++) {
+        const model = CANDIDATE_MODELS[i];
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
         try {
             console.log(`[Gemini API] Attempting model: ${model}`);
-            const response = await fetch(endpoint, {
+            let response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -105,16 +134,25 @@ export async function getGeminiResponse(userMessage: string, contextSchema?: str
                 })
             });
 
+            // If 429 rate limited, attempt a brief 1-second pause and 1 retry on the primary model
+            if (response.status === 429 && i === 0) {
+                console.warn(`[Gemini API] Primary model ${model} rate limited (429). Retrying in 1s...`);
+                await delay(1000);
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+                        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+                    })
+                });
+            }
+
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
                 lastErrorMessage = errData.error?.message || `Status ${response.status}`;
                 console.warn(`[Gemini API] Model ${model} returned error (${response.status}):`, lastErrorMessage);
-                
-                // If it's a quota / 429 error or model limit 0, continue to next fallback model
-                if (response.status === 429 || response.status === 404 || lastErrorMessage.includes('Quota exceeded') || lastErrorMessage.includes('limit: 0')) {
-                    continue;
-                }
-                
                 continue;
             }
 
@@ -153,7 +191,7 @@ export async function getGeminiResponse(userMessage: string, contextSchema?: str
         success: false,
         explanation: '',
         sql_statements: [],
-        error: lastErrorMessage || 'All Gemini models in fallback chain exceeded quota or failed.'
+        error: formatGeminiError(lastErrorMessage)
     };
 }
 
@@ -306,12 +344,13 @@ export async function getComposerResponse(
 
     let lastErrorMessage = '';
 
-    for (const model of CANDIDATE_MODELS) {
+    for (let i = 0; i < CANDIDATE_MODELS.length; i++) {
+        const model = CANDIDATE_MODELS[i];
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
         try {
             console.log(`[Composer API] Attempting model: ${model}`);
-            const response = await fetch(endpoint, {
+            let response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -326,13 +365,25 @@ export async function getComposerResponse(
                 })
             });
 
+            // If 429 rate limited on primary model, attempt brief 1s pause and retry once
+            if (response.status === 429 && i === 0) {
+                console.warn(`[Composer API] Primary model ${model} rate limited (429). Retrying in 1s...`);
+                await delay(1000);
+                response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: COMPOSER_SYSTEM_PROMPT }] },
+                        contents,
+                        generationConfig: { temperature: 0.15, responseMimeType: 'application/json' }
+                    })
+                });
+            }
+
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
                 lastErrorMessage = errData.error?.message || `Status ${response.status}`;
                 console.warn(`[Composer API] Model ${model} error (${response.status}):`, lastErrorMessage);
-                if (response.status === 429 || response.status === 404 || lastErrorMessage.includes('Quota exceeded') || lastErrorMessage.includes('limit: 0')) {
-                    continue;
-                }
                 continue;
             }
 
@@ -373,6 +424,6 @@ export async function getComposerResponse(
 
     return {
         success: false,
-        error: lastErrorMessage || 'All Gemini models in fallback chain exceeded quota or failed.'
+        error: formatGeminiError(lastErrorMessage)
     };
 }
