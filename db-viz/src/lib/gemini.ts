@@ -15,30 +15,7 @@ const CANDIDATE_MODELS = [
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function formatGeminiError(rawError: string): string {
-    if (!rawError) {
-        return 'All Gemini AI models in fallback chain exceeded quota or failed.';
-    }
-
-    const isQuotaError = rawError.includes('Quota exceeded') || 
-                         rawError.includes('429') || 
-                         rawError.includes('rate-limits') || 
-                         rawError.includes('limit: 0') ||
-                         rawError.includes('RESOURCE_EXHAUSTED');
-
-    if (isQuotaError) {
-        const retryMatch = rawError.match(/retry in ([\d.]+)\s*s/i);
-        let timeHint = '';
-        if (retryMatch && retryMatch[1]) {
-            const seconds = Math.ceil(parseFloat(retryMatch[1]));
-            timeHint = ` Please retry in ~${seconds} second${seconds === 1 ? '' : 's'}.`;
-        } else {
-            timeHint = ' Please wait a few seconds and try again.';
-        }
-
-        return `Schema Pilot rate limit or free tier quota reached.${timeHint} (Tip: Upgrade your Google Gemini API key to Pay-As-You-Go in Google AI Studio to increase rate limits).`;
-    }
-
-    return rawError;
+    return 'An error occurred. Please try again.';
 }
 
 export const MAX_INPUT_LENGTH = 1500;
