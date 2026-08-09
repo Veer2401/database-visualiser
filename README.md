@@ -1,13 +1,13 @@
 <div align="center">
 
 <!-- Animated Header Banner -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=059669&custom_color_2=7C3AED&height=200&section=header&text=Schema%20View&fontSize=46&fontColor=ffffff&fontAlignY=36&desc=Enterprise%20Visual%20Database%20Architect%20%26%20Query%20Engine&descSize=16&descAlignY=62" width="100%" alt="Schema View Banner" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=059669&amp;custom_color_2=7C3AED&amp;height=200&amp;section=header&amp;text=Schema%20View&amp;fontSize=46&amp;fontColor=ffffff&amp;fontAlignY=36&amp;desc=Enterprise%20Visual%20Database%20Architect%20and%20Query%20Engine&amp;descSize=16&amp;descAlignY=62" width="100%" alt="Schema View Banner" />
 
 <br/>
 
 <!-- Animated SVG Typing Banner -->
 <a href="https://github.com/yourusername/schema-view">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=22&pause=1000&color=059669&center=true&vCenter=true&width=750&lines=Visual+Database+Design+%26+Interactive+ERD+Canvas;Real-time+Collaborative+Schema+Architecting;Interactive+Web+SQL+Terminal+%26+Query+Runner;Automated+Multi-Format+SQL%2C+DOCX+%26+PDF+Exporters" alt="Typing Banner" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&amp;weight=600&amp;size=22&amp;pause=1000&amp;color=059669&amp;center=true&amp;vCenter=true&amp;width=750&amp;lines=Visual+Database+Design+and+Interactive+ERD+Canvas;Real-time+Collaborative+Schema+Architecting;Interactive+Web+SQL+Terminal+and+Query+Runner;Automated+Multi-Format+SQL%2C+DOCX+and+PDF+Exporters" alt="Typing Banner" />
 </a>
 
 <br/><br/>
@@ -32,7 +32,7 @@
 </div>
 
 <!-- Animated Gradient Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=059669&custom_color_2=2563EB&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=059669&amp;custom_color_2=2563EB&amp;height=60&amp;section=footer" width="100%" />
 
 ## 🌟 Feature Showcase
 
@@ -98,7 +98,7 @@
 </table>
 
 <!-- Animated Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=7C3AED&custom_color_2=059669&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=7C3AED&amp;custom_color_2=059669&amp;height=60&amp;section=footer" width="100%" />
 
 ## 🏗 System Architecture
 
@@ -148,29 +148,9 @@ sequenceDiagram
 ```
 
 <!-- Animated Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=2563EB&custom_color_2=7C3AED&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=2563EB&amp;custom_color_2=7C3AED&amp;height=60&amp;section=footer" width="100%" />
 
 ## 📈 Performance & Analytics
-
-### Benchmark Metrics & Real-Time Query Workload
-
-```mermaid
-xychart-beta
-    title "Canvas Render Latency & Query Execution Speed (ms)"
-    x-axis ["10 Tables", "50 Tables", "100 Tables", "250 Tables", "500 Tables"]
-    y-axis "Processing Time (ms)" 0 --> 250
-    bar [8, 22, 45, 110, 195]
-    line [5, 14, 28, 62, 125]
-```
-
-<br/>
-
-<!-- Animated Activity Graph Stream -->
-<div align="center">
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=yourusername&repo=schema-view&theme=react-dark&bg_color=0f172a&color=059669&line=7C3AED&point=2563EB&area=true&hide_border=true" width="100%" alt="Animated Database Traffic Activity Graph" />
-</div>
-
-<br/>
 
 <table width="100%">
   <tr>
@@ -190,7 +170,7 @@ xychart-beta
 </table>
 
 <!-- Animated Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=059669&custom_color_2=7C3AED&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=059669&amp;custom_color_2=7C3AED&amp;height=60&amp;section=footer" width="100%" />
 
 ## 🚦 Roadmap & Milestones
 
@@ -204,7 +184,7 @@ xychart-beta
 | **Version Controlled Migrations** | Git-like schema diffing, migration script creation & rollback | `v2.2.0` | ![Planned](https://img.shields.io/badge/Planned-7C3AED?style=flat-square&logo=target&logoColor=white) |
 
 <!-- Animated Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=7C3AED&custom_color_2=2563EB&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=7C3AED&amp;custom_color_2=2563EB&amp;height=60&amp;section=footer" width="100%" />
 
 ## ⚡ Quickstart Guide
 
@@ -273,7 +253,7 @@ docker-compose logs -f
 ```
 
 <!-- Animated Wave Divider -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=2563EB&custom_color_2=059669&height=60&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=2563EB&amp;custom_color_2=059669&amp;height=60&amp;section=footer" width="100%" />
 
 ## 📡 API Reference & Command Schema
 
@@ -382,7 +362,7 @@ Made with ❤️ by the Schema View Engineering Team
 <br/><br/>
 
 <!-- Animated Wave Footer Banner -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&custom_color_1=059669&custom_color_2=7C3AED&height=120&section=footer" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&amp;color=gradient&amp;custom_color_1=059669&amp;custom_color_2=7C3AED&amp;height=120&amp;section=footer" width="100%" />
 
 **[⬆ Back to Top](#-schema-view)**
 
