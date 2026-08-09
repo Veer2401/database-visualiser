@@ -40,5 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#Ignore skill.md
+#Ignore SKILL.md
 SKILL.md
