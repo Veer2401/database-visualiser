@@ -12,6 +12,23 @@ import { verifyAuth } from '@/lib/auth-helper';
 // System schemas that must never be user-prefixed
 const SYSTEM_SCHEMAS = new Set(['information_schema', 'pg_catalog', 'public', 'db_viz_system']);
 
+// Helper to safely append ON CONFLICT DO NOTHING to INSERT statements
+function addOnConflictDoNothing(sql: string): string {
+  const statements = sql
+    .split(';')
+    .map(stmt => stmt.trim())
+    .filter(Boolean);
+
+  const safeStatements = statements.map(stmt => {
+    if (/^\s*INSERT\s+INTO/i.test(stmt) && !/ON\s+CONFLICT/i.test(stmt)) {
+      return `${stmt} ON CONFLICT DO NOTHING`;
+    }
+    return stmt;
+  });
+
+  return safeStatements.join('; ') + (sql.trim().endsWith(';') ? ';' : '');
+}
+
 interface ExecuteQueryRequest {
   database?: string;
   query: string;
@@ -140,6 +157,34 @@ export async function POST(request: NextRequest) {
           } catch (healErr) {
             console.error('[Query Execute] Self-healing lookup failed:', healErr);
           }
+        }
+      }
+
+      // Self-healing fallback 2: If duplicate key / unique constraint error on INSERT, retry with ON CONFLICT DO NOTHING
+      if (!result.success && result.error && (/duplicate key value violates unique constraint/i.test(result.error) || result.code === '23505')) {
+        console.log(`[Query Execute] Duplicate key constraint hit in schema "${database}". Retrying with ON CONFLICT DO NOTHING...`);
+        const safeQuery = addOnConflictDoNothing(processedQuery);
+        result = await executeQueryInDatabase(database, safeQuery);
+
+        // Sync primary key sequence so future auto-increment inserts don't conflict
+        try {
+          const tableMatch = processedQuery.match(/INSERT\s+INTO\s+["`]?([a-zA-Z0-9_]+)["`]?/i);
+          if (tableMatch && tableMatch[1]) {
+            const tableName = tableMatch[1].toLowerCase();
+            const syncSeqSql = `
+              DO $$
+              BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '${tableName}' AND column_name = 'id') THEN
+                  PERFORM setval(pg_get_serial_sequence('"${tableName}"', 'id'), COALESCE((SELECT MAX(id) FROM "${tableName}"), 1), true);
+                END IF;
+              EXCEPTION WHEN OTHERS THEN
+                NULL;
+              END $$;
+            `;
+            await executeQueryInDatabase(database, syncSeqSql).catch(() => {});
+          }
+        } catch {
+          // Ignore sequence sync errors
         }
       }
     } else if (!database && !skipSchemaContext && !upperQuery.includes('INFORMATION_SCHEMA')) {
