@@ -18,7 +18,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-12.7-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-059669?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/yourusername/schema-view/actions)
 [![License](https://img.shields.io/badge/License-MIT-7C3AED?style=for-the-badge&logo=open-source-initiative&logoColor=white)](LICENSE)
@@ -50,7 +50,7 @@
     <td width="50%" valign="top">
       <h3 style="color:#7C3AED;">💻 Interactive Web SQL Terminal</h3>
       <ul>
-        <li><b>Integrated Execution Engine:</b> Execute raw MySQL queries directly within the browser UI with zero overhead.</li>
+        <li><b>Integrated Execution Engine:</b> Execute raw PostgreSQL queries directly within the browser UI with zero overhead.</li>
         <li><b>Syntax Highlighting & Autocomplete:</b> Full SQL keyword formatting, autocomplete hints, and error diagnostics.</li>
         <li><b>Query Execution History:</b> Keep track of previous SQL executions with execution timestamps and row metrics.</li>
         <li><b>Granular Permissions:</b> Support for read-only preview modes and full read-write developer consoles.</li>
@@ -102,7 +102,7 @@
 
 ## 🏗 System Architecture
 
-The high-level request lifecycle and sequence diagram below demonstrates how **Schema View** processes user actions from the visual React Flow canvas down to the backend MySQL database engine and real-time Firebase state store.
+The high-level request lifecycle and sequence diagram below demonstrates how **Schema View** processes user actions from the visual React Flow canvas down to the backend PostgreSQL database engine and real-time Firebase state store.
 
 ```mermaid
 %%{
@@ -125,7 +125,7 @@ sequenceDiagram
     participant Canvas as 🎨 ERD Canvas (React Flow)
     participant API as ⚡ Next.js API Routes
     participant Auth as 🔐 Firebase Auth & Firestore
-    participant Engine as 🐬 MySQL Database Engine
+    participant Engine as 🐘 PostgreSQL Database Engine
 
     Developer->>Canvas: Drag Table / Modify Column Schema
     Canvas->>Auth: Validate Session Token & Permissions
@@ -137,7 +137,7 @@ sequenceDiagram
     else Execute SQL Statement
         Developer->>Canvas: Execute Query via Web SQL Terminal
         Canvas->>API: POST /api/query { query, dbConfig }
-        API->>Engine: Execute SQL via mysql2 Connection Pool
+        API->>Engine: Execute SQL via node-postgres (pg) Pool
         Engine-->>API: Return Rowset & Execution Metrics
         API-->>Canvas: Render Data Grid & Execution Logs
     end
@@ -160,7 +160,7 @@ sequenceDiagram
     </td>
     <td bgcolor="#312E81" align="center" width="33%">
       <h3 style="color:#818CF8; margin: 6px 0;">🚀 <span style="color:#EEF2FF;">10x Execution Acceleration</span></h3>
-      <p style="color:#C7D2FE; font-size: 13px; margin: 4px 0; padding: 0 8px 8px 8px;">Pooled MySQL connection handling delivering sub-30ms raw query execution responses.</p>
+      <p style="color:#C7D2FE; font-size: 13px; margin: 4px 0; padding: 0 8px 8px 8px;">Pooled PostgreSQL connection handling delivering sub-30ms raw query execution responses.</p>
     </td>
     <td bgcolor="#7F1D1D" align="center" width="33%">
       <h3 style="color:#F87171; margin: 6px 0;">🛡️ <span style="color:#FEF2F2;">Zero Schema Drift</span></h3>
@@ -179,7 +179,7 @@ sequenceDiagram
 | **Visual ERD Designer** | Interactive drag-and-drop table and relationship editor | `v1.0.0` | ![Completed](https://img.shields.io/badge/Completed-059669?style=flat-square&logo=checkmark&logoColor=white) |
 | **Web SQL Terminal** | Direct SQL query runner with syntax highlighting & query history | `v1.1.0` | ![Completed](https://img.shields.io/badge/Completed-059669?style=flat-square&logo=checkmark&logoColor=white) |
 | **Multi-format Exporters** | DDL SQL, DOCX Data Dictionary, and PDF diagram exporters | `v1.2.0` | ![Completed](https://img.shields.io/badge/Completed-059669?style=flat-square&logo=checkmark&logoColor=white) |
-| **PostgreSQL & SQLite Support** | Multi-engine database driver support for Postgres and SQLite | `v1.5.0` | ![In Progress](https://img.shields.io/badge/In_Progress-2563EB?style=flat-square&logo=clock&logoColor=white) |
+| **MySQL & SQLite Support** | Multi-engine database driver support for MySQL and SQLite | `v1.5.0` | ![In Progress](https://img.shields.io/badge/In_Progress-2563EB?style=flat-square&logo=clock&logoColor=white) |
 | **AI Schema Assistant** | Natural language to SQL & auto table relationship generator | `v2.0.0` | ![Planned](https://img.shields.io/badge/Planned-7C3AED?style=flat-square&logo=target&logoColor=white) |
 | **Version Controlled Migrations** | Git-like schema diffing, migration script creation & rollback | `v2.2.0` | ![Planned](https://img.shields.io/badge/Planned-7C3AED?style=flat-square&logo=target&logoColor=white) |
 
@@ -193,7 +193,7 @@ sequenceDiagram
 Make sure you have the following installed on your local environment:
 - **Node.js**: `v18.0.0` or higher
 - **npm**: `v9.0.0` or higher (or `pnpm` / `yarn`)
-- **MySQL Database**: Local or hosted MySQL instance (v8.0+)
+- **PostgreSQL Database**: Local or hosted PostgreSQL instance (v14+)
 - **Firebase Account**: Firebase project with Auth & Firestore enabled
 
 ### 1. Clone & Install Dependencies
@@ -222,12 +222,12 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
 
-# MySQL Connection Details
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_secure_password
-MYSQL_DATABASE=schema_view_dev
+# PostgreSQL Connection Details
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_DB=schema_view_dev
 
 # Application Settings
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -292,10 +292,10 @@ Authorization: Bearer <FIREBASE_ID_TOKEN>
 }
 ```
 
-### 2. Test MySQL Connection Endpoint
+### 2. Test PostgreSQL Connection Endpoint
 
 ```http
-POST /api/test-mysql
+POST /api/test-postgres
 Content-Type: application/json
 ```
 
@@ -303,8 +303,8 @@ Content-Type: application/json
 ```json
 {
   "host": "localhost",
-  "port": 3306,
-  "user": "root",
+  "port": 5432,
+  "user": "postgres",
   "password": "your_password",
   "database": "schema_view_dev"
 }
@@ -314,7 +314,7 @@ Content-Type: application/json
 ```json
 {
   "status": "connected",
-  "message": "Successfully connected to MySQL database server v8.0.32",
+  "message": "Successfully connected to PostgreSQL database server v16.1",
   "latencyMs": 8.2
 }
 ```
@@ -329,7 +329,7 @@ Content-Type: application/json
 | **Language & Styling** | [TypeScript 5](https://www.typescriptlang.org/), [Tailwind CSS 4](https://tailwindcss.com/), [Aceternity UI](https://ui.aceternity.com/) |
 | **Interactive Canvas** | [React Flow](https://reactflow.dev/), [Framer Motion](https://www.framer.com/motion/) |
 | **Backend & Auth** | [Firebase 12.7](https://firebase.google.com/) (Auth & Firestore), Next.js API Route Handlers |
-| **Database Driver** | [MySQL2 Driver](https://github.com/sidorares/node-mysql2) for Node.js |
+| **Database Driver** | [node-postgres (pg)](https://node-postgres.com/) for Node.js |
 | **Document Generation** | [docx](https://github.com/dolanmiu/docx), [jsPDF](https://github.com/parallax/jsPDF), [html2canvas](https://github.com/niklasvh/html2canvas) |
 | **DevOps & Containerization** | Docker, Docker Compose, Vercel Deployment |
 
@@ -347,12 +347,11 @@ Contributions make the open-source community an incredible place to learn, inspi
 
 ---
 
-
-
----
-
 <div align="center">
 
+Made with ❤️ by the Schema View Engineering Team
+
+[⭐ Star Us On GitHub](https://github.com/yourusername/schema-view) • [💬 Join Discord Community](https://discord.gg/schemaview) • [📖 Read Documentation](https://docs.schemaview.com)
 
 <br/><br/>
 

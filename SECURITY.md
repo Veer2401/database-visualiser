@@ -83,6 +83,6 @@ We are grateful to security researchers who help keep **Schema View** safe. Upon
 
 <div align="center">
 
-Made with ❤️ by the Schema View Security Team
+The Schema View Team
 
 </div>
