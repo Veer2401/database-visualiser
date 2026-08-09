@@ -355,9 +355,6 @@ Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information
 
 <div align="center">
 
-Made with ❤️ by the Schema View Engineering Team
-
-[⭐ Star Us On GitHub](https://github.com/yourusername/schema-view) • [💬 Join Discord Community](https://discord.gg/schemaview) • [📖 Read Documentation](https://docs.schemaview.com)
 
 <br/><br/>
 
