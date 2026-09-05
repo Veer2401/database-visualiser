@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Presentation, Terminal, Menu, Wand2 } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 interface NavbarProps {
   onPresentationMode?: () => void;
@@ -13,6 +13,10 @@ interface NavbarProps {
   theme?: any;
   onMobileMenuToggle?: () => void;
   selectedDatabaseName?: string | null;
+  onToggleSidebar?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleTerminal?: () => void;
+  isTerminalMinimized?: boolean;
 }
 
 export default function Navbar({
@@ -24,6 +28,10 @@ export default function Navbar({
   theme,
   onMobileMenuToggle,
   selectedDatabaseName,
+  onToggleSidebar,
+  isSidebarCollapsed,
+  onToggleTerminal,
+  isTerminalMinimized,
 }: NavbarProps) {
   const initialHeight = 64; // px (h-16)
   const maxExtra = 24; // max extra px to expand
@@ -137,70 +145,89 @@ export default function Navbar({
           </motion.button>
         )}
 
-        {/* DB Composer Toggle */}
-        {onComposerToggle && (
-          <motion.button
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onComposerToggle}
-            className={`relative p-2.5 rounded-xl border shadow-md transition-all group ${
-              isComposerOpen
-                ? theme?.navbar?.includes('slate')
-                  ? 'bg-slate-800 border-slate-600 text-white shadow-slate-900/50'
-                  : 'bg-gray-900 border-gray-800 text-white shadow-gray-900/20'
-                : `${theme?.buttonSecondary || 'bg-white hover:bg-gray-50 border-gray-200/80 hover:border-gray-300'}`
-            }`}
-            aria-label="Toggle DB Composer"
-          >
-            <Wand2 className={`w-5 h-5 ${
-              isComposerOpen
-                ? 'text-white'
-                : `${theme?.text || 'text-gray-600'} group-hover:text-gray-900 transition-colors`
-            }`} />
-            {/* Tooltip */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-light rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
-              {isComposerOpen ? 'Close' : 'Open'} DB Composer
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-slate-900" />
-            </div>
-          </motion.button>
-        )}
-
-        {/* Mode Buttons */}
-        {showModeButtons && (
-          <div className="flex items-center gap-2">
-            {/* Terminal Mode */}
-            <motion.button
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onTerminalMode}
-              className={`relative p-2.5 rounded-xl ${theme?.buttonSecondary || 'bg-white hover:bg-green-50 border-gray-200/80 hover:border-green-300'} border shadow-md shadow-gray-200/30 transition-all group`}
-              aria-label="Terminal Mode"
+        {/* Layout Control Buttons (Sidebar, Terminal, Schema Pilot) */}
+        <div className="flex items-center gap-2">
+          {/* Toggle Sidebar (Left) */}
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className={`p-2.5 rounded-xl border shadow-md transition-colors ${
+                !isSidebarCollapsed
+                  ? theme?.navbar?.includes('slate')
+                    ? 'bg-slate-800 border-slate-600 text-white shadow-slate-900/50'
+                    : 'bg-gray-900 border-gray-800 text-white shadow-gray-900/20'
+                  : `${theme?.buttonSecondary || 'bg-white border-gray-200/80'} ${theme?.text || 'text-gray-600'}`
+              }`}
+              aria-label="Toggle Sidebar"
             >
-              <Terminal className={`w-5 h-5 ${theme?.text || 'text-gray-600'} group-hover:text-green-600 transition-colors`} />
-              {/* Tooltip */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-light rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
-                Switch to Terminal Mode
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-slate-900" />
-              </div>
-            </motion.button>
+              <svg
+                className={`w-5 h-5 ${
+                  !isSidebarCollapsed
+                    ? 'text-white'
+                    : `${theme?.text || 'text-gray-600'}`
+                }`}
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M12.5 1C13.881 1 15 2.119 15 3.5V12.5C15 13.881 13.881 15 12.5 15H3.5C2.119 15 1 13.881 1 12.5V3.5C1 2.119 2.119 1 3.5 1H12.5ZM12.5 14C13.328 14 14 13.328 14 12.5V3.5C14 2.672 13.328 2 12.5 2H7V14H12.5Z" />
+              </svg>
+            </button>
+          )}
 
-            {/* Presentation Mode */}
-            <motion.button
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onPresentationMode}
-              className={`relative p-2.5 rounded-xl ${theme?.buttonSecondary || 'bg-white hover:bg-blue-50 border-gray-200/80 hover:border-blue-300'} border shadow-md shadow-gray-200/30 transition-all group`}
-              aria-label="Presentation Mode"
+          {/* Toggle Bottom Terminal */}
+          {onToggleTerminal && (
+            <button
+              onClick={onToggleTerminal}
+              className={`p-2.5 rounded-xl border shadow-md transition-colors ${
+                !isTerminalMinimized
+                  ? theme?.navbar?.includes('slate')
+                    ? 'bg-slate-800 border-slate-600 text-white shadow-slate-900/50'
+                    : 'bg-gray-900 border-gray-800 text-white shadow-gray-900/20'
+                  : `${theme?.buttonSecondary || 'bg-white border-gray-200/80'} ${theme?.text || 'text-gray-600'}`
+              }`}
+              aria-label="Toggle Terminal"
             >
-              <Presentation className={`w-5 h-5 ${theme?.text || 'text-gray-600'} group-hover:text-blue-600 transition-colors`} />
-              {/* Tooltip */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-light rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
-                Switch to Presentation Mode
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-1 border-4 border-transparent border-b-slate-900" />
-              </div>
-            </motion.button>
-          </div>
-        )}
+              <svg
+                className={`w-5 h-5 ${
+                  !isTerminalMinimized
+                    ? 'text-white'
+                    : `${theme?.text || 'text-gray-600'}`
+                }`}
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M15 12.5C15 13.881 13.881 15 12.5 15H3.5C2.119 15 1 13.881 1 12.5V3.5C1 2.119 2.119 1 3.5 1H12.5C13.881 1 15 2.119 15 3.5V12.5ZM2 10H14V3.5C14 2.672 13.328 2 12.5 2H3.5C2.672 2 2 2.672 2 3.5V10Z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Toggle Schema Pilot / Right Chatbot */}
+          {onComposerToggle && (
+            <button
+              onClick={onComposerToggle}
+              className={`p-2.5 rounded-xl border shadow-md transition-colors ${
+                isComposerOpen
+                  ? theme?.navbar?.includes('slate')
+                    ? 'bg-slate-800 border-slate-600 text-white shadow-slate-900/50'
+                    : 'bg-gray-900 border-gray-800 text-white shadow-gray-900/20'
+                  : `${theme?.buttonSecondary || 'bg-white border-gray-200/80'} ${theme?.text || 'text-gray-600'}`
+              }`}
+              aria-label="Toggle Schema Pilot"
+            >
+              <svg
+                className={`w-5 h-5 ${
+                  isComposerOpen
+                    ? 'text-white'
+                    : `${theme?.text || 'text-gray-600'}`
+                }`}
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M12.5 1C13.881 1 15 2.119 15 3.5V12.5C15 13.881 13.881 15 12.5 15H3.5C2.119 15 1 13.881 1 12.5V3.5C1 2.119 2.119 1 3.5 1H12.5ZM9 14V2H3.5C2.672 2 2 2.672 2 3.5V12.5C2 13.328 2.672 14 3.5 14H9Z" />
+              </svg>
+            </button>
+          )}
+        </div>
       </motion.div>
     </motion.nav>
   );

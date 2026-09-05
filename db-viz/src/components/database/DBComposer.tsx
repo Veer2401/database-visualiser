@@ -14,15 +14,13 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X,
   Send,
-  Wand2,
+  Bot,
   ChevronDown,
   ChevronRight,
   CheckCircle2,
   XCircle,
   Loader2,
-  Sparkles,
   Database,
   Table2,
   MessageSquare,
@@ -30,8 +28,12 @@ import {
   Plus,
   Clock,
   Minus,
-  PanelLeftClose,
+  Wand2,
+  Sparkles,
 } from 'lucide-react';
+
+// Prevent Turbopack HMR cache errors in active browser sessions
+const _hmrCompat = [Wand2, Sparkles];
 import type { ComposerAction, ComposerChatMessage, ComposerSession } from '@/types/composer';
 import { useComposerActions, type UseComposerActionsParams } from '@/hooks/useComposerActions';
 import { useComposerSessions } from '@/hooks/useComposerSessions';
@@ -98,7 +100,7 @@ function actionIcon(type: ComposerAction['type']) {
     case 'RENAME_TABLE':
       return <Table2 className="w-3.5 h-3.5" />;
     default:
-      return <Sparkles className="w-3.5 h-3.5" />;
+      return <Bot className="w-3.5 h-3.5" />;
   }
 }
 
@@ -335,7 +337,7 @@ export default function DBComposer(props: DBComposerProps) {
           }`}
         >
           <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
-            <Wand2 className="w-3.5 h-3.5 text-white" />
+            <Bot className="w-3.5 h-3.5 text-white" />
           </div>
           <span>Schema Pilot</span>
           <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-mono font-medium">⌘K</span>
@@ -345,22 +347,17 @@ export default function DBComposer(props: DBComposerProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ x: 410, opacity: 0 }}
+            initial={{ x: 430, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 410, opacity: 0 }}
+            exit={{ x: 430, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full z-50 flex"
+            className={`fixed right-4 top-20 bottom-4 z-50 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-xl ${
+              isDark
+                ? 'bg-slate-950/95 border-slate-800 shadow-black/60'
+                : 'bg-white/95 border-gray-200 shadow-2xl shadow-gray-900/15'
+            }`}
             style={{ width: 390 }}
           >
-            {/* ─── Glass background ──────────────────────────────── */}
-            <div
-              className={`absolute inset-0 ${
-                isDark
-                  ? 'bg-slate-950/95 border-l border-slate-800'
-                  : 'bg-white/95 border-l border-gray-200'
-              } backdrop-blur-xl`}
-            />
-
             <div className="relative flex flex-col h-full w-full overflow-hidden">
               {/* ──────────────────────────────────────────────────────────── */}
               {/* TOP BAR: Three-icon control cluster                        */}
@@ -409,30 +406,6 @@ export default function DBComposer(props: DBComposerProps) {
                   </motion.button>
                 </div>
 
-                {/* Center: Title */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div className="relative flex-shrink-0">
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center ${
-                        isDark
-                          ? 'bg-slate-800 border border-slate-700'
-                          : 'bg-gray-900'
-                      }`}
-                    >
-                      <Wand2 className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full border ${
-                      isDark ? 'border-slate-950' : 'border-white'
-                    }`} />
-                  </div>
-                  <span
-                    className={`text-[11px] font-semibold tracking-tight truncate ${
-                      isDark ? 'text-slate-300' : 'text-gray-600'
-                    }`}
-                  >
-                    DB Composer
-                  </span>
-                </div>
 
                 {/* Right: Minimize/Close */}
                 <motion.button
@@ -585,7 +558,7 @@ export default function DBComposer(props: DBComposerProps) {
                             : 'bg-gray-100 border border-gray-200 shadow-sm'
                         }`}
                       >
-                        <Sparkles
+                        <Bot
                           className={`w-7 h-7 ${
                             isDark ? 'text-slate-200' : 'text-gray-800'
                           }`}

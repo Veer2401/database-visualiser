@@ -51,21 +51,35 @@ const nextConfig = {
   },
   // ─── HTTP Security & Caching Headers ───────────────────────────────────────
   async headers() {
+    const isProd = process.env.NODE_ENV === 'production';
+    const cacheHeaders = isProd
+      ? [
+          {
+            // Cache static public images and media assets immutably in production
+            source: '/:all*(jpg|jpeg|png|svg|webp|ico|woff2)',
+            headers: [
+              { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+            ],
+          },
+          {
+            // Cache static JS/CSS assets immutably in production
+            source: '/_next/static/(.*)',
+            headers: [
+              { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+            ],
+          },
+        ]
+      : [
+          {
+            source: '/:path*',
+            headers: [
+              { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+            ],
+          },
+        ];
+
     return [
-      {
-        // Cache static public images and media assets immutably
-        source: '/:all*(jpg|jpeg|png|svg|webp|ico|woff2)',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
-      {
-        // Cache static JS/CSS assets immutably for max performance
-        source: '/_next/static/(.*)',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
+      ...cacheHeaders,
       {
         // Apply security headers to every page and API route
         source: '/(.*)',

@@ -86,7 +86,7 @@ import {
 import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
 
 // Icons
-import { Upload, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { authFetch } from '@/lib/api-client';
 
 // Node and Edge types for React Flow
@@ -2452,20 +2452,13 @@ export default function DashboardPage() {
     >
       {/* Navbar */}
       <Navbar
-        onPresentationMode={() => {
-          if (selectedDatabaseId) {
-            router.push(`/presentation?db=${selectedDatabaseId}&theme=${currentTheme}`);
-          }
-        }}
-        onTerminalMode={() => {
-          if (selectedDatabaseId) {
-            router.push(`/terminal-mode?db=${selectedDatabaseId}`);
-          }
-        }}
+        onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleTerminal={() => setIsTerminalMinimized(prev => !prev)}
+        isTerminalMinimized={isTerminalMinimized}
         onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         onComposerToggle={() => setIsComposerOpen(prev => !prev)}
         isComposerOpen={isComposerOpen}
-        showModeButtons={!!selectedDatabaseId}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
         selectedDatabaseName={databases.find(db => db.id === selectedDatabaseId)?.name}
       />
@@ -2593,24 +2586,6 @@ export default function DashboardPage() {
           isCollapsed={isSidebarCollapsed}
         />
 
-        {/* Toggle Sidebar Button */}
-        <div className="relative z-40 hidden md:flex items-center w-0 h-full">
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className={`absolute top-1/2 -translate-y-1/2 w-6 h-16 flex items-center justify-center shadow-md transition-all duration-300 z-50 cursor-pointer ${
-              currentTheme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
-                : 'bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-            } ${
-              isSidebarCollapsed
-                ? 'left-0 rounded-r-md border-l-0 border-y border-r'
-                : '-left-3 rounded-full border'
-            }`}
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
-        </div>
 
         {/* Canvas Area */}
         <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4">
