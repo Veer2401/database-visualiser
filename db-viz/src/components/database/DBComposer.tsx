@@ -29,6 +29,8 @@ import {
   Trash2,
   Plus,
   Clock,
+  Minus,
+  PanelLeftClose,
 } from 'lucide-react';
 import type { ComposerAction, ComposerChatMessage, ComposerSession } from '@/types/composer';
 import { useComposerActions, type UseComposerActionsParams } from '@/hooks/useComposerActions';
@@ -123,6 +125,7 @@ export default function DBComposer(props: DBComposerProps) {
   const [isPending, setIsPending] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [expandedActions, setExpandedActions] = useState<Record<string, boolean>>({});
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -342,12 +345,12 @@ export default function DBComposer(props: DBComposerProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ x: 560, opacity: 0 }}
+            initial={{ x: 410, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 560, opacity: 0 }}
+            exit={{ x: 410, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
             className="fixed right-0 top-0 h-full z-50 flex"
-            style={{ width: 540 }}
+            style={{ width: 390 }}
           >
             {/* ─── Glass background ──────────────────────────────── */}
             <div
@@ -358,35 +361,45 @@ export default function DBComposer(props: DBComposerProps) {
               } backdrop-blur-xl`}
             />
 
-            <div className="relative flex h-full w-full overflow-hidden">
+            <div className="relative flex flex-col h-full w-full overflow-hidden">
               {/* ──────────────────────────────────────────────────────────── */}
-              {/* LEFT PANEL: Sessions Manager (~170px)                     */}
+              {/* TOP BAR: Three-icon control cluster                        */}
               {/* ──────────────────────────────────────────────────────────── */}
               <div
-                className={`w-[170px] flex flex-col border-r h-full flex-shrink-0 ${
-                  isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-gray-50/90 border-gray-200'
+                className={`flex items-center justify-between px-3 py-2 border-b flex-shrink-0 ${
+                  isDark ? 'border-slate-800' : 'border-gray-200'
                 }`}
               >
-                {/* Session Manager Header */}
-                <div className={`p-3 border-b flex items-center justify-between ${
-                  isDark ? 'border-slate-800' : 'border-gray-200'
-                }`}>
-                  <span className={`text-xs font-semibold uppercase tracking-wider ${
-                    isDark ? 'text-slate-400' : 'text-gray-500'
-                  }`}>
-                    Sessions
-                  </span>
+                {/* Left icon group: History + New Session */}
+                <div className="flex items-center gap-0.5">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => setIsHistoryOpen(prev => !prev)}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      isHistoryOpen
+                        ? isDark
+                          ? 'bg-slate-800 text-white shadow-sm'
+                          : 'bg-gray-200 text-gray-900 shadow-sm'
+                        : isDark
+                          ? 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                          : 'hover:bg-gray-100 text-gray-400 hover:text-gray-700'
+                    }`}
+                    title="Session History"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
                     onClick={handleNewSession}
                     disabled={isCreatingSession}
-                    className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
+                    className={`p-1.5 rounded-lg transition-all ${
                       isDark
-                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-                        : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-300'
-                    }`}
-                    title="Start new chat session (+)"
+                        ? 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                        : 'hover:bg-gray-100 text-gray-400 hover:text-gray-700'
+                    } disabled:opacity-40`}
+                    title="New Session"
                   >
                     {isCreatingSession ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -396,134 +409,168 @@ export default function DBComposer(props: DBComposerProps) {
                   </motion.button>
                 </div>
 
-                {/* Session List */}
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                  {isSessionsLoading ? (
-                    /* Skeletons */
-                    <div className="space-y-2 py-2 px-1">
-                      {[1, 2, 3].map(i => (
-                        <div
-                          key={i}
-                          className={`h-10 rounded-lg animate-pulse ${
-                            isDark ? 'bg-slate-800/60' : 'bg-gray-200/60'
-                          }`}
-                        />
-                      ))}
+                {/* Center: Title */}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                        isDark
+                          ? 'bg-slate-800 border border-slate-700'
+                          : 'bg-gray-900'
+                      }`}
+                    >
+                      <Wand2 className="w-2.5 h-2.5 text-white" />
                     </div>
-                  ) : sessions.length === 0 ? (
-                    <div className={`text-center py-6 text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
-                      No chats yet
-                    </div>
-                  ) : (
-                    sessions.map(session => {
-                      const isActive = session.id === activeSessionId;
-                      return (
-                        <motion.div
-                          key={session.id}
-                          whileHover={{ x: 1 }}
-                          onClick={() => setActiveSessionId(session.id)}
-                          className={`group relative flex flex-col px-2.5 py-2 rounded-xl text-left cursor-pointer transition-all border ${
-                            isActive
-                              ? isDark
-                                ? 'bg-slate-800 text-white border-slate-700 shadow-sm'
-                                : 'bg-white text-gray-900 border-gray-300 shadow-sm font-medium'
-                              : isDark
-                                ? 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 border-transparent'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-transparent'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-1 w-full">
-                            <span className="text-xs truncate flex-1 font-medium">
-                              {session.title || 'New Chat'}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteSession(session.id);
-                              }}
-                              className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity ${
-                                isDark
-                                  ? 'hover:bg-slate-700 text-slate-400 hover:text-red-400'
-                                  : 'hover:bg-gray-200 text-gray-400 hover:text-red-500'
-                              }`}
-                              title="Delete chat session"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                          <span className={`text-[10px] mt-0.5 flex items-center gap-1 ${
-                            isActive
-                              ? isDark ? 'text-slate-400' : 'text-gray-500'
-                              : isDark ? 'text-slate-600' : 'text-gray-400'
-                          }`}>
-                            <Clock className="w-2.5 h-2.5 opacity-60" />
-                            {formatRelativeTime(session.updatedAt)}
-                          </span>
-                        </motion.div>
-                      );
-                    })
-                  )}
+                    <div className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full border ${
+                      isDark ? 'border-slate-950' : 'border-white'
+                    }`} />
+                  </div>
+                  <span
+                    className={`text-[11px] font-semibold tracking-tight truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-600'
+                    }`}
+                  >
+                    DB Composer
+                  </span>
                 </div>
+
+                {/* Right: Minimize/Close */}
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
+                  onClick={onClose}
+                  className={`p-1.5 rounded-lg transition-all ${
+                    isDark
+                      ? 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                      : 'hover:bg-gray-100 text-gray-400 hover:text-gray-700'
+                  }`}
+                  title="Minimize"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </motion.button>
               </div>
 
               {/* ──────────────────────────────────────────────────────────── */}
-              {/* RIGHT PANEL: Chat Messages & Input                          */}
+              {/* SESSION HISTORY DROPDOWN (opt-in, slide-down)               */}
               {/* ──────────────────────────────────────────────────────────── */}
-              <div className="flex-1 flex flex-col h-full min-w-0">
-                {/* ─── Header ─────────────────────────────────────── */}
-                <div
-                  className={`flex items-center justify-between px-4 py-3 border-b ${
-                    isDark ? 'border-slate-800' : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="relative flex-shrink-0">
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                          isDark
-                            ? 'bg-slate-800 border border-slate-700 shadow-md'
-                            : 'bg-gray-900 shadow-md'
-                        }`}
-                      >
-                        <Wand2 className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-slate-950" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2
-                        className={`text-xs font-semibold tracking-tight truncate ${
-                          isDark ? 'text-white' : 'text-gray-900'
-                        }`}
-                      >
-                        {activeSession?.title || 'DB Composer'}
-                      </h2>
-                      <p
-                        className={`text-[10px] ${
-                          isDark ? 'text-slate-500' : 'text-gray-400'
-                        } font-medium uppercase tracking-wider`}
-                      >
-                        Schema Pilot
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={onClose}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        isDark
-                          ? 'hover:bg-slate-800 text-slate-500 hover:text-slate-300'
-                          : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+              <AnimatePresence>
+                {isHistoryOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+                    className={`overflow-hidden border-b flex-shrink-0 ${
+                      isDark ? 'border-slate-800' : 'border-gray-200'
+                    }`}
+                  >
+                    <div
+                      className={`px-3 pt-2 pb-2 ${
+                        isDark ? 'bg-slate-900/60' : 'bg-gray-50/80'
                       }`}
                     >
-                      <X className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
+                      {/* Dropdown header */}
+                      <div className="flex items-center justify-between mb-2 px-1">
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                          isDark ? 'text-slate-500' : 'text-gray-400'
+                        }`}>
+                          Session History
+                        </span>
+                        <span className={`text-[10px] tabular-nums ${
+                          isDark ? 'text-slate-600' : 'text-gray-300'
+                        }`}>
+                          {sessions.length} {sessions.length === 1 ? 'session' : 'sessions'}
+                        </span>
+                      </div>
+
+                      {/* Session entries */}
+                      <div className="space-y-0.5 max-h-[220px] overflow-y-auto">
+                        {isSessionsLoading ? (
+                          <div className="space-y-1.5 py-1 px-1">
+                            {[1, 2, 3].map(i => (
+                              <div
+                                key={i}
+                                className={`h-9 rounded-lg animate-pulse ${
+                                  isDark ? 'bg-slate-800/60' : 'bg-gray-200/60'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        ) : sessions.length === 0 ? (
+                          <div className={`text-center py-5 text-xs ${
+                            isDark ? 'text-slate-500' : 'text-gray-400'
+                          }`}>
+                            No sessions yet. Start a new chat!
+                          </div>
+                        ) : (
+                          sessions.map(session => {
+                            const isActive = session.id === activeSessionId;
+                            return (
+                              <motion.div
+                                key={session.id}
+                                whileHover={{ x: 2 }}
+                                onClick={() => {
+                                  setActiveSessionId(session.id);
+                                  setIsHistoryOpen(false);
+                                }}
+                                className={`group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-all ${
+                                  isActive
+                                    ? isDark
+                                      ? 'bg-slate-800 text-white'
+                                      : 'bg-white text-gray-900 shadow-sm'
+                                    : isDark
+                                      ? 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
+                                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                    isActive
+                                      ? 'bg-emerald-400'
+                                      : isDark ? 'bg-slate-700' : 'bg-gray-300'
+                                  }`} />
+                                  <span className="text-xs truncate font-medium">
+                                    {session.title || 'New Chat'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                                  <span className={`text-[10px] tabular-nums ${
+                                    isDark ? 'text-slate-600' : 'text-gray-400'
+                                  }`}>
+                                    {formatRelativeTime(session.updatedAt)}
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteSession(session.id);
+                                    }}
+                                    className={`opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity ${
+                                      isDark
+                                        ? 'hover:bg-slate-700 text-slate-500 hover:text-red-400'
+                                        : 'hover:bg-gray-200 text-gray-400 hover:text-red-500'
+                                    }`}
+                                    title="Delete session"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </motion.div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* ──────────────────────────────────────────────────────────── */}
+              {/* CHAT AREA: Messages & Input (full-width)                    */}
+              {/* ──────────────────────────────────────────────────────────── */}
+              <div className="flex-1 flex flex-col min-h-0">
 
                 {/* ─── Chat Area ──────────────────────────────────── */}
-                <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
                   {/* Welcome state */}
                   {messages.length === 0 && (
                     <motion.div
@@ -747,7 +794,7 @@ export default function DBComposer(props: DBComposerProps) {
 
                 {/* ─── Input Area ─────────────────────────────────── */}
                 <div
-                  className={`px-3 pb-3 pt-2.5 border-t ${
+                  className={`px-3 pb-2.5 pt-2 border-t ${
                     isDark ? 'border-slate-800' : 'border-gray-200'
                   }`}
                 >
