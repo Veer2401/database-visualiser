@@ -28,12 +28,7 @@ import {
   Plus,
   Clock,
   Minus,
-  Wand2,
-  Sparkles,
 } from 'lucide-react';
-
-// Prevent Turbopack HMR cache errors in active browser sessions
-const _hmrCompat = [Wand2, Sparkles];
 import type { ComposerAction, ComposerChatMessage, ComposerSession } from '@/types/composer';
 import { useComposerActions, type UseComposerActionsParams } from '@/hooks/useComposerActions';
 import { useComposerSessions } from '@/hooks/useComposerSessions';
@@ -317,9 +312,6 @@ export default function DBComposer(props: DBComposerProps) {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, []);
 
-  // Dark mode detection
-  const isDark = theme?.navbar?.includes('slate') || theme?.bg?.includes('slate');
-
   return (
     <>
       {/* Floating Trigger Button when closed */}
@@ -347,21 +339,14 @@ export default function DBComposer(props: DBComposerProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 420, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed z-50 flex flex-col rounded-2xl border border-white/[0.08] shadow-2xl overflow-hidden backdrop-blur-2xl bg-gray-950/95"
+            className="fixed right-4 top-20 bottom-4 w-[390px] z-50 flex flex-col rounded-2xl border border-white/[0.08] shadow-2xl overflow-hidden backdrop-blur-2xl bg-[#121212] text-white"
             style={{
-              width: 390,
-              top: '80px',
-              bottom: '16px',
-              right: '16px',
-              height: 'calc(100vh - 96px)',
-              maxHeight: 'calc(100vh - 96px)',
-              background: 'linear-gradient(145deg, #1e1e1e 0%, #121212 100%)',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
             }}
           >
-            <div className="relative flex flex-col h-full w-full overflow-hidden">
+            <div className="relative flex flex-col h-full w-full overflow-hidden bg-[#121212]">
               {/* Top Bar with Branding & Controls */}
-              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.08] flex-shrink-0 select-none">
+              <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.08] bg-[#121212] flex-shrink-0 select-none">
                 {/* Left: History & New Session */}
                 <div className="flex items-center gap-1">
                   <button
@@ -408,7 +393,7 @@ export default function DBComposer(props: DBComposerProps) {
               </div>
 
               {/* ──────────────────────────────────────────────────────────── */}
-              {/* SESSION HISTORY DROPDOWN (opt-in, slide-down)               */}
+              {/* SESSION HISTORY DROPDOWN (matching black chat window)       */}
               {/* ──────────────────────────────────────────────────────────── */}
               <AnimatePresence>
                 {isHistoryOpen && (
@@ -417,25 +402,15 @@ export default function DBComposer(props: DBComposerProps) {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-                    className={`overflow-hidden border-b flex-shrink-0 ${
-                      isDark ? 'border-slate-800' : 'border-gray-200'
-                    }`}
+                    className="overflow-hidden border-b border-white/[0.08] flex-shrink-0 bg-[#121212]"
                   >
-                    <div
-                      className={`px-3 pt-2 pb-2 ${
-                        isDark ? 'bg-slate-900/60' : 'bg-gray-50/80'
-                      }`}
-                    >
+                    <div className="px-3 pt-2 pb-2 bg-[#121212]">
                       {/* Dropdown header */}
                       <div className="flex items-center justify-between mb-2 px-1">
-                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-                          isDark ? 'text-slate-500' : 'text-gray-400'
-                        }`}>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                           Session History
                         </span>
-                        <span className={`text-[10px] tabular-nums ${
-                          isDark ? 'text-slate-600' : 'text-gray-300'
-                        }`}>
+                        <span className="text-[10px] tabular-nums text-gray-500">
                           {sessions.length} {sessions.length === 1 ? 'session' : 'sessions'}
                         </span>
                       </div>
@@ -447,16 +422,12 @@ export default function DBComposer(props: DBComposerProps) {
                             {[1, 2, 3].map(i => (
                               <div
                                 key={i}
-                                className={`h-9 rounded-lg animate-pulse ${
-                                  isDark ? 'bg-slate-800/60' : 'bg-gray-200/60'
-                                }`}
+                                className="h-9 rounded-lg animate-pulse bg-white/[0.05]"
                               />
                             ))}
                           </div>
                         ) : sessions.length === 0 ? (
-                          <div className={`text-center py-5 text-xs ${
-                            isDark ? 'text-slate-500' : 'text-gray-400'
-                          }`}>
+                          <div className="text-center py-5 text-xs text-gray-500 font-light">
                             No sessions yet. Start a new chat!
                           </div>
                         ) : (
@@ -472,28 +443,22 @@ export default function DBComposer(props: DBComposerProps) {
                                 }}
                                 className={`group flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-all ${
                                   isActive
-                                    ? isDark
-                                      ? 'bg-slate-800 text-white'
-                                      : 'bg-white text-gray-900 shadow-sm'
-                                    : isDark
-                                      ? 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
-                                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    ? 'bg-white/10 text-white shadow-sm'
+                                    : 'text-gray-400 hover:bg-white/[0.05] hover:text-white'
                                 }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                   <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                                     isActive
                                       ? 'bg-emerald-400'
-                                      : isDark ? 'bg-slate-700' : 'bg-gray-300'
+                                      : 'bg-white/20'
                                   }`} />
-                                  <span className="text-xs truncate font-medium">
+                                  <span className="text-xs truncate font-normal">
                                     {session.title || 'New Chat'}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                                  <span className={`text-[10px] tabular-nums ${
-                                    isDark ? 'text-slate-600' : 'text-gray-400'
-                                  }`}>
+                                  <span className="text-[10px] tabular-nums text-gray-500">
                                     {formatRelativeTime(session.updatedAt)}
                                   </span>
                                   <button
@@ -501,11 +466,7 @@ export default function DBComposer(props: DBComposerProps) {
                                       e.stopPropagation();
                                       deleteSession(session.id);
                                     }}
-                                    className={`opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity ${
-                                      isDark
-                                        ? 'hover:bg-slate-700 text-slate-500 hover:text-red-400'
-                                        : 'hover:bg-gray-200 text-gray-400 hover:text-red-500'
-                                    }`}
+                                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/10 text-gray-500 hover:text-red-400 transition-opacity"
                                     title="Delete session"
                                   >
                                     <Trash2 className="w-3 h-3" />
