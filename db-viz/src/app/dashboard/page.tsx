@@ -55,9 +55,8 @@ const CreateChoiceModal = dynamic(() => import('@/components/database/CreateChoi
 const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyModal'), { ssr: false });
 const ExportModal = dynamic(() => import('@/components/database/ExportModal'), { ssr: false });
 const ImportModal = dynamic(() => import('@/components/database/ImportModal'), { ssr: false });
-const SQLChatbot = dynamic(() => import('@/components/chatbot/SQLChatbot'), { ssr: false });
-const DBComposer = dynamic(() => import('@/components/database/DBComposer'), { ssr: false });
 const QueryResultsPanel = dynamic(() => import('@/components/database/QueryResultsPanel'), { ssr: false });
+import DBComposer from '@/components/database/DBComposer';
 
 import TableNode from '@/components/database/TableNode';
 import RelationshipEdge from '@/components/database/RelationshipEdge';
