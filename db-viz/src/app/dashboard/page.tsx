@@ -98,29 +98,29 @@ const edgeTypes = {
   relationshipEdge: RelationshipEdge,
 };
 
-// Theme definitions (moved outside component to prevent re-creation)
+// Theme definitions aligned with Landing Page design tokens
 const THEMES = {
   light: {
-    bg: 'bg-gradient-to-br from-gray-50 via-white to-gray-100',
-    navbar: 'bg-white/95 border-gray-200',
+    bg: 'bg-[#fafafa]',
+    navbar: 'bg-white/90 border-gray-200',
     sidebar: 'bg-white border-gray-200',
-    text: 'text-gray-900',
-    textSecondary: 'text-gray-600',
-    button: 'bg-gray-900 hover:bg-gray-800 text-white',
-    buttonSecondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900',
+    text: 'text-black',
+    textSecondary: 'text-gray-500',
+    button: 'bg-black hover:bg-gray-900 text-white',
+    buttonSecondary: 'bg-gray-100 hover:bg-gray-200 text-black',
     modal: 'bg-white',
-    input: 'bg-white border-gray-300 text-gray-900',
+    input: 'bg-white border-gray-200 text-black',
   },
   dark: {
-    bg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
-    navbar: 'bg-slate-900/95 border-slate-700',
-    sidebar: 'bg-slate-900 border-slate-700',
+    bg: 'bg-gray-950',
+    navbar: 'bg-gray-950/90 border-white/[0.08]',
+    sidebar: 'bg-[#121212] border-white/[0.08]',
     text: 'text-white',
-    textSecondary: 'text-slate-300',
-    button: 'bg-slate-100 hover:bg-white text-slate-900',
-    buttonSecondary: 'bg-slate-700 hover:bg-slate-600 text-white',
-    modal: 'bg-slate-800',
-    input: 'bg-slate-900 border-slate-600 text-white',
+    textSecondary: 'text-gray-400',
+    button: 'bg-white hover:bg-gray-100 text-black',
+    buttonSecondary: 'bg-white/10 hover:bg-white/15 text-white',
+    modal: 'bg-[#161616]',
+    input: 'bg-[#141414] border-white/10 text-white',
   },
 };
 
@@ -355,12 +355,12 @@ export default function DashboardPage() {
         const unsub = onSnapshot(chatRef, (snap) => {
           if (snap.exists()) {
             const data = snap.data();
-              const SCHEMA_PILOT_WELCOME = "⚡ **Schema Pilot Ready**\n\nI am Schema Pilot, your AI database copilot. Tell me what you want to build:\n\n• *\"Create a car dealership database with cars and sales tables\"*\n• *\"Build a student management system with 3 sample records\"*\n• *\"Add an orders table with a foreign key to users\"*\n\nI will generate the SQL and automatically render the tables onto your interactive canvas!";
+              const DB_COMPOSER_WELCOME = "⚡ **DB Composer Ready**\n\nI am DB Composer, your AI database assistant. Tell me what you want to build:\n\n• *\"Create a car dealership database with cars and sales tables\"*\n• *\"Build a student management system with 3 sample records\"*\n• *\"Add an orders table with a foreign key to users\"*\n\nI will generate the SQL and automatically render the tables onto your interactive canvas!";
 
               const loaded: ChatMessage[] = data.messages.map((m: Record<string, unknown>) => {
                 let content = m.content as string;
-                if (m.id === 'welcome' || (typeof content === 'string' && (content.includes('AI Composer') || content.includes('Cursor-like')))) {
-                  content = SCHEMA_PILOT_WELCOME;
+                if (m.id === 'welcome' || (typeof content === 'string' && (content.includes('AI Composer') || content.includes('Cursor-like') || content.includes('Schema Pilot')))) {
+                  content = DB_COMPOSER_WELCOME;
                 }
                 return {
                   id: m.id as string,
@@ -2461,6 +2461,9 @@ export default function DashboardPage() {
         isComposerOpen={isComposerOpen}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
         selectedDatabaseName={databases.find(db => db.id === selectedDatabaseId)?.name}
+        tableCount={tablesForSelectedDb.length}
+        onExport={() => setIsExportModalOpen(true)}
+        onImport={() => setIsImportModalOpen(true)}
       />
 
       {/* Main Content */}
@@ -2588,15 +2591,15 @@ export default function DashboardPage() {
 
 
         {/* Canvas Area */}
-        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4">
+        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4 bg-[#fafafa]">
           {/* React Flow Canvas */}
-          <div className="flex-1 relative" ref={workflowRef}>
+          <div className="flex-1 relative rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm" ref={workflowRef}>
             {selectedDatabaseId ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.99 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="h-full rounded-xl overflow-hidden border border-gray-200 bg-white"
+                transition={{ duration: 0.25 }}
+                className="h-full w-full"
               >
                 <ReactFlow
                   nodes={nodes}
@@ -2611,36 +2614,31 @@ export default function DashboardPage() {
                   }}
                   defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
                   proOptions={{ hideAttribution: true }}
-                  className={THEMES[currentTheme as keyof typeof THEMES]?.bg || THEMES.light.bg}
+                  className="bg-white"
                 >
                   <div data-html2canvas-ignore="true">
                     <Controls
-                      className="bg-white border border-gray-200 rounded-lg"
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
                     />
                   </div>
                 </ReactFlow>
               </motion.div>
             ) : (
-              <div className={`h-full flex items-center justify-center rounded-2xl ${THEMES[currentTheme as keyof typeof THEMES]?.bg || THEMES.light.bg}`}>
+              <div className="h-full flex items-center justify-center rounded-2xl bg-white">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="text-center max-w-lg mx-auto px-8"
+                  transition={{ duration: 0.4 }}
+                  className="text-center max-w-md mx-auto px-6"
                 >
-                  {/* Clean, minimal icon */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.05 }}
-                    className={`w-14 h-14 ${currentTheme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-gray-100 border-gray-200'} border rounded-xl flex items-center justify-center mx-auto mb-6`}
-                  >
+                  {/* Brand Icon */}
+                  <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
                     <svg
-                      className={`w-6 h-6 ${currentTheme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}
+                      className="w-6 h-6 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
-                      strokeWidth={1.5}
+                      strokeWidth={1.75}
                     >
                       <path
                         strokeLinecap="round"
@@ -2648,121 +2646,47 @@ export default function DashboardPage() {
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                  </motion.div>
+                  </div>
 
                   {/* Title */}
-                  <motion.h2
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={`text-2xl font-light ${THEMES[currentTheme as keyof typeof THEMES]?.text || 'text-gray-900'} mb-3`}
-                    style={{ fontFamily: 'var(--font-geist-sans)', letterSpacing: '-0.01em' }}
+                  <h2
+                    className="text-2xl font-light text-black mb-2 tracking-tight"
+                    style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
                     Design your database
-                  </motion.h2>
+                  </h2>
 
                   {/* Subtitle */}
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                    className={`text-sm ${THEMES[currentTheme as keyof typeof THEMES]?.textSecondary || 'text-gray-500'} mb-8 max-w-sm mx-auto leading-relaxed`}
+                  <p
+                    className="text-xs font-light text-gray-500 mb-6 max-w-sm mx-auto leading-relaxed"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    Create tables, define columns, and set up relationships visually. Select a database from the sidebar or create a new one.
-                  </motion.p>
+                    Build tables visually, configure columns and constraints, and link relations. Select a database from the sidebar or start a new project.
+                  </p>
 
                   {/* Action button */}
-                  <motion.button
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     onClick={() => handleOpenCreateDatabase()}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 ${currentTheme === 'dark' ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'} rounded-lg transition-colors text-sm font-medium`}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-black hover:bg-gray-800 text-white rounded-full text-xs font-medium transition-colors shadow-sm"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
-                    New database
-                  </motion.button>
+                    <span>New Database</span>
+                  </button>
 
-                  {/* Keyboard shortcut hint */}
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={`text-xs ${currentTheme === 'dark' ? 'text-slate-500' : 'text-gray-400'} mt-4`}
+                  <p
+                    className="text-[11px] font-light text-gray-400 mt-3"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    or select from the sidebar
-                  </motion.p>
+                    or select an existing database from the sidebar
+                  </p>
                 </motion.div>
               </div>
             )}
 
-            {/* Table count badge and Export Button */}
-            <AnimatePresence>
-              {selectedDatabaseId && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute top-8 right-8 space-y-3 z-10"
-                  data-html2canvas-ignore="true"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={`${currentTheme === 'dark' ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-300'} backdrop-blur-sm px-4 py-2.5 rounded-xl shadow-md border`}
-                  >
-                    <p className={`text-[13px] ${THEMES[currentTheme as keyof typeof THEMES]?.textSecondary || 'text-gray-600'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                      <span className={`font-medium ${THEMES[currentTheme as keyof typeof THEMES]?.text || 'text-gray-900'}`}>
-                        {selectedDatabaseName}
-                      </span>
-                      <span className="mx-1.5">·</span>
-                      {tablesForSelectedDb.length} {tablesForSelectedDb.length === 1 ? 'table' : 'tables'}
-                    </p>
-                  </motion.div>
 
-                  {/* Export Button */}
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.15 }}
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsExportModalOpen(true)}
-                    className="w-full bg-black hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-md text-[13px] flex items-center justify-center gap-2 transition-colors"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export
-                  </motion.button>
-
-                  {/* Import Button */}
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsImportModalOpen(true)}
-                    className="w-full bg-black hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-md text-[13px] flex items-center justify-center gap-2 transition-colors"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Import
-                  </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Query Results Panel */}
             <AnimatePresence>

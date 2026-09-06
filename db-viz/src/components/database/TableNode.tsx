@@ -39,17 +39,17 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
   return (
     <div
       className={`
-        relative ${theme?.modal || 'bg-white'} rounded-xl overflow-visible
-        shadow-lg hover:shadow-xl transition-all duration-150
-        border-2 ${selected || isSelected ? (theme?.navbar?.includes('slate') ? 'border-blue-400' : 'border-blue-500') : (theme?.navbar?.includes('slate') ? 'border-slate-700' : 'border-gray-200')}
-        min-w-[220px]
+        relative ${theme?.modal || 'bg-white'} rounded-2xl overflow-visible
+        shadow-sm hover:shadow-md transition-all duration-150
+        border ${selected || isSelected ? 'border-black ring-2 ring-black/10' : 'border-gray-200 hover:border-gray-300'}
+        min-w-[230px]
       `}
     >
       {/* Table Header */}
-      <div className={`${theme?.button || 'bg-black'} px-4 py-3 flex items-center justify-between group rounded-t-xl`}>
+      <div className="bg-black px-4 py-2.5 flex items-center justify-between group rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-white rounded-full opacity-80" />
-          <h3 className="text-white font-light text-sm tracking-wide" style={{ fontFamily: 'var(--font-geist-sans)' }}>
+          <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80" />
+          <h3 className="text-white font-normal text-xs tracking-wide" style={{ fontFamily: 'var(--font-geist-sans)' }}>
             {table.name}
           </h3>
         </div>
@@ -132,7 +132,7 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
       </div>
 
       {/* Table Footer */}
-      <div className={`px-4 py-2 ${theme?.navbar?.includes('slate') ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'} border-t rounded-b-xl`}>
+      <div className={`px-4 py-2 ${theme?.navbar?.includes('slate') ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'} border-t rounded-b-2xl`}>
         <div className={`flex items-center justify-between text-xs ${theme?.textSecondary || 'text-gray-600'}`}>
           <span>{table.columns.length} columns</span>
           <span className="flex items-center gap-1">
