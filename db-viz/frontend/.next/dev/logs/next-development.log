@@ -1,0 +1,38 @@
+[00:00:00.539] Server  LOG     ✓ Ready in 387ms
+[00:00:03.210] Browser GROUP   📊 Cache Performance Report
+[00:00:03.210] Browser LOG     Cached Resources: 17
+[00:00:03.210] Browser LOG     Network Requests: 14
+[00:00:03.210] Browser LOG     Cache Hit Rate: 54.8%
+[00:00:03.210] Browser LOG     Total Data Transferred: 115.29 KB
+[00:00:03.210] Browser LOG     Average Resource Time: 14 ms
+[00:00:03.210] Browser GROUPEND 
+[00:00:03.210] Browser GROUP   📊 Cache Performance Report
+[00:00:03.210] Browser LOG     Cached Resources: 18
+[00:00:03.210] Browser LOG     Network Requests: 14
+[00:00:03.210] Browser LOG     Cache Hit Rate: 56.3%
+[00:00:03.210] Browser LOG     Total Data Transferred: 115.29 KB
+[00:00:03.210] Browser LOG     Average Resource Time: 14 ms
+[00:00:03.210] Browser GROUPEND 
+[00:00:03.210] Browser LOG     [TTFB] {"metric":"TTFB","rating":"needs-improvement","timestamp":"2026-09-08T15:50:49.099Z","url":"http://localhost:3000/profile","value":1439}
+[00:00:03.210] Browser WARN    ⚠️ TTFB exceeds 600ms: 1439
+[00:00:03.468] Browser LOG     [FCP] {"metric":"FCP","rating":"needs-improvement","timestamp":"2026-09-08T15:50:49.357Z","url":"http://localhost:3000/profile","value":1853}
+[00:00:03.468] Browser WARN    ⚠️ FCP exceeds 1.8s: 1853
+[00:00:06.166] Browser LOG     [LCP] {"metric":"LCP","rating":"good","timestamp":"2026-09-08T15:50:52.056Z","url":"http://localhost:3000/profile","value":2146}
+[00:00:06.603] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:00:20.141] Browser LOG     [Dashboard] Waiting for layouts to load...
+[00:00:20.141] Browser LOG     [Dashboard] Waiting for layouts to load...
+[00:00:20.141] Browser LOG     [Dashboard] Creating nodes with layouts: {"layouts":{},"layoutsCount":0,"tablesCount":0}
+[00:00:20.141] Browser WARN    [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002
+[00:00:20.141] Browser WARN    [React Flow]: It looks like you've created a new nodeTypes or edgeTypes object. If this wasn't on purpose please define the nodeTypes/edgeTypes outside of the component or memoize them. Help: https://reactflow.dev/error#002
+[00:00:20.141] Browser LOG     [Dashboard] Initialized terminalDbRef with prefixed name: user_gCnzqFza_automotive_industry
+[00:00:20.141] Browser LOG     [Dashboard] Creating nodes with layouts: {"layouts":{},"layoutsCount":0,"tablesCount":0}
+[00:00:20.141] Browser LOG     [Dashboard] Waiting for layouts to load...
+[00:00:20.259] Browser LOG     [Dashboard] Creating nodes with layouts: {"layouts":{"08a2f20e-2154-4d2b-b007-6df64b9444e7":{"x":1539.792807724883,"y":869.6319880909898},"2a87396c-125c-4472-8ef8-f9daa4ec300b":{"x":1511.581011247711,"y":706.9246159017198},"3c3c39f4-2c32-4bee-bcbc-ee10095dbc86":{"x":1062.6172663704872,"y":815.8126899743305},"528366e5-6020-407b-9770-261b438a2d98":{"x":2187.2245445378603,"y":861.8540550743803},"806a9ad5-80f0-4008-a6f3-d7fecf97109b":{"x":1870.1680064641505,"y":844.68765636721},"a71b37b6-fd7b-47a9-8a15-483e795c500d":{"x":1159.147999741793,"y":1141.8067164833585},"e96babe6-4b06-4dac-8a18-20ca1f0e8bed":{"x":1509.2417828054504,"y":1218.9655234648205},"f1ef1c7a-8bea-4d70-83de-e60add32d005":{"x":1912.1303144150102,"y":1264.7425866839403}},"layoutsCount":8,"tablesCount":8}
+[00:00:20.259] Browser LOG     [Dashboard] Table brands: savedPosition={"x":1539.792807724883,"y":869.6319880909898}, using={"x":1539.792807724883,"y":869.6319880909898}
+[00:00:20.259] Browser LOG     [Dashboard] Table body_types: savedPosition={"x":1511.581011247711,"y":706.9246159017198}, using={"x":1511.581011247711,"y":706.9246159017198}
+[00:00:20.259] Browser LOG     [Dashboard] Table countries: savedPosition={"x":1062.6172663704872,"y":815.8126899743305}, using={"x":1062.6172663704872,"y":815.8126899743305}
+[00:00:20.259] Browser LOG     [Dashboard] Table variants: savedPosition={"x":2187.2245445378603,"y":861.8540550743803}, using={"x":2187.2245445378603,"y":861.8540550743803}
+[00:00:20.259] Browser LOG     [Dashboard] Table models: savedPosition={"x":1870.1680064641505,"y":844.68765636721}, using={"x":1870.1680064641505,"y":844.68765636721}
+[00:00:20.259] Browser LOG     [Dashboard] Table manufacturers: savedPosition={"x":1159.147999741793,"y":1141.8067164833585}, using={"x":1159.147999741793,"y":1141.8067164833585}
+[00:00:20.259] Browser LOG     [Dashboard] Table features: savedPosition={"x":1509.2417828054504,"y":1218.9655234648205}, using={"x":1509.2417828054504,"y":1218.9655234648205}
+[00:00:20.259] Browser LOG     [Dashboard] Table variant_features: savedPosition={"x":1912.1303144150102,"y":1264.7425866839403}, using={"x":1912.1303144150102,"y":1264.7425866839403}
