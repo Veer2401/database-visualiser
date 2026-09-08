@@ -1,0 +1,326 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768">
+  <defs>
+    <linearGradient id="blueAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="greenAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="purpleAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="orangeAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="cyanAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+    <filter id="subtleGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- White background -->
+  <rect width="1024" height="768" fill="#ffffff"/>
+
+  <!-- Subtle dot grid pattern -->
+  <g opacity="0.15">
+    <circle cx="40" cy="40" r="1" fill="#94a3b8"/><circle cx="80" cy="40" r="1" fill="#94a3b8"/><circle cx="120" cy="40" r="1" fill="#94a3b8"/><circle cx="160" cy="40" r="1" fill="#94a3b8"/><circle cx="200" cy="40" r="1" fill="#94a3b8"/><circle cx="240" cy="40" r="1" fill="#94a3b8"/><circle cx="280" cy="40" r="1" fill="#94a3b8"/><circle cx="320" cy="40" r="1" fill="#94a3b8"/><circle cx="360" cy="40" r="1" fill="#94a3b8"/><circle cx="400" cy="40" r="1" fill="#94a3b8"/><circle cx="440" cy="40" r="1" fill="#94a3b8"/><circle cx="480" cy="40" r="1" fill="#94a3b8"/><circle cx="520" cy="40" r="1" fill="#94a3b8"/><circle cx="560" cy="40" r="1" fill="#94a3b8"/><circle cx="600" cy="40" r="1" fill="#94a3b8"/><circle cx="640" cy="40" r="1" fill="#94a3b8"/><circle cx="680" cy="40" r="1" fill="#94a3b8"/><circle cx="720" cy="40" r="1" fill="#94a3b8"/><circle cx="760" cy="40" r="1" fill="#94a3b8"/><circle cx="800" cy="40" r="1" fill="#94a3b8"/><circle cx="840" cy="40" r="1" fill="#94a3b8"/><circle cx="880" cy="40" r="1" fill="#94a3b8"/><circle cx="920" cy="40" r="1" fill="#94a3b8"/><circle cx="960" cy="40" r="1" fill="#94a3b8"/><circle cx="1000" cy="40" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="80" r="1" fill="#94a3b8"/><circle cx="80" cy="80" r="1" fill="#94a3b8"/><circle cx="120" cy="80" r="1" fill="#94a3b8"/><circle cx="160" cy="80" r="1" fill="#94a3b8"/><circle cx="200" cy="80" r="1" fill="#94a3b8"/><circle cx="240" cy="80" r="1" fill="#94a3b8"/><circle cx="280" cy="80" r="1" fill="#94a3b8"/><circle cx="320" cy="80" r="1" fill="#94a3b8"/><circle cx="360" cy="80" r="1" fill="#94a3b8"/><circle cx="400" cy="80" r="1" fill="#94a3b8"/><circle cx="440" cy="80" r="1" fill="#94a3b8"/><circle cx="480" cy="80" r="1" fill="#94a3b8"/><circle cx="520" cy="80" r="1" fill="#94a3b8"/><circle cx="560" cy="80" r="1" fill="#94a3b8"/><circle cx="600" cy="80" r="1" fill="#94a3b8"/><circle cx="640" cy="80" r="1" fill="#94a3b8"/><circle cx="680" cy="80" r="1" fill="#94a3b8"/><circle cx="720" cy="80" r="1" fill="#94a3b8"/><circle cx="760" cy="80" r="1" fill="#94a3b8"/><circle cx="800" cy="80" r="1" fill="#94a3b8"/><circle cx="840" cy="80" r="1" fill="#94a3b8"/><circle cx="880" cy="80" r="1" fill="#94a3b8"/><circle cx="920" cy="80" r="1" fill="#94a3b8"/><circle cx="960" cy="80" r="1" fill="#94a3b8"/><circle cx="1000" cy="80" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="120" r="1" fill="#94a3b8"/><circle cx="80" cy="120" r="1" fill="#94a3b8"/><circle cx="120" cy="120" r="1" fill="#94a3b8"/><circle cx="160" cy="120" r="1" fill="#94a3b8"/><circle cx="200" cy="120" r="1" fill="#94a3b8"/><circle cx="240" cy="120" r="1" fill="#94a3b8"/><circle cx="280" cy="120" r="1" fill="#94a3b8"/><circle cx="320" cy="120" r="1" fill="#94a3b8"/><circle cx="360" cy="120" r="1" fill="#94a3b8"/><circle cx="400" cy="120" r="1" fill="#94a3b8"/><circle cx="440" cy="120" r="1" fill="#94a3b8"/><circle cx="480" cy="120" r="1" fill="#94a3b8"/><circle cx="520" cy="120" r="1" fill="#94a3b8"/><circle cx="560" cy="120" r="1" fill="#94a3b8"/><circle cx="600" cy="120" r="1" fill="#94a3b8"/><circle cx="640" cy="120" r="1" fill="#94a3b8"/><circle cx="680" cy="120" r="1" fill="#94a3b8"/><circle cx="720" cy="120" r="1" fill="#94a3b8"/><circle cx="760" cy="120" r="1" fill="#94a3b8"/><circle cx="800" cy="120" r="1" fill="#94a3b8"/><circle cx="840" cy="120" r="1" fill="#94a3b8"/><circle cx="880" cy="120" r="1" fill="#94a3b8"/><circle cx="920" cy="120" r="1" fill="#94a3b8"/><circle cx="960" cy="120" r="1" fill="#94a3b8"/><circle cx="1000" cy="120" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="160" r="1" fill="#94a3b8"/><circle cx="80" cy="160" r="1" fill="#94a3b8"/><circle cx="120" cy="160" r="1" fill="#94a3b8"/><circle cx="160" cy="160" r="1" fill="#94a3b8"/><circle cx="200" cy="160" r="1" fill="#94a3b8"/><circle cx="240" cy="160" r="1" fill="#94a3b8"/><circle cx="280" cy="160" r="1" fill="#94a3b8"/><circle cx="320" cy="160" r="1" fill="#94a3b8"/><circle cx="360" cy="160" r="1" fill="#94a3b8"/><circle cx="400" cy="160" r="1" fill="#94a3b8"/><circle cx="440" cy="160" r="1" fill="#94a3b8"/><circle cx="480" cy="160" r="1" fill="#94a3b8"/><circle cx="520" cy="160" r="1" fill="#94a3b8"/><circle cx="560" cy="160" r="1" fill="#94a3b8"/><circle cx="600" cy="160" r="1" fill="#94a3b8"/><circle cx="640" cy="160" r="1" fill="#94a3b8"/><circle cx="680" cy="160" r="1" fill="#94a3b8"/><circle cx="720" cy="160" r="1" fill="#94a3b8"/><circle cx="760" cy="160" r="1" fill="#94a3b8"/><circle cx="800" cy="160" r="1" fill="#94a3b8"/><circle cx="840" cy="160" r="1" fill="#94a3b8"/><circle cx="880" cy="160" r="1" fill="#94a3b8"/><circle cx="920" cy="160" r="1" fill="#94a3b8"/><circle cx="960" cy="160" r="1" fill="#94a3b8"/><circle cx="1000" cy="160" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="200" r="1" fill="#94a3b8"/><circle cx="80" cy="200" r="1" fill="#94a3b8"/><circle cx="120" cy="200" r="1" fill="#94a3b8"/><circle cx="160" cy="200" r="1" fill="#94a3b8"/><circle cx="200" cy="200" r="1" fill="#94a3b8"/><circle cx="240" cy="200" r="1" fill="#94a3b8"/><circle cx="280" cy="200" r="1" fill="#94a3b8"/><circle cx="320" cy="200" r="1" fill="#94a3b8"/><circle cx="360" cy="200" r="1" fill="#94a3b8"/><circle cx="400" cy="200" r="1" fill="#94a3b8"/><circle cx="440" cy="200" r="1" fill="#94a3b8"/><circle cx="480" cy="200" r="1" fill="#94a3b8"/><circle cx="520" cy="200" r="1" fill="#94a3b8"/><circle cx="560" cy="200" r="1" fill="#94a3b8"/><circle cx="600" cy="200" r="1" fill="#94a3b8"/><circle cx="640" cy="200" r="1" fill="#94a3b8"/><circle cx="680" cy="200" r="1" fill="#94a3b8"/><circle cx="720" cy="200" r="1" fill="#94a3b8"/><circle cx="760" cy="200" r="1" fill="#94a3b8"/><circle cx="800" cy="200" r="1" fill="#94a3b8"/><circle cx="840" cy="200" r="1" fill="#94a3b8"/><circle cx="880" cy="200" r="1" fill="#94a3b8"/><circle cx="920" cy="200" r="1" fill="#94a3b8"/><circle cx="960" cy="200" r="1" fill="#94a3b8"/><circle cx="1000" cy="200" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="240" r="1" fill="#94a3b8"/><circle cx="80" cy="240" r="1" fill="#94a3b8"/><circle cx="120" cy="240" r="1" fill="#94a3b8"/><circle cx="160" cy="240" r="1" fill="#94a3b8"/><circle cx="200" cy="240" r="1" fill="#94a3b8"/><circle cx="240" cy="240" r="1" fill="#94a3b8"/><circle cx="280" cy="240" r="1" fill="#94a3b8"/><circle cx="320" cy="240" r="1" fill="#94a3b8"/><circle cx="360" cy="240" r="1" fill="#94a3b8"/><circle cx="400" cy="240" r="1" fill="#94a3b8"/><circle cx="440" cy="240" r="1" fill="#94a3b8"/><circle cx="480" cy="240" r="1" fill="#94a3b8"/><circle cx="520" cy="240" r="1" fill="#94a3b8"/><circle cx="560" cy="240" r="1" fill="#94a3b8"/><circle cx="600" cy="240" r="1" fill="#94a3b8"/><circle cx="640" cy="240" r="1" fill="#94a3b8"/><circle cx="680" cy="240" r="1" fill="#94a3b8"/><circle cx="720" cy="240" r="1" fill="#94a3b8"/><circle cx="760" cy="240" r="1" fill="#94a3b8"/><circle cx="800" cy="240" r="1" fill="#94a3b8"/><circle cx="840" cy="240" r="1" fill="#94a3b8"/><circle cx="880" cy="240" r="1" fill="#94a3b8"/><circle cx="920" cy="240" r="1" fill="#94a3b8"/><circle cx="960" cy="240" r="1" fill="#94a3b8"/><circle cx="1000" cy="240" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="280" r="1" fill="#94a3b8"/><circle cx="80" cy="280" r="1" fill="#94a3b8"/><circle cx="120" cy="280" r="1" fill="#94a3b8"/><circle cx="160" cy="280" r="1" fill="#94a3b8"/><circle cx="200" cy="280" r="1" fill="#94a3b8"/><circle cx="240" cy="280" r="1" fill="#94a3b8"/><circle cx="280" cy="280" r="1" fill="#94a3b8"/><circle cx="320" cy="280" r="1" fill="#94a3b8"/><circle cx="360" cy="280" r="1" fill="#94a3b8"/><circle cx="400" cy="280" r="1" fill="#94a3b8"/><circle cx="440" cy="280" r="1" fill="#94a3b8"/><circle cx="480" cy="280" r="1" fill="#94a3b8"/><circle cx="520" cy="280" r="1" fill="#94a3b8"/><circle cx="560" cy="280" r="1" fill="#94a3b8"/><circle cx="600" cy="280" r="1" fill="#94a3b8"/><circle cx="640" cy="280" r="1" fill="#94a3b8"/><circle cx="680" cy="280" r="1" fill="#94a3b8"/><circle cx="720" cy="280" r="1" fill="#94a3b8"/><circle cx="760" cy="280" r="1" fill="#94a3b8"/><circle cx="800" cy="280" r="1" fill="#94a3b8"/><circle cx="840" cy="280" r="1" fill="#94a3b8"/><circle cx="880" cy="280" r="1" fill="#94a3b8"/><circle cx="920" cy="280" r="1" fill="#94a3b8"/><circle cx="960" cy="280" r="1" fill="#94a3b8"/><circle cx="1000" cy="280" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="320" r="1" fill="#94a3b8"/><circle cx="80" cy="320" r="1" fill="#94a3b8"/><circle cx="120" cy="320" r="1" fill="#94a3b8"/><circle cx="160" cy="320" r="1" fill="#94a3b8"/><circle cx="200" cy="320" r="1" fill="#94a3b8"/><circle cx="240" cy="320" r="1" fill="#94a3b8"/><circle cx="280" cy="320" r="1" fill="#94a3b8"/><circle cx="320" cy="320" r="1" fill="#94a3b8"/><circle cx="360" cy="320" r="1" fill="#94a3b8"/><circle cx="400" cy="320" r="1" fill="#94a3b8"/><circle cx="440" cy="320" r="1" fill="#94a3b8"/><circle cx="480" cy="320" r="1" fill="#94a3b8"/><circle cx="520" cy="320" r="1" fill="#94a3b8"/><circle cx="560" cy="320" r="1" fill="#94a3b8"/><circle cx="600" cy="320" r="1" fill="#94a3b8"/><circle cx="640" cy="320" r="1" fill="#94a3b8"/><circle cx="680" cy="320" r="1" fill="#94a3b8"/><circle cx="720" cy="320" r="1" fill="#94a3b8"/><circle cx="760" cy="320" r="1" fill="#94a3b8"/><circle cx="800" cy="320" r="1" fill="#94a3b8"/><circle cx="840" cy="320" r="1" fill="#94a3b8"/><circle cx="880" cy="320" r="1" fill="#94a3b8"/><circle cx="920" cy="320" r="1" fill="#94a3b8"/><circle cx="960" cy="320" r="1" fill="#94a3b8"/><circle cx="1000" cy="320" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="360" r="1" fill="#94a3b8"/><circle cx="80" cy="360" r="1" fill="#94a3b8"/><circle cx="120" cy="360" r="1" fill="#94a3b8"/><circle cx="160" cy="360" r="1" fill="#94a3b8"/><circle cx="200" cy="360" r="1" fill="#94a3b8"/><circle cx="240" cy="360" r="1" fill="#94a3b8"/><circle cx="280" cy="360" r="1" fill="#94a3b8"/><circle cx="320" cy="360" r="1" fill="#94a3b8"/><circle cx="360" cy="360" r="1" fill="#94a3b8"/><circle cx="400" cy="360" r="1" fill="#94a3b8"/><circle cx="440" cy="360" r="1" fill="#94a3b8"/><circle cx="480" cy="360" r="1" fill="#94a3b8"/><circle cx="520" cy="360" r="1" fill="#94a3b8"/><circle cx="560" cy="360" r="1" fill="#94a3b8"/><circle cx="600" cy="360" r="1" fill="#94a3b8"/><circle cx="640" cy="360" r="1" fill="#94a3b8"/><circle cx="680" cy="360" r="1" fill="#94a3b8"/><circle cx="720" cy="360" r="1" fill="#94a3b8"/><circle cx="760" cy="360" r="1" fill="#94a3b8"/><circle cx="800" cy="360" r="1" fill="#94a3b8"/><circle cx="840" cy="360" r="1" fill="#94a3b8"/><circle cx="880" cy="360" r="1" fill="#94a3b8"/><circle cx="920" cy="360" r="1" fill="#94a3b8"/><circle cx="960" cy="360" r="1" fill="#94a3b8"/><circle cx="1000" cy="360" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="400" r="1" fill="#94a3b8"/><circle cx="80" cy="400" r="1" fill="#94a3b8"/><circle cx="120" cy="400" r="1" fill="#94a3b8"/><circle cx="160" cy="400" r="1" fill="#94a3b8"/><circle cx="200" cy="400" r="1" fill="#94a3b8"/><circle cx="240" cy="400" r="1" fill="#94a3b8"/><circle cx="280" cy="400" r="1" fill="#94a3b8"/><circle cx="320" cy="400" r="1" fill="#94a3b8"/><circle cx="360" cy="400" r="1" fill="#94a3b8"/><circle cx="400" cy="400" r="1" fill="#94a3b8"/><circle cx="440" cy="400" r="1" fill="#94a3b8"/><circle cx="480" cy="400" r="1" fill="#94a3b8"/><circle cx="520" cy="400" r="1" fill="#94a3b8"/><circle cx="560" cy="400" r="1" fill="#94a3b8"/><circle cx="600" cy="400" r="1" fill="#94a3b8"/><circle cx="640" cy="400" r="1" fill="#94a3b8"/><circle cx="680" cy="400" r="1" fill="#94a3b8"/><circle cx="720" cy="400" r="1" fill="#94a3b8"/><circle cx="760" cy="400" r="1" fill="#94a3b8"/><circle cx="800" cy="400" r="1" fill="#94a3b8"/><circle cx="840" cy="400" r="1" fill="#94a3b8"/><circle cx="880" cy="400" r="1" fill="#94a3b8"/><circle cx="920" cy="400" r="1" fill="#94a3b8"/><circle cx="960" cy="400" r="1" fill="#94a3b8"/><circle cx="1000" cy="400" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="440" r="1" fill="#94a3b8"/><circle cx="80" cy="440" r="1" fill="#94a3b8"/><circle cx="120" cy="440" r="1" fill="#94a3b8"/><circle cx="160" cy="440" r="1" fill="#94a3b8"/><circle cx="200" cy="440" r="1" fill="#94a3b8"/><circle cx="240" cy="440" r="1" fill="#94a3b8"/><circle cx="280" cy="440" r="1" fill="#94a3b8"/><circle cx="320" cy="440" r="1" fill="#94a3b8"/><circle cx="360" cy="440" r="1" fill="#94a3b8"/><circle cx="400" cy="440" r="1" fill="#94a3b8"/><circle cx="440" cy="440" r="1" fill="#94a3b8"/><circle cx="480" cy="440" r="1" fill="#94a3b8"/><circle cx="520" cy="440" r="1" fill="#94a3b8"/><circle cx="560" cy="440" r="1" fill="#94a3b8"/><circle cx="600" cy="440" r="1" fill="#94a3b8"/><circle cx="640" cy="440" r="1" fill="#94a3b8"/><circle cx="680" cy="440" r="1" fill="#94a3b8"/><circle cx="720" cy="440" r="1" fill="#94a3b8"/><circle cx="760" cy="440" r="1" fill="#94a3b8"/><circle cx="800" cy="440" r="1" fill="#94a3b8"/><circle cx="840" cy="440" r="1" fill="#94a3b8"/><circle cx="880" cy="440" r="1" fill="#94a3b8"/><circle cx="920" cy="440" r="1" fill="#94a3b8"/><circle cx="960" cy="440" r="1" fill="#94a3b8"/><circle cx="1000" cy="440" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="480" r="1" fill="#94a3b8"/><circle cx="80" cy="480" r="1" fill="#94a3b8"/><circle cx="120" cy="480" r="1" fill="#94a3b8"/><circle cx="160" cy="480" r="1" fill="#94a3b8"/><circle cx="200" cy="480" r="1" fill="#94a3b8"/><circle cx="240" cy="480" r="1" fill="#94a3b8"/><circle cx="280" cy="480" r="1" fill="#94a3b8"/><circle cx="320" cy="480" r="1" fill="#94a3b8"/><circle cx="360" cy="480" r="1" fill="#94a3b8"/><circle cx="400" cy="480" r="1" fill="#94a3b8"/><circle cx="440" cy="480" r="1" fill="#94a3b8"/><circle cx="480" cy="480" r="1" fill="#94a3b8"/><circle cx="520" cy="480" r="1" fill="#94a3b8"/><circle cx="560" cy="480" r="1" fill="#94a3b8"/><circle cx="600" cy="480" r="1" fill="#94a3b8"/><circle cx="640" cy="480" r="1" fill="#94a3b8"/><circle cx="680" cy="480" r="1" fill="#94a3b8"/><circle cx="720" cy="480" r="1" fill="#94a3b8"/><circle cx="760" cy="480" r="1" fill="#94a3b8"/><circle cx="800" cy="480" r="1" fill="#94a3b8"/><circle cx="840" cy="480" r="1" fill="#94a3b8"/><circle cx="880" cy="480" r="1" fill="#94a3b8"/><circle cx="920" cy="480" r="1" fill="#94a3b8"/><circle cx="960" cy="480" r="1" fill="#94a3b8"/><circle cx="1000" cy="480" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="520" r="1" fill="#94a3b8"/><circle cx="80" cy="520" r="1" fill="#94a3b8"/><circle cx="120" cy="520" r="1" fill="#94a3b8"/><circle cx="160" cy="520" r="1" fill="#94a3b8"/><circle cx="200" cy="520" r="1" fill="#94a3b8"/><circle cx="240" cy="520" r="1" fill="#94a3b8"/><circle cx="280" cy="520" r="1" fill="#94a3b8"/><circle cx="320" cy="520" r="1" fill="#94a3b8"/><circle cx="360" cy="520" r="1" fill="#94a3b8"/><circle cx="400" cy="520" r="1" fill="#94a3b8"/><circle cx="440" cy="520" r="1" fill="#94a3b8"/><circle cx="480" cy="520" r="1" fill="#94a3b8"/><circle cx="520" cy="520" r="1" fill="#94a3b8"/><circle cx="560" cy="520" r="1" fill="#94a3b8"/><circle cx="600" cy="520" r="1" fill="#94a3b8"/><circle cx="640" cy="520" r="1" fill="#94a3b8"/><circle cx="680" cy="520" r="1" fill="#94a3b8"/><circle cx="720" cy="520" r="1" fill="#94a3b8"/><circle cx="760" cy="520" r="1" fill="#94a3b8"/><circle cx="800" cy="520" r="1" fill="#94a3b8"/><circle cx="840" cy="520" r="1" fill="#94a3b8"/><circle cx="880" cy="520" r="1" fill="#94a3b8"/><circle cx="920" cy="520" r="1" fill="#94a3b8"/><circle cx="960" cy="520" r="1" fill="#94a3b8"/><circle cx="1000" cy="520" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="560" r="1" fill="#94a3b8"/><circle cx="80" cy="560" r="1" fill="#94a3b8"/><circle cx="120" cy="560" r="1" fill="#94a3b8"/><circle cx="160" cy="560" r="1" fill="#94a3b8"/><circle cx="200" cy="560" r="1" fill="#94a3b8"/><circle cx="240" cy="560" r="1" fill="#94a3b8"/><circle cx="280" cy="560" r="1" fill="#94a3b8"/><circle cx="320" cy="560" r="1" fill="#94a3b8"/><circle cx="360" cy="560" r="1" fill="#94a3b8"/><circle cx="400" cy="560" r="1" fill="#94a3b8"/><circle cx="440" cy="560" r="1" fill="#94a3b8"/><circle cx="480" cy="560" r="1" fill="#94a3b8"/><circle cx="520" cy="560" r="1" fill="#94a3b8"/><circle cx="560" cy="560" r="1" fill="#94a3b8"/><circle cx="600" cy="560" r="1" fill="#94a3b8"/><circle cx="640" cy="560" r="1" fill="#94a3b8"/><circle cx="680" cy="560" r="1" fill="#94a3b8"/><circle cx="720" cy="560" r="1" fill="#94a3b8"/><circle cx="760" cy="560" r="1" fill="#94a3b8"/><circle cx="800" cy="560" r="1" fill="#94a3b8"/><circle cx="840" cy="560" r="1" fill="#94a3b8"/><circle cx="880" cy="560" r="1" fill="#94a3b8"/><circle cx="920" cy="560" r="1" fill="#94a3b8"/><circle cx="960" cy="560" r="1" fill="#94a3b8"/><circle cx="1000" cy="560" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="600" r="1" fill="#94a3b8"/><circle cx="80" cy="600" r="1" fill="#94a3b8"/><circle cx="120" cy="600" r="1" fill="#94a3b8"/><circle cx="160" cy="600" r="1" fill="#94a3b8"/><circle cx="200" cy="600" r="1" fill="#94a3b8"/><circle cx="240" cy="600" r="1" fill="#94a3b8"/><circle cx="280" cy="600" r="1" fill="#94a3b8"/><circle cx="320" cy="600" r="1" fill="#94a3b8"/><circle cx="360" cy="600" r="1" fill="#94a3b8"/><circle cx="400" cy="600" r="1" fill="#94a3b8"/><circle cx="440" cy="600" r="1" fill="#94a3b8"/><circle cx="480" cy="600" r="1" fill="#94a3b8"/><circle cx="520" cy="600" r="1" fill="#94a3b8"/><circle cx="560" cy="600" r="1" fill="#94a3b8"/><circle cx="600" cy="600" r="1" fill="#94a3b8"/><circle cx="640" cy="600" r="1" fill="#94a3b8"/><circle cx="680" cy="600" r="1" fill="#94a3b8"/><circle cx="720" cy="600" r="1" fill="#94a3b8"/><circle cx="760" cy="600" r="1" fill="#94a3b8"/><circle cx="800" cy="600" r="1" fill="#94a3b8"/><circle cx="840" cy="600" r="1" fill="#94a3b8"/><circle cx="880" cy="600" r="1" fill="#94a3b8"/><circle cx="920" cy="600" r="1" fill="#94a3b8"/><circle cx="960" cy="600" r="1" fill="#94a3b8"/><circle cx="1000" cy="600" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="640" r="1" fill="#94a3b8"/><circle cx="80" cy="640" r="1" fill="#94a3b8"/><circle cx="120" cy="640" r="1" fill="#94a3b8"/><circle cx="160" cy="640" r="1" fill="#94a3b8"/><circle cx="200" cy="640" r="1" fill="#94a3b8"/><circle cx="240" cy="640" r="1" fill="#94a3b8"/><circle cx="280" cy="640" r="1" fill="#94a3b8"/><circle cx="320" cy="640" r="1" fill="#94a3b8"/><circle cx="360" cy="640" r="1" fill="#94a3b8"/><circle cx="400" cy="640" r="1" fill="#94a3b8"/><circle cx="440" cy="640" r="1" fill="#94a3b8"/><circle cx="480" cy="640" r="1" fill="#94a3b8"/><circle cx="520" cy="640" r="1" fill="#94a3b8"/><circle cx="560" cy="640" r="1" fill="#94a3b8"/><circle cx="600" cy="640" r="1" fill="#94a3b8"/><circle cx="640" cy="640" r="1" fill="#94a3b8"/><circle cx="680" cy="640" r="1" fill="#94a3b8"/><circle cx="720" cy="640" r="1" fill="#94a3b8"/><circle cx="760" cy="640" r="1" fill="#94a3b8"/><circle cx="800" cy="640" r="1" fill="#94a3b8"/><circle cx="840" cy="640" r="1" fill="#94a3b8"/><circle cx="880" cy="640" r="1" fill="#94a3b8"/><circle cx="920" cy="640" r="1" fill="#94a3b8"/><circle cx="960" cy="640" r="1" fill="#94a3b8"/><circle cx="1000" cy="640" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="680" r="1" fill="#94a3b8"/><circle cx="80" cy="680" r="1" fill="#94a3b8"/><circle cx="120" cy="680" r="1" fill="#94a3b8"/><circle cx="160" cy="680" r="1" fill="#94a3b8"/><circle cx="200" cy="680" r="1" fill="#94a3b8"/><circle cx="240" cy="680" r="1" fill="#94a3b8"/><circle cx="280" cy="680" r="1" fill="#94a3b8"/><circle cx="320" cy="680" r="1" fill="#94a3b8"/><circle cx="360" cy="680" r="1" fill="#94a3b8"/><circle cx="400" cy="680" r="1" fill="#94a3b8"/><circle cx="440" cy="680" r="1" fill="#94a3b8"/><circle cx="480" cy="680" r="1" fill="#94a3b8"/><circle cx="520" cy="680" r="1" fill="#94a3b8"/><circle cx="560" cy="680" r="1" fill="#94a3b8"/><circle cx="600" cy="680" r="1" fill="#94a3b8"/><circle cx="640" cy="680" r="1" fill="#94a3b8"/><circle cx="680" cy="680" r="1" fill="#94a3b8"/><circle cx="720" cy="680" r="1" fill="#94a3b8"/><circle cx="760" cy="680" r="1" fill="#94a3b8"/><circle cx="800" cy="680" r="1" fill="#94a3b8"/><circle cx="840" cy="680" r="1" fill="#94a3b8"/><circle cx="880" cy="680" r="1" fill="#94a3b8"/><circle cx="920" cy="680" r="1" fill="#94a3b8"/><circle cx="960" cy="680" r="1" fill="#94a3b8"/><circle cx="1000" cy="680" r="1" fill="#94a3b8"/>
+    <circle cx="40" cy="720" r="1" fill="#94a3b8"/><circle cx="80" cy="720" r="1" fill="#94a3b8"/><circle cx="120" cy="720" r="1" fill="#94a3b8"/><circle cx="160" cy="720" r="1" fill="#94a3b8"/><circle cx="200" cy="720" r="1" fill="#94a3b8"/><circle cx="240" cy="720" r="1" fill="#94a3b8"/><circle cx="280" cy="720" r="1" fill="#94a3b8"/><circle cx="320" cy="720" r="1" fill="#94a3b8"/><circle cx="360" cy="720" r="1" fill="#94a3b8"/><circle cx="400" cy="720" r="1" fill="#94a3b8"/><circle cx="440" cy="720" r="1" fill="#94a3b8"/><circle cx="480" cy="720" r="1" fill="#94a3b8"/><circle cx="520" cy="720" r="1" fill="#94a3b8"/><circle cx="560" cy="720" r="1" fill="#94a3b8"/><circle cx="600" cy="720" r="1" fill="#94a3b8"/><circle cx="640" cy="720" r="1" fill="#94a3b8"/><circle cx="680" cy="720" r="1" fill="#94a3b8"/><circle cx="720" cy="720" r="1" fill="#94a3b8"/><circle cx="760" cy="720" r="1" fill="#94a3b8"/><circle cx="800" cy="720" r="1" fill="#94a3b8"/><circle cx="840" cy="720" r="1" fill="#94a3b8"/><circle cx="880" cy="720" r="1" fill="#94a3b8"/><circle cx="920" cy="720" r="1" fill="#94a3b8"/><circle cx="960" cy="720" r="1" fill="#94a3b8"/><circle cx="1000" cy="720" r="1" fill="#94a3b8"/>
+  </g>
+
+  <!-- ========== RELATIONSHIP LINES (behind cards) ========== -->
+
+  <!-- users → orders (user_id FK) -->
+  <path d="M 480 210 C 540 210, 540 175, 600 175" fill="none" stroke="#3b82f6" stroke-width="2.5" opacity="0.5" filter="url(#subtleGlow)"/>
+  <circle cx="480" cy="210" r="5" fill="#3b82f6" opacity="0.6"/>
+  <circle cx="600" cy="175" r="5" fill="#22c55e" opacity="0.6"/>
+
+  <!-- products → order_items (product_id FK) -->
+  <path d="M 480 420 C 560 420, 560 460, 640 460" fill="none" stroke="#a855f7" stroke-width="2.5" opacity="0.5" filter="url(#subtleGlow)"/>
+  <circle cx="480" cy="420" r="5" fill="#a855f7" opacity="0.6"/>
+  <circle cx="640" cy="460" r="5" fill="#f97316" opacity="0.6"/>
+
+  <!-- orders → order_items (order_id FK) -->
+  <path d="M 750 270 C 750 330, 720 390, 720 410" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.45" filter="url(#subtleGlow)"/>
+  <circle cx="750" cy="270" r="5" fill="#22c55e" opacity="0.6"/>
+  <circle cx="720" cy="410" r="5" fill="#f97316" opacity="0.6"/>
+
+  <!-- categories → products (category_id FK) -->
+  <path d="M 430 580 C 370 580, 340 480, 340 420" fill="none" stroke="#eab308" stroke-width="2" opacity="0.4" filter="url(#subtleGlow)"/>
+  <circle cx="430" cy="580" r="5" fill="#0891b2" opacity="0.6"/>
+  <circle cx="340" cy="420" r="5" fill="#a855f7" opacity="0.6"/>
+
+  <!-- ===== USERS TABLE ===== -->
+  <g filter="url(#cardShadow)">
+    <rect x="230" y="60" width="250" height="230" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Header -->
+    <rect x="230" y="60" width="250" height="42" rx="12" fill="url(#blueAccent)"/>
+    <rect x="230" y="90" width="250" height="12" fill="url(#blueAccent)"/>
+    <!-- Table icon -->
+    <rect x="248" y="72" width="14" height="11" rx="2" fill="white" opacity="0.9"/>
+    <line x1="248" y1="78" x2="262" y2="78" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="255" y1="72" x2="255" y2="83" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="270" y="87" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" font-weight="600">users</text>
+    <text x="432" y="86" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.8">6 rows</text>
+
+    <!-- Columns -->
+    <g>
+      <rect x="242" y="112" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="128" font-family="monospace" font-size="12" fill="#b45309" font-weight="600">PK  id</text>
+      <text x="414" y="128" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="242" y="140" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="252" y="156" font-family="monospace" font-size="12" fill="#334155">name</text>
+      <text x="386" y="156" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="242" y="168" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="184" font-family="monospace" font-size="12" fill="#334155">email</text>
+      <text x="386" y="184" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="242" y="196" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="252" y="212" font-family="monospace" font-size="12" fill="#334155">password</text>
+      <text x="386" y="212" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="242" y="224" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="240" font-family="monospace" font-size="12" fill="#334155">role</text>
+      <text x="386" y="240" font-family="monospace" font-size="10" fill="#94a3b8">ENUM</text>
+    </g>
+    <g>
+      <rect x="242" y="252" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="252" y="268" font-family="monospace" font-size="12" fill="#334155">created_at</text>
+      <text x="370" y="268" font-family="monospace" font-size="10" fill="#94a3b8">TIMESTAMP</text>
+    </g>
+  </g>
+
+  <!-- ===== ORDERS TABLE ===== -->
+  <g filter="url(#cardShadow)">
+    <rect x="580" y="60" width="250" height="230" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Header -->
+    <rect x="580" y="60" width="250" height="42" rx="12" fill="url(#greenAccent)"/>
+    <rect x="580" y="90" width="250" height="12" fill="url(#greenAccent)"/>
+    <rect x="598" y="72" width="14" height="11" rx="2" fill="white" opacity="0.9"/>
+    <line x1="598" y1="78" x2="612" y2="78" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="605" y1="72" x2="605" y2="83" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="620" y="87" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" font-weight="600">orders</text>
+    <text x="780" y="86" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.8">12 rows</text>
+
+    <!-- Columns -->
+    <g>
+      <rect x="592" y="112" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="128" font-family="monospace" font-size="12" fill="#b45309" font-weight="600">PK  id</text>
+      <text x="764" y="128" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="140" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="602" y="156" font-family="monospace" font-size="12" fill="#3b82f6">FK  user_id</text>
+      <text x="764" y="156" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="168" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="184" font-family="monospace" font-size="12" fill="#334155">total</text>
+      <text x="746" y="184" font-family="monospace" font-size="10" fill="#94a3b8">DECIMAL</text>
+    </g>
+    <g>
+      <rect x="592" y="196" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="602" y="212" font-family="monospace" font-size="12" fill="#334155">status</text>
+      <text x="746" y="212" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="592" y="224" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="240" font-family="monospace" font-size="12" fill="#334155">ordered_at</text>
+      <text x="730" y="240" font-family="monospace" font-size="10" fill="#94a3b8">DATETIME</text>
+    </g>
+    <g>
+      <rect x="592" y="252" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="602" y="268" font-family="monospace" font-size="12" fill="#334155">notes</text>
+      <text x="770" y="268" font-family="monospace" font-size="10" fill="#94a3b8">TEXT</text>
+    </g>
+  </g>
+
+  <!-- ===== PRODUCTS TABLE ===== -->
+  <g filter="url(#cardShadow)">
+    <rect x="230" y="330" width="250" height="220" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Header -->
+    <rect x="230" y="330" width="250" height="42" rx="12" fill="url(#purpleAccent)"/>
+    <rect x="230" y="360" width="250" height="12" fill="url(#purpleAccent)"/>
+    <rect x="248" y="342" width="14" height="11" rx="2" fill="white" opacity="0.9"/>
+    <line x1="248" y1="348" x2="262" y2="348" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="255" y1="342" x2="255" y2="353" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="270" y="357" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" font-weight="600">products</text>
+    <text x="432" y="356" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.8">24 rows</text>
+
+    <!-- Columns -->
+    <g>
+      <rect x="242" y="382" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="398" font-family="monospace" font-size="12" fill="#b45309" font-weight="600">PK  id</text>
+      <text x="414" y="398" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="242" y="410" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="252" y="426" font-family="monospace" font-size="12" fill="#334155">name</text>
+      <text x="386" y="426" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="242" y="438" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="454" font-family="monospace" font-size="12" fill="#334155">price</text>
+      <text x="396" y="454" font-family="monospace" font-size="10" fill="#94a3b8">DECIMAL</text>
+    </g>
+    <g>
+      <rect x="242" y="466" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="252" y="482" font-family="monospace" font-size="12" fill="#3b82f6">FK  category_id</text>
+      <text x="414" y="482" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="242" y="494" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="252" y="510" font-family="monospace" font-size="12" fill="#334155">stock</text>
+      <text x="414" y="510" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+  </g>
+
+  <!-- ===== ORDER_ITEMS TABLE ===== -->
+  <g filter="url(#cardShadow)">
+    <rect x="580" y="360" width="250" height="200" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Header -->
+    <rect x="580" y="360" width="250" height="42" rx="12" fill="url(#orangeAccent)"/>
+    <rect x="580" y="390" width="250" height="12" fill="url(#orangeAccent)"/>
+    <rect x="598" y="372" width="14" height="11" rx="2" fill="white" opacity="0.9"/>
+    <line x1="598" y1="378" x2="612" y2="378" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="605" y1="372" x2="605" y2="383" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="620" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" font-weight="600">order_items</text>
+    <text x="780" y="386" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.8">30 rows</text>
+
+    <!-- Columns -->
+    <g>
+      <rect x="592" y="412" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="428" font-family="monospace" font-size="12" fill="#b45309" font-weight="600">PK  id</text>
+      <text x="764" y="428" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="440" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="602" y="456" font-family="monospace" font-size="12" fill="#3b82f6">FK  order_id</text>
+      <text x="764" y="456" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="468" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="484" font-family="monospace" font-size="12" fill="#3b82f6">FK  product_id</text>
+      <text x="764" y="484" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="496" width="226" height="24" rx="5" fill="#ffffff"/>
+      <text x="602" y="512" font-family="monospace" font-size="12" fill="#334155">quantity</text>
+      <text x="764" y="512" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="592" y="524" width="226" height="24" rx="5" fill="#f8fafc"/>
+      <text x="602" y="540" font-family="monospace" font-size="12" fill="#334155">subtotal</text>
+      <text x="746" y="540" font-family="monospace" font-size="10" fill="#94a3b8">DECIMAL</text>
+    </g>
+  </g>
+
+  <!-- ===== CATEGORIES TABLE ===== -->
+  <g filter="url(#cardShadow)">
+    <rect x="380" y="598" width="240" height="150" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Header -->
+    <rect x="380" y="598" width="240" height="42" rx="12" fill="url(#cyanAccent)"/>
+    <rect x="380" y="628" width="240" height="12" fill="url(#cyanAccent)"/>
+    <rect x="398" y="610" width="14" height="11" rx="2" fill="white" opacity="0.9"/>
+    <line x1="398" y1="616" x2="412" y2="616" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <line x1="405" y1="610" x2="405" y2="621" stroke="white" stroke-width="0.8" opacity="0.5"/>
+    <text x="420" y="625" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="white" font-weight="600">categories</text>
+    <text x="572" y="624" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.8">8 rows</text>
+
+    <!-- Columns -->
+    <g>
+      <rect x="392" y="650" width="216" height="24" rx="5" fill="#f8fafc"/>
+      <text x="402" y="666" font-family="monospace" font-size="12" fill="#b45309" font-weight="600">PK  id</text>
+      <text x="556" y="666" font-family="monospace" font-size="10" fill="#94a3b8">INT</text>
+    </g>
+    <g>
+      <rect x="392" y="678" width="216" height="24" rx="5" fill="#ffffff"/>
+      <text x="402" y="694" font-family="monospace" font-size="12" fill="#334155">name</text>
+      <text x="530" y="694" font-family="monospace" font-size="10" fill="#94a3b8">VARCHAR</text>
+    </g>
+    <g>
+      <rect x="392" y="706" width="216" height="24" rx="5" fill="#f8fafc"/>
+      <text x="402" y="722" font-family="monospace" font-size="12" fill="#334155">description</text>
+      <text x="548" y="722" font-family="monospace" font-size="10" fill="#94a3b8">TEXT</text>
+    </g>
+  </g>
+
+  <!-- Floating SQL keyword badges -->
+  <g opacity="0.5">
+    <rect x="60" y="460" width="90" height="30" rx="15" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+    <text x="80" y="480" font-family="monospace" font-size="12" fill="#16a34a">SELECT *</text>
+  </g>
+  <g opacity="0.45">
+    <rect x="870" y="620" width="100" height="30" rx="15" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+    <text x="888" y="640" font-family="monospace" font-size="12" fill="#2563eb">INNER JOIN</text>
+  </g>
+  <g opacity="0.4">
+    <rect x="870" y="660" width="100" height="30" rx="15" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+    <text x="884" y="680" font-family="monospace" font-size="12" fill="#7c3aed">GROUP BY</text>
+  </g>
+  <g opacity="0.35">
+    <rect x="60" y="510" width="100" height="30" rx="15" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="76" y="530" font-family="monospace" font-size="12" fill="#c2410c">INSERT INTO</text>
+  </g>
+
+  <!-- Mini stats panel top-right -->
+  <g filter="url(#cardShadow)">
+    <rect x="870" y="75" width="120" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="892" y="98" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8" font-weight="600" letter-spacing="0.5">SCHEMA STATS</text>
+    <line x1="880" y1="106" x2="980" y2="106" stroke="#f1f5f9" stroke-width="1"/>
+    <text x="892" y="126" font-family="system-ui, sans-serif" font-size="12" fill="#64748b">Tables</text>
+    <text x="960" y="126" font-family="system-ui, sans-serif" font-size="12" fill="#22c55e" font-weight="600">5</text>
+    <text x="892" y="148" font-family="system-ui, sans-serif" font-size="12" fill="#64748b">Relations</text>
+    <text x="960" y="148" font-family="system-ui, sans-serif" font-size="12" fill="#3b82f6" font-weight="600">4</text>
+    <text x="892" y="170" font-family="system-ui, sans-serif" font-size="12" fill="#64748b">Columns</text>
+    <text x="955" y="170" font-family="system-ui, sans-serif" font-size="12" fill="#a855f7" font-weight="600">27</text>
+  </g>
+
+  <!-- Minimap bottom-right -->
+  <g filter="url(#cardShadow)">
+    <rect x="880" y="470" width="110" height="80" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="893" y="483" width="18" height="12" rx="2" fill="#dbeafe" stroke="#93c5fd" stroke-width="0.5"/>
+    <rect x="920" y="483" width="18" height="12" rx="2" fill="#dcfce7" stroke="#86efac" stroke-width="0.5"/>
+    <rect x="893" y="503" width="18" height="12" rx="2" fill="#f3e8ff" stroke="#c4b5fd" stroke-width="0.5"/>
+    <rect x="920" y="503" width="18" height="12" rx="2" fill="#ffedd5" stroke="#fdba74" stroke-width="0.5"/>
+    <rect x="907" y="523" width="18" height="10" rx="2" fill="#cffafe" stroke="#67e8f9" stroke-width="0.5"/>
+    <!-- Minimap viewport box -->
+    <rect x="888" y="478" width="56" height="42" rx="3" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4" stroke-dasharray="3 2"/>
+    <text x="948" y="544" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8">100%</text>
+  </g>
+</svg>
