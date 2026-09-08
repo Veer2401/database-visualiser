@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { MotionValue, motion, useScroll, useTransform, useInView, useMotionValue, animate } from "motion/react";
+import { MotionValue, motion, useScroll, useTransform, useInView, useMotionValue, animate } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export type MacbookTooltip = { label: string; description?: string };

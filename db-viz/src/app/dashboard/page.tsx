@@ -6,8 +6,6 @@ import ReactFlow, {
   Node,
   Edge,
   Controls,
-  Background,
-  BackgroundVariant,
   useNodesState,
   useEdgesState,
   Connection,
@@ -15,14 +13,11 @@ import ReactFlow, {
   MarkerType,
   NodeChange,
   applyNodeChanges,
+  ReactFlowInstance,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
-
-// Disable caching for dashboard (dynamic user data)
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
 
 // Firebase
 import {
@@ -45,21 +40,26 @@ import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import Terminal from '@/components/layout/Terminal';
 
-import CreateDatabaseModal from '@/components/database/CreateDatabaseModal';
-import CreateTableModal from '@/components/database/CreateTableModal';
-import EditTableModal from '@/components/database/EditTableModal';
-import InsertDataModal from '@/components/database/InsertDataModal';
-import UpdateDataModal from '@/components/database/UpdateDataModal';
-import DeleteDataModal from '@/components/database/DeleteDataModal';
-import SelectDataModal from '@/components/database/SelectDataModal';
-import DropModal from '@/components/database/DropModal';
-import CreateChoiceModal from '@/components/database/CreateChoiceModal';
+import dynamic from 'next/dynamic';
+
+const CreateDatabaseModal = dynamic(() => import('@/components/database/CreateDatabaseModal'), { ssr: false });
+const UpgradePlanModal = dynamic(() => import('@/components/common/UpgradePlanModal'), { ssr: false });
+const CreateTableModal = dynamic(() => import('@/components/database/CreateTableModal'), { ssr: false });
+const EditTableModal = dynamic(() => import('@/components/database/EditTableModal'), { ssr: false });
+const InsertDataModal = dynamic(() => import('@/components/database/InsertDataModal'), { ssr: false });
+const UpdateDataModal = dynamic(() => import('@/components/database/UpdateDataModal'), { ssr: false });
+const DeleteDataModal = dynamic(() => import('@/components/database/DeleteDataModal'), { ssr: false });
+const SelectDataModal = dynamic(() => import('@/components/database/SelectDataModal'), { ssr: false });
+const DropModal = dynamic(() => import('@/components/database/DropModal'), { ssr: false });
+const CreateChoiceModal = dynamic(() => import('@/components/database/CreateChoiceModal'), { ssr: false });
+const ForeignKeyModal = dynamic(() => import('@/components/database/ForeignKeyModal'), { ssr: false });
+const ExportModal = dynamic(() => import('@/components/database/ExportModal'), { ssr: false });
+const ImportModal = dynamic(() => import('@/components/database/ImportModal'), { ssr: false });
+const QueryResultsPanel = dynamic(() => import('@/components/database/QueryResultsPanel'), { ssr: false });
+import DBComposer from '@/components/database/DBComposer';
+
 import TableNode from '@/components/database/TableNode';
 import RelationshipEdge from '@/components/database/RelationshipEdge';
-import QueryResultsPanel from '@/components/database/QueryResultsPanel';
-import ForeignKeyModal from '@/components/database/ForeignKeyModal';
-import ExportModal from '@/components/database/ExportModal';
-import SQLChatbot from '@/components/chatbot/SQLChatbot';
 import { ChatMessage } from '@/components/chatbot/SQLChatbot';
 
 // Hooks and Types
@@ -73,6 +73,21 @@ import {
   Relationship,
 } from '@/types/database';
 
+// SQL Parser
+import {
+  parseSQLFile,
+  validateSQL,
+  generateDatabaseName,
+  extractTableName,
+} from '@/lib/sql-parser';
+
+// FK helpers for 3NF compliance
+import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
+
+// Icons
+import { Upload } from 'lucide-react';
+import { authFetch } from '@/lib/api-client';
+
 // Node and Edge types for React Flow
 const nodeTypes = {
   tableNode: TableNode,
@@ -82,37 +97,41 @@ const edgeTypes = {
   relationshipEdge: RelationshipEdge,
 };
 
-// Theme definitions (moved outside component to prevent re-creation)
+// Theme definitions aligned with Landing Page design tokens
 const THEMES = {
   light: {
-    bg: 'bg-gradient-to-br from-gray-50 via-white to-gray-100',
-    navbar: 'bg-white/95 border-gray-200',
+    bg: 'bg-[#fafafa]',
+    navbar: 'bg-white/90 border-gray-200',
     sidebar: 'bg-white border-gray-200',
-    text: 'text-gray-900',
-    textSecondary: 'text-gray-600',
-    button: 'bg-gray-900 hover:bg-gray-800 text-white',
-    buttonSecondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900',
+    text: 'text-black',
+    textSecondary: 'text-gray-500',
+    button: 'bg-black hover:bg-gray-900 text-white',
+    buttonSecondary: 'bg-gray-100 hover:bg-gray-200 text-black',
     modal: 'bg-white',
-    input: 'bg-white border-gray-300 text-gray-900',
-    dots: '#000000',
+    input: 'bg-white border-gray-200 text-black',
   },
   dark: {
-    bg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
-    navbar: 'bg-slate-900/95 border-slate-700',
-    sidebar: 'bg-slate-900 border-slate-700',
+    bg: 'bg-gray-950',
+    navbar: 'bg-gray-950/90 border-white/[0.08]',
+    sidebar: 'bg-[#121212] border-white/[0.08]',
     text: 'text-white',
-    textSecondary: 'text-slate-300',
-    button: 'bg-slate-100 hover:bg-white text-slate-900',
-    buttonSecondary: 'bg-slate-700 hover:bg-slate-600 text-white',
-    modal: 'bg-slate-800',
-    input: 'bg-slate-900 border-slate-600 text-white',
-    dots: '#ffffff',
+    textSecondary: 'text-gray-400',
+    button: 'bg-white hover:bg-gray-100 text-black',
+    buttonSecondary: 'bg-white/10 hover:bg-white/15 text-white',
+    modal: 'bg-[#161616]',
+    input: 'bg-[#141414] border-white/10 text-white',
   },
 };
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, logout } = useAuth();
+
+  useEffect(() => {
+    router.prefetch('/settings');
+    router.prefetch('/profile');
+    router.prefetch('/login');
+  }, [router]);
 
   // Track intentional logout to prevent redirect to login
   const isLoggingOut = useRef(false);
@@ -122,6 +141,7 @@ export default function DashboardPage() {
 
   // Mobile Sidebar State
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // UI State
 
@@ -129,6 +149,8 @@ export default function DashboardPage() {
   const [isCreateChoiceModalOpen, setIsCreateChoiceModalOpen] = useState(false);
   const [isCreateDbModalOpen, setIsCreateDbModalOpen] = useState(false);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'database' | 'table'>('database');
   const [isEditTableModalOpen, setIsEditTableModalOpen] = useState(false);
   const [isInsertDataModalOpen, setIsInsertDataModalOpen] = useState(false);
   const [isUpdateDataModalOpen, setIsUpdateDataModalOpen] = useState(false);
@@ -137,6 +159,7 @@ export default function DashboardPage() {
   const [isDropModalOpen, setIsDropModalOpen] = useState(false);
   const [isForeignKeyModalOpen, setIsForeignKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingTableId, setEditingTableId] = useState<string | null>(null);
 
   // Workflow ref for export
@@ -148,6 +171,13 @@ export default function DashboardPage() {
   const [tables, setTables] = useState<TableType[]>([]);
   const [allTables, setAllTables] = useState<TableType[]>([]); // All tables for sidebar counts
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedDatabaseId) {
+      router.prefetch(`/terminal-mode?db=${selectedDatabaseId}`);
+      router.prefetch(`/presentation?db=${selectedDatabaseId}&theme=${currentTheme}`);
+    }
+  }, [router, selectedDatabaseId, currentTheme]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([]);
 
@@ -157,9 +187,51 @@ export default function DashboardPage() {
   const [chatbotDbName, setChatbotDbName] = useState<string | null>(null);
   const [chatLoaded, setChatLoaded] = useState(false);
 
-  // React Flow state
+  // DB Composer sidebar state
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+
+  // React Flow state & instance
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges] = useEdgesState([]);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+
+  // Compute current screen/viewport center in canvas coordinates for Schema Pilot table placement
+  const viewportCenter = useMemo(() => {
+    if (!reactFlowInstance) return undefined;
+    try {
+      const viewport = reactFlowInstance.getViewport();
+      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const zoom = viewport.zoom || 1;
+      return {
+        x: Math.round((-viewport.x + (windowWidth / 2)) / zoom - 160),
+        y: Math.round((-viewport.y + (windowHeight / 2)) / zoom - 120),
+      };
+    } catch {
+      return undefined;
+    }
+  }, [reactFlowInstance, nodes]);
+
+  // Smooth fitView handler for DB Composer actions
+  const handleActionsExecuted = useCallback(() => {
+    if (reactFlowInstance) {
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
+      }, 200);
+    }
+  }, [reactFlowInstance]);
+
+  // Auto fitView whenever new tables are added
+  const prevTablesCountRef = useRef(tables.length);
+  useEffect(() => {
+    if (tables.length > prevTablesCountRef.current && reactFlowInstance) {
+      const timer = setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+    prevTablesCountRef.current = tables.length;
+  }, [tables.length, reactFlowInstance]);
 
   // Workflow layouts for position persistence
   const {
@@ -171,12 +243,78 @@ export default function DashboardPage() {
     databaseId: selectedDatabaseId,
   });
 
+  // Helper function to calculate optimal table position (side by side)
+  const calculateTablePosition = useCallback(
+    (databaseId: string): { x: number; y: number } => {
+      const dbTables = tables.filter((t) => t.databaseId === databaseId);
+      
+      if (dbTables.length === 0) {
+        // First table: start at default position
+        return { x: 100, y: 100 };
+      }
+
+      // Find the rightmost table
+      const rightmostTable = dbTables.reduce((max, table) => {
+        return table.position.x > max.position.x ? table : max;
+      });
+
+      // Place next table 350px to the right (TABLE_WIDTH + SPACING)
+      // Align to the same Y level
+      return {
+        x: rightmostTable.position.x + 350,
+        y: rightmostTable.position.y,
+      };
+    },
+    [tables]
+  );
+
+  // Calculate grid positions for multiple tables (no state dependency)
+  const calculateGridPositions = useCallback(
+    (count: number, startIndex: number = 0): Array<{ x: number; y: number }> => {
+      const positions: Array<{ x: number; y: number }> = [];
+      const TABLE_WIDTH = 300;
+      const SPACING = 50;
+      const COLS_PER_ROW = 4;
+      const ROW_HEIGHT = 350;
+      
+      for (let i = 0; i < count; i++) {
+        const col = (startIndex + i) % COLS_PER_ROW;
+        const row = Math.floor((startIndex + i) / COLS_PER_ROW);
+        
+        positions.push({
+          x: 100 + col * (TABLE_WIDTH + SPACING),
+          y: 100 + row * ROW_HEIGHT,
+        });
+      }
+      
+      return positions;
+    },
+    []
+  );
+
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('dbviz-theme');
     if (savedTheme && THEMES[savedTheme as keyof typeof THEMES]) {
       setCurrentTheme(savedTheme);
     }
+  }, []);
+
+  // ⌘K / ⌘I / Ctrl+K / Ctrl+I keyboard shortcut to toggle DB Composer
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      const key = e.key ? e.key.toLowerCase() : '';
+      const code = e.code ? e.code.toLowerCase() : '';
+
+      if (isCmdOrCtrl && (key === 'k' || key === 'i' || code === 'keyk' || code === 'keyi')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsComposerOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => window.removeEventListener('keydown', handler, { capture: true });
   }, []);
 
   // Theme change handler
@@ -216,19 +354,25 @@ export default function DashboardPage() {
         const unsub = onSnapshot(chatRef, (snap) => {
           if (snap.exists()) {
             const data = snap.data();
-            if (data.messages && Array.isArray(data.messages)) {
-              const loaded: ChatMessage[] = data.messages.map((m: Record<string, unknown>) => ({
-                id: m.id as string,
-                type: m.type as 'user' | 'bot',
-                content: m.content as string,
-                sql: m.sql as string[] | undefined,
-                executed: m.executed as boolean | undefined,
-                timestamp: m.timestamp instanceof Timestamp
-                  ? (m.timestamp as Timestamp).toDate()
-                  : new Date(m.timestamp as string),
-              }));
+              const DB_COMPOSER_WELCOME = "⚡ **DB Composer Ready**\n\nI am DB Composer, your AI database assistant. Tell me what you want to build:\n\n• *\"Create a car dealership database with cars and sales tables\"*\n• *\"Build a student management system with 3 sample records\"*\n• *\"Add an orders table with a foreign key to users\"*\n\nI will generate the SQL and automatically render the tables onto your interactive canvas!";
+
+              const loaded: ChatMessage[] = data.messages.map((m: Record<string, unknown>) => {
+                let content = m.content as string;
+                if (m.id === 'welcome' || (typeof content === 'string' && (content.includes('AI Composer') || content.includes('Cursor-like') || content.includes('Schema Pilot')))) {
+                  content = DB_COMPOSER_WELCOME;
+                }
+                return {
+                  id: m.id as string,
+                  type: m.type as 'user' | 'bot',
+                  content,
+                  sql: m.sql as string[] | undefined,
+                  executed: m.executed as boolean | undefined,
+                  timestamp: m.timestamp instanceof Timestamp
+                    ? (m.timestamp as Timestamp).toDate()
+                    : new Date(m.timestamp as string),
+                };
+              });
               setChatMessages(loaded);
-            }
             if (data.activeDatabaseId) {
               setChatbotDbId(data.activeDatabaseId);
             }
@@ -292,7 +436,6 @@ export default function DashboardPage() {
           name: data.name,
           userId: data.userId,
           db_password_hash: data.db_password_hash,
-          mysqlName: data.mysqlName, // Include actual MySQL name
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
         });
@@ -320,21 +463,17 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [user]);
 
+  // Stable key for database IDs to prevent listener tear-down/re-subscription thrashing
+  const dbIdsKey = useMemo(() => databases.map(d => d.id).sort().join(','), [databases]);
+
   // Firebase: Subscribe to ALL tables for the user (for sidebar counts)
   useEffect(() => {
-    if (!user) {
+    if (!user || !dbIdsKey) {
       setAllTables([]);
       return;
     }
 
-    // Get all database IDs for this user
-    const dbIds = databases.map((d) => d.id);
-    if (dbIds.length === 0) {
-      setAllTables([]);
-      return;
-    }
-
-    // Subscribe to all tables for all user databases
+    const dbIds = dbIdsKey.split(',');
     const unsubscribes: (() => void)[] = [];
     const tablesByDb: Record<string, TableType[]> = {};
 
@@ -355,7 +494,6 @@ export default function DashboardPage() {
           });
         });
         tablesByDb[dbId] = tbls;
-        // Combine all tables from all databases
         const allTablesArray = Object.values(tablesByDb).flat();
         setAllTables(allTablesArray);
       });
@@ -365,7 +503,7 @@ export default function DashboardPage() {
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [user, databases]);
+  }, [user, dbIdsKey]);
 
   // Firebase: Subscribe to tables for selected database (for workflow canvas)
   useEffect(() => {
@@ -395,7 +533,7 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [selectedDatabaseId]);
 
-  // Convert foreign key relationships to edges
+  // Convert foreign key relationships to edges (only update if edge structure changes)
   useEffect(() => {
     const newEdges: Edge[] = [];
 
@@ -432,8 +570,12 @@ export default function DashboardPage() {
       });
     });
 
-    setEdges(newEdges);
-  }, [tables]);
+    setEdges((prevEdges) => {
+      const prevKey = prevEdges.map(e => e.id).sort().join(',');
+      const nextKey = newEdges.map(e => e.id).sort().join(',');
+      return prevKey === nextKey ? prevEdges : newEdges;
+    });
+  }, [tables, setEdges]);
 
   // Handle node position changes (for immediate visual updates)
   const onNodesChange = useCallback(
@@ -465,38 +607,56 @@ export default function DashboardPage() {
     ]);
   }, []);
 
+  // Plan limits checks
+  const handleOpenCreateDatabase = useCallback(() => {
+    if (databases.length >= 3) {
+      setUpgradeReason('database');
+      setIsUpgradeModalOpen(true);
+    } else {
+      setIsCreateDbModalOpen(true);
+    }
+  }, [databases.length]);
+
+  const handleOpenCreateTable = useCallback(() => {
+    if (tables.length >= 10) {
+      setUpgradeReason('table');
+      setIsUpgradeModalOpen(true);
+    } else {
+      setIsCreateTableModalOpen(true);
+    }
+  }, [tables.length]);
+
   // Create database
   const handleCreateDatabase = useCallback(
     async (name: string) => {
       if (!user) return;
 
       try {
-        // First, create the database in MySQL with user isolation
-        const mysqlResponse = await fetch('/api/database/create', {
+        // First, create the database/schema in PostgreSQL with user isolation
+        const postgresResponse = await authFetch('/api/database/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, userId: user.uid }),
+          body: JSON.stringify({ name }),
         });
-        const mysqlResult = await mysqlResponse.json();
+        const postgresResult = await postgresResponse.json();
 
-        if (!mysqlResult.success) {
-          addLog('error', `MySQL Error: ${mysqlResult.error}`);
+        if (!postgresResult.success) {
+          addLog('error', `PostgreSQL Error: ${postgresResult.error}`);
           return;
         }
 
-        // If MySQL creation successful, save to Firebase (no password)
+        // If PostgreSQL creation successful, save to Firebase (no password)
         const dbId = uuidv4();
 
         await setDoc(doc(db, 'databases', dbId), {
           name,
           userId: user.uid,
           db_password_hash: '',
-          mysqlName: mysqlResult.actualDatabaseName, // Store actual MySQL name
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         });
 
-        addLog('success', `Database '${name}' created successfully in MySQL`);
+        addLog('success', `Database '${name}' created successfully in PostgreSQL`);
         setSelectedDatabaseId(dbId);
         setIsCreateDbModalOpen(false);
       } catch (error) {
@@ -517,17 +677,17 @@ export default function DashboardPage() {
         const dbName = dbToDelete?.name;
 
         if (dbName) {
-          // First, drop the database in MySQL with user isolation
-          const mysqlResponse = await fetch('/api/database/drop', {
+          // First, drop the schema in PostgreSQL with user isolation
+          const postgresResponse = await authFetch('/api/database/drop', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: dbName, userId: user.uid }),
+            body: JSON.stringify({ name: dbName }),
           });
-          const mysqlResult = await mysqlResponse.json();
+          const postgresResult = await postgresResponse.json();
 
-          if (!mysqlResult.success) {
+          if (!postgresResult.success) {
             // Log warning but continue with Firebase deletion
-            addLog('warning', `MySQL: ${mysqlResult.error}`);
+            addLog('warning', `PostgreSQL: ${postgresResult.error}`);
           }
         }
 
@@ -552,21 +712,21 @@ export default function DashboardPage() {
     [user, databases, tables, selectedDatabaseId, addLog]
   );
 
-  // ── Helper: sync MySQL tables → Firebase for a given database ────────────
+  // ── Helper: sync PostgreSQL tables → Firebase for a given database ────────────
   const syncTablesToFirebase = useCallback(
     async (actualDbName: string, firebaseDbId: string) => {
       if (!user) return;
 
-      const showTablesResponse = await fetch('/api/query/execute', {
+      const showTablesResponse = await authFetch('/api/query/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ database: actualDbName, query: 'SHOW TABLES', userId: user.uid }),
+        body: JSON.stringify({ database: actualDbName, query: 'SHOW TABLES' }),
       });
       const showTablesResult = await showTablesResponse.json();
 
       if (!showTablesResult.success || !showTablesResult.results) return;
 
-      const mysqlTableNames: string[] = showTablesResult.results.map(
+      const pgTableNames: string[] = showTablesResult.results.map(
         (row: Record<string, string>) => Object.values(row)[0]
       );
 
@@ -575,23 +735,38 @@ export default function DashboardPage() {
         query(collection(db, 'tables'), where('databaseId', '==', firebaseDbId))
       );
       const existingNames = new Set<string>();
-      existingTablesSnap.forEach(d => existingNames.add(d.data().name));
+      const existingTables: Array<{ name: string; position: { x: number; y: number } }> = [];
+      
+      existingTablesSnap.forEach(d => {
+        const data = d.data();
+        existingNames.add(data.name);
+        existingTables.push({ 
+          name: data.name, 
+          position: data.position || { x: 100, y: 100 } 
+        });
+      });
 
-      let newTableCount = 0;
-      const totalExisting = existingNames.size;
+      // Collect new tables to be added
+      const newTables: Array<{ name: string; columns: Column[] }> = [];
 
-      for (let i = 0; i < mysqlTableNames.length; i++) {
-        const tableName = mysqlTableNames[i];
+      for (let i = 0; i < pgTableNames.length; i++) {
+        const tableName = pgTableNames[i];
         if (existingNames.has(tableName)) continue; // Already in Firebase
 
-        const descResponse = await fetch('/api/table/describe', {
+        const descResponse = await authFetch('/api/table/describe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, table: tableName, userId: user.uid }),
+          body: JSON.stringify({ database: actualDbName, table: tableName }),
         });
         const descResult = await descResponse.json();
 
-        if (descResult.success && descResult.columns) {
+        if (!descResult.success) {
+          // Skip tables that can't be described (might not exist or access denied)
+          console.warn(`Could not describe table '${tableName}':`, descResult.error);
+          continue;
+        }
+
+        if (descResult.columns) {
           const columns: Column[] = descResult.columns.map(
             (col: { Field: string; Type: string; Null: string; Key: string; Default: string | null; Extra: string }) => {
               const column: Record<string, unknown> = {
@@ -611,26 +786,34 @@ export default function DashboardPage() {
             }
           );
 
-          const idx = totalExisting + newTableCount;
-          const xOffset = (idx % 3) * 350;
-          const yOffset = Math.floor(idx / 3) * 300;
-
-          const tableId = uuidv4();
-          await setDoc(doc(db, 'tables', tableId), {
-            name: tableName,
-            databaseId: firebaseDbId,
-            columns,
-            position: { x: 100 + xOffset, y: 100 + yOffset },
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-          });
-
-          addLog('success', `Table '${tableName}' synced to workflow`);
-          newTableCount++;
+          newTables.push({ name: tableName, columns });
         }
       }
+
+      // Calculate grid positions for new tables
+      const totalTableCount = existingTables.length + newTables.length;
+      const gridPositions = calculateGridPositions(totalTableCount);
+      
+      // Add new tables with calculated positions
+      for (let i = 0; i < newTables.length; i++) {
+        const tableData = newTables[i];
+        const positionIndex = existingTables.length + i;
+        const position = gridPositions[positionIndex];
+
+        const tableId = uuidv4();
+        await setDoc(doc(db, 'tables', tableId), {
+          name: tableData.name,
+          databaseId: firebaseDbId,
+          columns: tableData.columns,
+          position,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+
+        addLog('success', `Table '${tableData.name}' synced to workflow`);
+      }
     },
-    [user, addLog]
+    [user, addLog, calculateGridPositions]
   );
 
   // ── Execute SQL from chatbot → terminal → workflow ───────────────────────
@@ -642,20 +825,38 @@ export default function DashboardPage() {
       let dbName = chatbotDbName;
       let actualDbName: string;
 
-      // If no active chatbot database yet, create one
+      // If no active chatbot database yet, check if user is creating one
       if (!dbId) {
-        dbName = `chatbot_db_${Date.now().toString(36)}`;
+        // Look for CREATE DATABASE statement in the SQL
+        let createDbStatement = '';
+        let extractedDbName = '';
 
-        const mysqlResponse = await fetch('/api/database/create', {
+        for (const sql of sqlStatements) {
+          const trimmed = sql.trim();
+          if (/^CREATE\s+DATABASE/i.test(trimmed)) {
+            createDbStatement = trimmed;
+            // Extract database name from "CREATE DATABASE <name>"
+            const match = trimmed.match(/CREATE\s+DATABASE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
+            if (match && match[1]) {
+              extractedDbName = match[1];
+            }
+            break;
+          }
+        }
+
+        // Use extracted name if available, otherwise generate one
+        dbName = extractedDbName || `chatbot_db_${Date.now().toString(36)}`;
+
+        const dbResponse = await authFetch('/api/database/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: dbName, userId: user.uid }),
+          body: JSON.stringify({ name: dbName }),
         });
-        const mysqlResult = await mysqlResponse.json();
+        const dbResult = await dbResponse.json();
 
-        if (!mysqlResult.success) {
-          addLog('error', `MySQL Error: ${mysqlResult.error}`);
-          throw new Error(mysqlResult.error);
+        if (!dbResult.success) {
+          addLog('error', `Error: ${dbResult.error}`);
+          throw new Error(dbResult.error);
         }
 
         dbId = uuidv4();
@@ -663,12 +864,11 @@ export default function DashboardPage() {
           name: dbName,
           userId: user.uid,
           db_password_hash: '',
-          mysqlName: mysqlResult.actualDatabaseName,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         });
 
-        actualDbName = mysqlResult.actualDatabaseName;
+        actualDbName = dbName;
         setChatbotDbId(dbId);
         setChatbotDbName(dbName);
 
@@ -686,7 +886,7 @@ export default function DashboardPage() {
         if (!existingDb) {
           throw new Error('Chatbot database not found. It may have been deleted.');
         }
-        actualDbName = existingDb.mysqlName || existingDb.name;
+        actualDbName = existingDb.name;
       }
 
       // Execute each SQL statement
@@ -695,10 +895,10 @@ export default function DashboardPage() {
         if (!trimmed) continue;
         if (/^CREATE\s+DATABASE/i.test(trimmed)) continue; // Skip CREATE DATABASE
 
-        const execResponse = await fetch('/api/query/execute', {
+        const execResponse = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database: actualDbName, query: trimmed, userId: user.uid }),
+          body: JSON.stringify({ database: actualDbName, query: trimmed }),
         });
         const execResult = await execResponse.json();
 
@@ -709,7 +909,7 @@ export default function DashboardPage() {
         }
       }
 
-      // Sync tables from MySQL → Firebase (handles new tables only, skips existing)
+// Sync tables from PostgreSQL → Firebase (handles new tables only, skips existing)
       await syncTablesToFirebase(actualDbName, dbId);
 
       // Switch workflow to the chatbot database
@@ -726,88 +926,97 @@ export default function DashboardPage() {
 
       try {
         const selectedDatabase = databases.find((d) => d.id === selectedDatabaseId);
-        const databaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+        const databaseName = selectedDatabase?.name;
 
         if (!databaseName) {
           addLog('error', 'No database selected');
           return;
         }
 
-        // Check if table already exists in MySQL
-        const checkResponse = await fetch('/api/query/execute', {
+        // Check if table already exists in PostgreSQL
+        const checkResponse = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
-            query: `SHOW TABLES LIKE '${name}'`,
-            userId: user?.uid,
+            query: `SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = '${name.toLowerCase()}'`,
           }),
         });
         const checkResult = await checkResponse.json();
 
         if (checkResult.success && checkResult.results && checkResult.results.length > 0) {
-          addLog('error', `Table '${name}' already exists in MySQL. Use DROP TABLE \`${name}\` to remove it first.`);
-          return;
+          const count = Number(checkResult.results[0].count);
+          if (count > 0) {
+            addLog('error', `Table '${name}' already exists. Use DROP TABLE \`${name}\` to remove it first.`);
+            return;
+          }
         }
 
-        // First, create the table in MySQL
-        const mysqlColumns = columns.map((col) => ({
-          name: col.name,
-          dataType: col.dataType,
-          isPrimaryKey: col.isPrimaryKey,
-          isNotNull: col.isNotNull,
-          isUnique: col.isUnique,
-          isAutoIncrement: col.isAutoIncrement,
-          defaultValue: col.defaultValue,
-          isForeignKey: col.isForeignKey,
-          foreignKeyReference: col.foreignKeyReference ? {
-            tableName: col.foreignKeyReference.tableName,
-            columnName: col.foreignKeyReference.columnName,
-          } : undefined,
-        }));
+        // First, create the table in PostgreSQL
+        const pgColumns = columns.map((col) => {
+          const fkTableName = col.isForeignKey ? getFKTableName(col.foreignKeyReference, tables) : null;
+          const fkColumnName = col.isForeignKey ? getFKColumnName(col.foreignKeyReference, tables) : null;
+          
+          return {
+            name: col.name,
+            dataType: col.dataType,
+            isPrimaryKey: col.isPrimaryKey,
+            isNotNull: col.isNotNull,
+            isUnique: col.isUnique,
+            isAutoIncrement: col.isAutoIncrement,
+            defaultValue: col.defaultValue,
+            isForeignKey: col.isForeignKey,
+            foreignKeyReference: col.foreignKeyReference && fkTableName && fkColumnName ? {
+              tableName: fkTableName,
+              columnName: fkColumnName,
+            } : undefined,
+          };
+        });
 
-        const mysqlResponse = await fetch('/api/table/create', {
+        const response = await authFetch('/api/table/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             tableName: name,
-            columns: mysqlColumns,
+            columns: pgColumns,
           }),
         });
-        const mysqlResult = await mysqlResponse.json();
+        const result = await response.json();
 
-        if (!mysqlResult.success) {
-          addLog('error', `MySQL Error: ${mysqlResult.error}`);
+        if (!result.success) {
+          addLog('error', `Error: ${result.error}`);
           return;
         }
 
-        // If MySQL creation successful, save to Firebase
+        // If PostgreSQL creation successful, save to Firebase
         const tableId = uuidv4();
 
         // Calculate position for new table
-        const existingTables = tables.filter((t) => t.databaseId === selectedDatabaseId);
-        const xOffset = (existingTables.length % 3) * 350;
-        const yOffset = Math.floor(existingTables.length / 3) * 300;
+        const position = calculateTablePosition(selectedDatabaseId);
 
         await setDoc(doc(db, 'tables', tableId), {
           name,
           databaseId: selectedDatabaseId,
           columns,
-          position: { x: 100 + xOffset, y: 100 + yOffset },
+          position,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         });
 
-        addLog('success', `Table '${name}' created successfully in MySQL`);
+        addLog('success', `Table '${name}' created successfully in PostgreSQL`);
 
         // Log foreign key relationships
         columns.forEach((col) => {
           if (col.isForeignKey && col.foreignKeyReference) {
-            addLog(
-              'info',
-              `Foreign key linked: ${name}.${col.name} → ${col.foreignKeyReference.tableName}.${col.foreignKeyReference.columnName}`
-            );
+            const fkTableName = getFKTableName(col.foreignKeyReference, tables);
+            const fkColumnName = getFKColumnName(col.foreignKeyReference, tables);
+            if (fkTableName && fkColumnName) {
+              addLog(
+                'info',
+                `Foreign key linked: ${name}.${col.name} → ${fkTableName}.${fkColumnName}`
+              );
+            }
           }
         });
 
@@ -828,24 +1037,23 @@ export default function DashboardPage() {
         const tableName = tableToDelete?.name;
         const databaseId = tableToDelete?.databaseId;
         const selectedDatabase = databases.find((d) => d.id === databaseId);
-        const databaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+        const databaseName = selectedDatabase?.name;
 
         if (tableName && databaseName) {
-          // First, drop the table in MySQL
-          const mysqlResponse = await fetch('/api/query/execute', {
+          // First, drop the table in PostgreSQL
+          const response = await authFetch('/api/query/execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               database: databaseName,
-              query: `DROP TABLE \`${tableName}\``,
-              userId: user?.uid,
+              query: `DROP TABLE "${tableName}"`,
             }),
           });
-          const mysqlResult = await mysqlResponse.json();
+          const result = await response.json();
 
-          if (!mysqlResult.success) {
+          if (!result.success) {
             // Log warning but continue with Firebase deletion
-            addLog('warning', `MySQL: ${mysqlResult.error}`);
+            addLog('warning', `PostgreSQL: ${result.error}`);
           }
         }
 
@@ -885,7 +1093,7 @@ export default function DashboardPage() {
 
         const tableName = table.name;
         const selectedDatabase = databases.find((d) => d.id === table.databaseId);
-        const databaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+        const databaseName = selectedDatabase?.name;
 
         if (!databaseName) {
           addLog('error', 'Database not found');
@@ -920,7 +1128,7 @@ export default function DashboardPage() {
 
         // Add new columns
         for (const col of addedColumns) {
-          let colDef = `ADD COLUMN \`${col.name}\` ${col.dataType}`;
+          let colDef = `ADD COLUMN "${col.name}" ${col.dataType}`;
           if (col.isNotNull) colDef += ' NOT NULL';
           if (col.isUnique) colDef += ' UNIQUE';
           if (col.defaultValue) colDef += ` DEFAULT '${col.defaultValue}'`;
@@ -929,51 +1137,35 @@ export default function DashboardPage() {
 
         // Drop removed columns
         for (const col of removedColumns) {
-          alterCommands.push(`DROP COLUMN \`${col.name}\``);
+          alterCommands.push(`DROP COLUMN "${col.name}"`);
         }
 
         // Modify existing columns
         for (const col of modifiedColumns) {
-          let colDef = `MODIFY COLUMN \`${col.name}\` ${col.dataType}`;
+          let colDef = `ALTER COLUMN "${col.name}" TYPE ${col.dataType}`;
           if (col.isNotNull) colDef += ' NOT NULL';
           if (col.isUnique) colDef += ' UNIQUE';
           if (col.defaultValue) colDef += ` DEFAULT '${col.defaultValue}'`;
           alterCommands.push(colDef);
         }
 
-        // Execute all ALTER TABLE commands
+        // If there are changes, execute with schema sync
         if (alterCommands.length > 0) {
-          const alterQuery = `ALTER TABLE \`${tableName}\` ${alterCommands.join(', ')}`;
-
-          const response = await fetch('/api/query/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              database: databaseName,
-              query: alterQuery,
-              userId: user?.uid,
-            }),
-          });
-
-          const result = await response.json();
-
+          const alterQuery = `ALTER TABLE "${tableName}" ${alterCommands.join(', ')}`;
+          
+          // Use schema-aware execution to automatically sync to Firebase and canvas
+          const result = await executeQueryWithSchemaSync(databaseName, alterQuery);
+          
           if (!result.success) {
             addLog('error', `Failed to alter table: ${result.error}`);
             return;
           }
-
-          addLog('success', `Table '${tableName}' structure altered in MySQL`);
         }
 
-        // Update Firebase with new columns
-        await updateDoc(doc(db, 'tables', tableId), {
-          columns,
-          updatedAt: Timestamp.now(),
-        });
-
-        addLog('success', `Table '${tableName}' updated successfully`);
+        // Close modal - Firebase listener will sync the updated table
         setIsEditTableModalOpen(false);
         setEditingTableId(null);
+        addLog('success', `Table '${tableName}' updated successfully`);
       } catch (error) {
         console.error('Error updating table:', error);
         addLog('error', 'Failed to update table');
@@ -995,18 +1187,21 @@ export default function DashboardPage() {
       const sourceColumn = sourceTable?.columns.find((c) => c.id === sourceColumnId);
       const targetColumn = targetTable?.columns.find((c) => c.id === targetColumnId);
       const selectedDatabase = databases.find((d) => d.id === selectedDatabaseId);
-      const databaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+      const databaseName = selectedDatabase?.name;
 
       if (!sourceTable || !targetTable || !sourceColumn || !targetColumn || !databaseName) {
         throw new Error('Invalid table or column selection');
       }
 
       try {
-        // First, add the foreign key constraint in MySQL
+        // Add the foreign key constraint in PostgreSQL directly
+        // PostgreSQL will return proper errors if tables don't exist
         const constraintName = `fk_${sourceTable.name}_${sourceColumn.name}`;
-        const alterQuery = `ALTER TABLE \`${sourceTable.name}\` ADD CONSTRAINT \`${constraintName}\` FOREIGN KEY (\`${sourceColumn.name}\`) REFERENCES \`${targetTable.name}\`(\`${targetColumn.name}\`)`;
+        const alterQuery = `ALTER TABLE "${sourceTable.name}" ADD CONSTRAINT "${constraintName}" FOREIGN KEY ("${sourceColumn.name}") REFERENCES "${targetTable.name}"("${targetColumn.name}")`;
 
-        const response = await fetch('/api/query/execute', {
+        console.log('Adding FK with query:', alterQuery);
+
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1016,9 +1211,10 @@ export default function DashboardPage() {
         });
 
         const result = await response.json();
+        console.log('FK operation result:', result);
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to add foreign key in MySQL');
+          throw new Error(result.error || 'Failed to add foreign key in PostgreSQL');
         }
 
         // Update Firebase with the foreign key reference
@@ -1073,32 +1269,31 @@ export default function DashboardPage() {
       const table = tables.find((t) => t.id === tableId);
       const column = table?.columns.find((c) => c.id === columnId);
       const selectedDatabase = databases.find((d) => d.id === selectedDatabaseId);
-      const databaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+      const databaseName = selectedDatabase?.name;
 
       if (!table || !column || !databaseName) {
         throw new Error('Invalid table or column');
       }
 
       try {
-        // First, remove the foreign key constraint from MySQL
+        // Remove the foreign key constraint from PostgreSQL
         const constraintName = `fk_${table.name}_${column.name}`;
-        const alterQuery = `ALTER TABLE \`${table.name}\` DROP FOREIGN KEY \`${constraintName}\``;
+        const alterQuery = `ALTER TABLE "${table.name}" DROP CONSTRAINT "${constraintName}"`;
 
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: databaseName,
             query: alterQuery,
-            userId: user?.uid,
           }),
         });
 
         const result = await response.json();
 
-        // Even if MySQL fails (constraint might have different name), update Firebase
+        // Even if PostgreSQL fails (constraint might have different name), update Firebase
         if (!result.success) {
-          addLog('warning', `MySQL: ${result.error}. Updating workflow...`);
+          addLog('warning', `PostgreSQL: ${result.error}. Updating workflow...`);
         }
 
         // Update Firebase to remove the foreign key reference
@@ -1127,14 +1322,226 @@ export default function DashboardPage() {
     [tables, databases, selectedDatabaseId, addLog]
   );
 
+  // Handle SQL file import
+  const handleSQLImport = useCallback(
+    async (sqlContent: string, fileName: string) => {
+      if (!user?.uid) {
+        addLog('error', 'User ID not found');
+        throw new Error('User ID not found');
+      }
+
+      try {
+        // Validate SQL content
+        if (!validateSQL(sqlContent)) {
+          throw new Error('SQL file is empty or contains no valid statements');
+        }
+
+        addLog('info', `🔄 Parsing SQL file: ${fileName}`);
+
+        // Parse the SQL file
+        const parsedSQL = parseSQLFile(sqlContent);
+
+        if (!parsedSQL.createTableStatements || parsedSQL.createTableStatements.length === 0) {
+          throw new Error('No CREATE TABLE statements found in the SQL file');
+        }
+
+        addLog(
+          'info',
+          `📊 Found ${parsedSQL.createTableStatements.length} table(s) to import`
+        );
+
+        // Determine database name
+        let targetDatabaseId: string;
+        let targetDatabaseName: string;
+
+        if (parsedSQL.databaseName) {
+          // Database name found in SQL file (from CREATE DATABASE statement)
+          targetDatabaseName = parsedSQL.databaseName;
+          const existingDb = databases.find(
+            (d) => d.name.toLowerCase() === targetDatabaseName.toLowerCase()
+          );
+
+          if (existingDb) {
+            targetDatabaseId = existingDb.id;
+            addLog('info', `📁 Using existing database: ${targetDatabaseName}`);
+          } else {
+            // Create the database from SQL
+            addLog('info', `📁 Creating database: ${targetDatabaseName}`);
+            const dbResponse = await authFetch('/api/database/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: targetDatabaseName,
+              }),
+            });
+
+            const dbResult = await dbResponse.json();
+
+            if (!dbResult.success) {
+              throw new Error(`Failed to create database: ${dbResult.error}`);
+            }
+
+            // Add database to Firestore
+            const newDb: DatabaseType = {
+              id: uuidv4(),
+              name: targetDatabaseName,
+              userId: user.uid,
+              db_password_hash: '',
+              createdAt: new Date(Timestamp.now().toMillis()),
+              updatedAt: new Date(Timestamp.now().toMillis()),
+            };
+
+            await setDoc(doc(db, 'databases', newDb.id), {
+              ...newDb,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
+            });
+            targetDatabaseId = newDb.id;
+            addLog('success', `✅ Database created: ${targetDatabaseName}`);
+          }
+        } else {
+          // No database name in SQL, use selected or create new
+          if (!selectedDatabaseId) {
+            const generatedDbName = generateDatabaseName(fileName);
+            targetDatabaseName = generatedDbName;
+
+            addLog('info', `📁 Creating database: ${generatedDbName}`);
+            const dbResponse = await authFetch('/api/database/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: generatedDbName,
+              }),
+            });
+
+            const dbResult = await dbResponse.json();
+
+            if (!dbResult.success) {
+              throw new Error(`Failed to create database: ${dbResult.error}`);
+            }
+
+            const newDb: DatabaseType = {
+              id: uuidv4(),
+              name: generatedDbName,
+              userId: user.uid,
+              db_password_hash: '',
+              createdAt: new Date(Timestamp.now().toMillis()),
+              updatedAt: new Date(Timestamp.now().toMillis()),
+            };
+
+            await setDoc(doc(db, 'databases', newDb.id), {
+              ...newDb,
+              createdAt: Timestamp.now(),
+              updatedAt: Timestamp.now(),
+            });
+            targetDatabaseId = newDb.id;
+            addLog('success', `✅ Database created: ${generatedDbName}`);
+          } else {
+            targetDatabaseId = selectedDatabaseId;
+            targetDatabaseName = databases.find((d) => d.id === selectedDatabaseId)?.name || 'database';
+            addLog('info', `📁 Using selected database: ${targetDatabaseName}`);
+          }
+        }
+
+        const actualDatabaseName = databases.find((d) => d.id === targetDatabaseId)?.name || targetDatabaseName;
+
+        // Create tables by executing the CREATE TABLE statements
+        for (const tableStatement of parsedSQL.createTableStatements) {
+          addLog('info', `📋 Creating table: ${tableStatement.tableName}`);
+
+          // Execute CREATE TABLE statement in PostgreSQL
+          const createResponse = await authFetch('/api/query/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              database: actualDatabaseName,
+              query: tableStatement.sql,
+            }),
+          });
+
+          const createResult = await createResponse.json();
+
+          if (!createResult.success) {
+            addLog('warning', `⚠️ CREATE TABLE warning: ${createResult.error}`);
+          } else {
+            addLog('success', `✅ Table created: ${tableStatement.tableName}`);
+          }
+        }
+
+        // Execute INSERT statements
+        if (parsedSQL.insertStatements && parsedSQL.insertStatements.length > 0) {
+          addLog('info', `📝 Executing ${parsedSQL.insertStatements.length} INSERT statement(s)`);
+
+          for (const insertStmt of parsedSQL.insertStatements) {
+            const insertResponse = await authFetch('/api/query/execute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                database: actualDatabaseName,
+                query: insertStmt.sql,
+              }),
+            });
+
+            const insertResult = await insertResponse.json();
+
+            if (!insertResult.success) {
+              addLog('warning', `⚠️ INSERT warning: ${insertResult.error}`);
+            }
+          }
+
+          addLog('success', `✅ Data inserted successfully`);
+        }
+
+        // Execute any other statements (like procedures, functions, triggers, etc.)
+        if (parsedSQL.otherStatements && parsedSQL.otherStatements.length > 0) {
+          addLog('info', `🔧 Executing ${parsedSQL.otherStatements.length} additional statement(s)`);
+
+          for (const stmt of parsedSQL.otherStatements) {
+            try {
+              const response = await authFetch('/api/query/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  database: actualDatabaseName,
+                  query: stmt.sql,
+                }),
+              });
+
+              const result = await response.json();
+
+              if (!result.success) {
+                addLog('warning', `⚠️ Statement executed with warning: ${result.error}`);
+              }
+            } catch (err) {
+              addLog('warning', `⚠️ Could not execute additional statement`);
+            }
+          }
+        }
+
+        // Sync tables from PostgreSQL to Firebase (after all tables are created)
+        addLog('info', `🔄 Syncing tables to workflow...`);
+        await syncTablesToFirebase(actualDatabaseName, targetDatabaseId);
+
+        // Set the imported database as selected
+        setSelectedDatabaseId(targetDatabaseId);
+        addLog('success', `🎉 Import completed successfully!`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        addLog('error', `❌ Import failed: ${errorMsg}`);
+        throw error;
+      }
+    },
+    [user, selectedDatabaseId, databases, addLog, setSelectedDatabaseId, syncTablesToFirebase]
+  );
+
   // Execute query helper for modals
   const executeQuery = useCallback(
     async (database: string, query: string): Promise<{ success: boolean; results?: unknown[]; error?: string }> => {
       try {
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ database, query, userId: user?.uid }),
+          body: JSON.stringify({ database, query }),
         });
         const result = await response.json();
 
@@ -1157,29 +1564,202 @@ export default function DashboardPage() {
     [addLog]
   );
 
+  // Execute query with automatic schema synchronization to Firebase/Canvas
+  const executeQueryWithSchemaSync = useCallback(
+    async (database: string, query: string): Promise<{ success: boolean; results?: unknown[]; error?: string }> => {
+      // First execute the query
+      const result = await executeQuery(database, query);
+      if (!result.success) return result;
+
+      // Then, check if this query changes the schema and sync to Firebase
+      const upperQuery = query.toUpperCase().trim();
+      const currentDatabaseName = database;
+
+      try {
+        // Handle CREATE TABLE - add to Firebase
+        if (upperQuery.startsWith('CREATE TABLE')) {
+          const match = query.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
+          if (match && match[1] && selectedDatabaseId) {
+            const tableName = match[1];
+            
+            // Fetch table structure from PostgreSQL using the proper endpoint
+            const describeResponse = await authFetch('/api/table/describe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                database: currentDatabaseName,
+                table: tableName,
+              }),
+            });
+            const describeResult = await describeResponse.json();
+
+            if (describeResult.success && Array.isArray(describeResult.columns)) {
+              const columns = describeResult.columns.map((col: any) => {
+                const column: Column = {
+                  id: uuidv4(),
+                  name: col.Field,
+                  dataType: col.Type.toUpperCase().replace(/\(.*\)/, '').trim(),
+                  isPrimaryKey: col.Key === 'PRI',
+                  isNotNull: col.Null === 'NO',
+                  isUnique: col.Key === 'UNI',
+                  defaultValue: col.Default,
+                  isForeignKey: col.Key === 'MUL',
+                };
+                return column;
+              });
+
+              const tableId = uuidv4();
+              const position = calculateTablePosition(selectedDatabaseId);
+
+              await setDoc(doc(db, 'tables', tableId), {
+                name: tableName,
+                databaseId: selectedDatabaseId,
+                columns,
+                position,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+              });
+
+              addLog('success', `Table '${tableName}' added to canvas`);
+            }
+          }
+        }
+        // Handle DROP TABLE - remove from Firebase
+        else if (upperQuery.startsWith('DROP TABLE')) {
+          const match = query.match(/DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
+          if (match && match[1]) {
+            const tableName = match[1];
+            const tableToDelete = tables.find((t) =>
+              t.name.toLowerCase() === tableName.toLowerCase() &&
+              t.databaseId === selectedDatabaseId
+            );
+
+            if (tableToDelete) {
+              await deleteDoc(doc(db, 'tables', tableToDelete.id));
+              if (selectedTableId === tableToDelete.id) {
+                setSelectedTableId(null);
+              }
+              addLog('info', `Table '${tableName}' removed from workflow`);
+            }
+          }
+        }
+        // Handle ALTER TABLE - update schema in Firebase
+        else if (upperQuery.startsWith('ALTER TABLE')) {
+          const match = query.match(/ALTER\s+TABLE\s+[`"]?(\w+)[`"]?/i);
+          if (match && match[1] && selectedDatabaseId) {
+            const tableName = match[1];
+            const tableToUpdate = tables.find((t) =>
+              t.name.toLowerCase() === tableName.toLowerCase() &&
+              t.databaseId === selectedDatabaseId
+            );
+
+            if (tableToUpdate) {
+              // Use the proper table/describe endpoint for PostgreSQL
+              const describeResponse = await authFetch('/api/table/describe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  database: currentDatabaseName,
+                  table: tableName,
+                }),
+              });
+              const describeResult = await describeResponse.json();
+
+              if (describeResult.success && Array.isArray(describeResult.columns)) {
+                const updatedColumns = describeResult.columns.map((col: any) => {
+                  const existingColumn = tableToUpdate.columns.find((c) => c.name === col.Field);
+                  
+                  const column: Column = {
+                    id: existingColumn?.id || uuidv4(),
+                    name: col.Field,
+                    dataType: col.Type.toUpperCase().replace(/\(.*\)/, '').trim(),
+                    isPrimaryKey: col.Key === 'PRI',
+                    isNotNull: col.Null === 'NO',
+                    isUnique: col.Key === 'UNI',
+                    defaultValue: col.Default,
+                    isForeignKey: col.Key === 'MUL',
+                  };
+
+                  return column;
+                });
+
+                await updateDoc(doc(db, 'tables', tableToUpdate.id), {
+                  columns: updatedColumns,
+                  updatedAt: Timestamp.now(),
+                });
+
+                addLog('success', `Table '${tableName}' structure updated on canvas`);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error syncing schema:', err);
+        // Don't throw - schema sync failure shouldn't prevent query success
+      }
+
+      return result;
+    },
+    [executeQuery, selectedDatabaseId, selectedTableId, tables, addLog, user?.uid]
+  );
+
   // Handle view data from table node arrow button
   const handleViewData = useCallback(
     async (tableId: string, tableName: string) => {
-      const db = databases.find((d) => d.id === selectedDatabaseId);
-      if (!db) return;
+      // Use terminalDbRef which has the ACTUAL prefixed schema name from terminal
+      const db = terminalDbRef.current;
+      
+      if (!db) {
+        addLog('error', `No database found in terminalDbRef`);
+        console.error('[handleViewData] Database not found in terminalDbRef');
+        return;
+      }
 
-      const mysqlDatabaseName = db.mysqlName || db.name;
-      const query = `SELECT * FROM \`${tableName}\``;
+      console.log('[handleViewData] Executing query with prefixed database:', { dbName: db.name, tableName });
 
-      const result = await executeQuery(mysqlDatabaseName, query);
+      // Query table data - convert table name to lowercase for PostgreSQL consistency
+      const tableNameLower = tableName.toLowerCase();
+      const query = `SELECT * FROM "${tableNameLower}"`;
+
+      const result = await executeQuery(db.name, query);
+
       if (result.success && result.results) {
+        addLog('success', `Retrieved ${result.results.length} rows from "${tableNameLower}"`);
         setQueryResults({
           results: result.results,
           query,
         });
+      } else {
+        addLog('error', result.error || `Failed to retrieve data from "${tableNameLower}"`);
+        console.error('[handleViewData] Query failed:', result.error);
       }
     },
-    [databases, selectedDatabaseId, executeQuery]
+    [executeQuery, addLog]
   );
+
+  // Track terminal's current database separately from UI selection
+  // This allows USE command to work correctly even with async state updates
+  const terminalDbRef = useRef<{ id: string; name: string } | null>(null);
+
+  // Initialize terminal database ref when selected database changes
+  useEffect(() => {
+    if (selectedDatabaseId && user?.uid) {
+      const db = databases.find((d) => d.id === selectedDatabaseId);
+      if (db) {
+        // Compute prefixed database name (same logic as PostgreSQL uses: user_{first8chars}_{dbName})
+        const prefix = `user_${user.uid.substring(0, 8)}_`;
+        const prefixedName = `${prefix}${db.name}`;
+        terminalDbRef.current = {
+          id: db.id,
+          name: prefixedName,
+        };
+        console.log('[Dashboard] Initialized terminalDbRef with prefixed name:', prefixedName);
+      }
+    }
+  }, [selectedDatabaseId, databases, user?.uid]);
 
   // Convert tables to React Flow nodes with persisted layout positions
   useEffect(() => {
-    // Wait for layouts to load before rendering nodes with positions
     if (layoutsLoading) {
       console.log('[Dashboard] Waiting for layouts to load...');
       return;
@@ -1231,46 +1811,56 @@ export default function DashboardPage() {
         throw new Error('At least one value is required');
       }
 
-      const query = `INSERT INTO \`${table}\` (\`${columns.join('`, `')}\`) VALUES (${vals.join(', ')})`;
-      const result = await executeQuery(database, query);
+      const query = `INSERT INTO "${table}" (${columns.map((col) => `"${col}"`).join(', ')}) VALUES (${vals.join(', ')})`;
+      const result = await executeQueryWithSchemaSync(database, query);
 
       if (!result.success) {
         throw new Error(result.error);
       }
     },
-    [executeQuery]
+    [executeQueryWithSchemaSync]
   );
 
   // Handle DROP table from modal
   const handleDropTable = useCallback(
     async (database: string, tableName: string) => {
-      // Find the table in Firebase
-      const tableToDelete = tables.find((t) => t.name === tableName);
-      const dbObject = databases.find((d) => d.name === database || d.mysqlName === database);
+      console.log('[handleDropTable] Input database:', database, 'tableName:', tableName);
+      console.log('[handleDropTable] Available databases:', databases.map(d => ({ id: d.id, name: d.name })));
+      console.log('[handleDropTable] Available tables (allTables):', allTables.map(t => ({ id: t.id, name: t.name, databaseId: t.databaseId })));
+      
+      // Find the table in Firebase - use allTables instead of tables
+      const tableToDelete = allTables.find((t) => t.name === tableName);
+      const dbObject = databases.find((d) => d.name === database);
 
+      console.log('[handleDropTable] tableToDelete found:', !!tableToDelete, tableToDelete);
+      console.log('[handleDropTable] dbObject found:', !!dbObject, dbObject);
+      console.log('[handleDropTable] Match check:', tableToDelete?.databaseId === dbObject?.id);
+      
       if (tableToDelete && dbObject && tableToDelete.databaseId === dbObject.id) {
-        // Drop from MySQL
-        const result = await executeQuery(database, `DROP TABLE \`${tableName}\``);
+        // Drop from PostgreSQL
+        const dropQuery = `DROP TABLE "${tableName}"`;
+        console.log('[handleDropTable] Executing query:', dropQuery, 'in database:', database, 'with userId:', user?.uid);
+        const result = await executeQueryWithSchemaSync(database, dropQuery);
+        console.log('[handleDropTable] Query result:', result);
+        
         if (!result.success) {
           throw new Error(result.error);
         }
 
-        // Delete from Firebase
-        await deleteDoc(doc(db, 'tables', tableToDelete.id));
-
-        if (selectedTableId === tableToDelete.id) {
-          setSelectedTableId(null);
-        }
-
         addLog('success', `Table '${tableName}' dropped successfully`);
       } else {
+        console.error('[handleDropTable] Table or database not found!', {
+          tableFound: !!tableToDelete,
+          dbFound: !!dbObject,
+          tableDbMatch: tableToDelete?.databaseId === dbObject?.id,
+        });
         throw new Error('Table not found');
       }
     },
-    [tables, databases, selectedTableId, executeQuery, addLog]
+    [allTables, databases, executeQueryWithSchemaSync, addLog, user?.uid]
   );
 
-  // Handle terminal command - Execute real MySQL queries
+  // Handle terminal command - Execute real PostgreSQL queries
   const handleTerminalCommand = useCallback(
     async (command: string) => {
       const upperCommand = command.toUpperCase().trim();
@@ -1278,7 +1868,7 @@ export default function DashboardPage() {
 
       // Handle local commands (HELP, CLEAR)
       if (upperCommand === 'HELP' || upperCommand === '\\H') {
-        addLog('info', 'Available commands (connected to MySQL):');
+        addLog('info', 'Available commands (connected to PostgreSQL):');
         addLog('info', '  SHOW DATABASES    - List all databases');
         addLog('info', '  SHOW TABLES       - List tables in current database');
         addLog('info', '  USE <database>    - Select a database');
@@ -1317,18 +1907,18 @@ export default function DashboardPage() {
         return;
       }
 
-      // Handle SHOW DATABASES - fetch from MySQL with user filter
+      // Handle SHOW DATABASES - fetch from PostgreSQL with user filter
       if (upperCommand === 'SHOW DATABASES' || upperCommand === 'SHOW DATABASES;') {
         addLog('info', 'Executing: SHOW DATABASES');
 
         try {
-          const response = await fetch(`/api/database/list?userId=${user?.uid}`);
+          const response = await authFetch(`/api/database/list`);
           const result = await response.json();
 
           if (result.success && result.databases) {
-            const mysqlDatabases = result.databases;
+            const postgresDatabases = result.databases;
 
-            if (mysqlDatabases.length === 0) {
+            if (postgresDatabases.length === 0) {
               addLog('info', '+--------------------+');
               addLog('info', '| Database           |');
               addLog('info', '+--------------------+');
@@ -1343,14 +1933,14 @@ export default function DashboardPage() {
               addLog('info', '+--------------------+');
               addLog('info', '| Database           |');
               addLog('info', '+--------------------+');
-              mysqlDatabases.forEach((db: { name: string }) => {
+              postgresDatabases.forEach((db: { name: string }) => {
                 addLog('info', `| ${db.name.padEnd(18)} |`);
               });
               addLog('info', '+--------------------+');
-              addLog('info', `${mysqlDatabases.length} row${mysqlDatabases.length !== 1 ? 's' : ''} in set`);
+              addLog('info', `${postgresDatabases.length} row${postgresDatabases.length !== 1 ? 's' : ''} in set`);
 
               // Show in workflow area
-              const dbData = mysqlDatabases.map((db: { name: string }) => ({ Database: db.name }));
+              const dbData = postgresDatabases.map((db: { name: string }) => ({ Database: db.name }));
               setQueryResults({
                 results: dbData,
                 query: 'SHOW DATABASES',
@@ -1360,7 +1950,7 @@ export default function DashboardPage() {
             addLog('error', `Error fetching databases: ${result.error || 'Unknown error'}`);
           }
         } catch (error) {
-          addLog('error', 'Failed to fetch databases from MySQL');
+          addLog('error', 'Failed to fetch databases from PostgreSQL');
           console.error('Error fetching databases:', error);
         }
         return;
@@ -1413,7 +2003,13 @@ export default function DashboardPage() {
           (d) => d.name.toLowerCase() === dbName.toLowerCase()
         );
         if (targetDb) {
+          // Update both React state AND the terminal ref immediately
+          // This ensures the next query in the terminal uses the correct database
           setSelectedDatabaseId(targetDb.id);
+          terminalDbRef.current = {
+            id: targetDb.id,
+            name: targetDb.name,
+          };
           addLog('success', 'Database changed');
         } else {
           addLog('error', `ERROR 1049 (42000): Unknown database '${dbName}'`);
@@ -1421,21 +2017,94 @@ export default function DashboardPage() {
         return;
       }
 
-      // Get current database name for queries that need it
-      const selectedDatabase = databases.find((d) => d.id === selectedDatabaseId);
-      const currentDatabaseName = selectedDatabase?.mysqlName || selectedDatabase?.name;
+      // Handle CREATE DATABASE (convert to PostgreSQL CREATE SCHEMA)
+      if (/^CREATE\s+DATABASE/i.test(upperCommand)) {
+        if (databases.length >= 3) {
+          setUpgradeReason('database');
+          setIsUpgradeModalOpen(true);
+          addLog('error', 'Error: Free plan limit reached. Maximum 3 databases allowed.');
+          return;
+        }
 
-      // Execute query against MySQL
+        const match = trimmedCommand.match(/CREATE\s+DATABASE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
+        if (match && match[1]) {
+          const dbName = match[1];
+
+          try {
+            addLog('info', `Executing: ${trimmedCommand}`);
+
+            // Create schema in PostgreSQL
+            const response = await authFetch('/api/database/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: dbName }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              addLog('success', `Schema '${dbName}' created successfully`);
+
+              // Create schema in Firebase
+              const dbId = uuidv4();
+              await setDoc(doc(db, 'databases', dbId), {
+                name: dbName,
+                userId: user?.uid,
+                db_password_hash: '',
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+              });
+
+              // Auto-select the newly created schema
+              setSelectedDatabaseId(dbId);
+              // Also update terminal ref so subsequent queries use the correct schema
+              terminalDbRef.current = {
+                id: dbId,
+                name: dbName,
+              };
+              addLog('info', `Schema '${dbName}' added to workflow and selected`);
+            } else {
+              addLog('error', result.error || 'Failed to create schema');
+            }
+          } catch (error) {
+            console.error('Error creating schema:', error);
+            addLog('error', 'Failed to create schema');
+          }
+          return;
+        }
+      }
+
+      // Get current database name for queries - use terminal ref as source of truth
+      // This is synced immediately when USE is executed, avoiding async state timing issues
+      if (!terminalDbRef.current) {
+        addLog('error', 'No database selected. Use "USE <database>" first.');
+        return;
+      }
+      const currentDatabaseName = terminalDbRef.current.name;
+
+      // Execute query against PostgreSQL
       try {
+        // Check limits before executing CREATE TABLE
+        if (/^CREATE\s+TABLE/i.test(upperCommand)) {
+          const currentDbId = terminalDbRef.current?.id || selectedDatabaseId;
+          const currentTables = allTables.filter((t) => t.databaseId === currentDbId);
+          
+          if (currentTables.length >= 10) {
+            setUpgradeReason('table');
+            setIsUpgradeModalOpen(true);
+            addLog('error', 'Error: Free plan limit reached. Maximum 10 tables allowed per database.');
+            return;
+          }
+        }
+
         addLog('info', `Executing: ${trimmedCommand}`);
 
-        const response = await fetch('/api/query/execute', {
+        const response = await authFetch('/api/query/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             database: currentDatabaseName,
             query: trimmedCommand,
-            userId: user?.uid,
           }),
         });
 
@@ -1468,123 +2137,103 @@ export default function DashboardPage() {
           }
 
           // Handle schema-changing queries to update UI immediately
-          if (upperCommand.startsWith('CREATE TABLE') && selectedDatabaseId) {
+          if (/^CREATE\s+TABLE/i.test(upperCommand)) {
             // Extract table name from CREATE TABLE query
             const match = trimmedCommand.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?/i);
             if (match && match[1]) {
               const tableName = match[1];
+              const dbId = terminalDbRef.current?.id || selectedDatabaseId;
 
-              // Fetch table structure from MySQL
+              if (!dbId) {
+                addLog('error', 'Error: No database selected. Use "USE <database>" first.');
+                return;
+              }
+
+              // Fetch table structure from PostgreSQL
               try {
-                const describeResponse = await fetch('/api/query/execute', {
+                const describeResponse = await authFetch('/api/table/describe', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     database: currentDatabaseName,
-                    query: `DESCRIBE \`${tableName}\``,
-                    userId: user?.uid,
+                    table: tableName,
                   }),
                 });
                 const describeResult = await describeResponse.json();
 
-                if (describeResult.success && Array.isArray(describeResult.results)) {
-                  // Get foreign key information from INFORMATION_SCHEMA
-                  const fkResponse = await fetch('/api/query/execute', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      database: 'information_schema',
-                      query: `
-                        SELECT 
-                          COLUMN_NAME,
-                          REFERENCED_TABLE_NAME,
-                          REFERENCED_COLUMN_NAME
-                        FROM KEY_COLUMN_USAGE
-                        WHERE TABLE_SCHEMA = '${currentDatabaseName}'
-                          AND TABLE_NAME = '${tableName}'
-                          AND REFERENCED_TABLE_NAME IS NOT NULL
-                      `,
-                    }),
-                  });
-                  const fkResult = await fkResponse.json();
-                  const foreignKeys = fkResult.success && Array.isArray(fkResult.results) ? fkResult.results : [];
-
-                  // Create a map of column name -> foreign key reference
-                  const fkMap = new Map<string, { tableName: string; columnName: string }>();
-                  foreignKeys.forEach((fk: any) => {
-                    fkMap.set(fk.COLUMN_NAME, {
-                      tableName: fk.REFERENCED_TABLE_NAME,
-                      columnName: fk.REFERENCED_COLUMN_NAME,
-                    });
-                  });
-
-                  // Convert MySQL column info to our Column format
-                  const columns = describeResult.results.map((col: any) => {
-                    const column: Column = {
-                      id: uuidv4(),
-                      name: col.Field,
-                      dataType: col.Type,
-                      isPrimaryKey: col.Key === 'PRI',
-                      isNotNull: col.Null === 'NO',
-                      isUnique: col.Key === 'UNI',
-                      defaultValue: col.Default,
-                      isForeignKey: col.Key === 'MUL' || fkMap.has(col.Field),
-                    };
-
-                    // Add foreign key reference if exists
-                    const fkRef = fkMap.get(col.Field);
-                    if (fkRef) {
-                      // Find the referenced table in our tables array
-                      const referencedTable = tables.find((t) =>
-                        t.name === fkRef.tableName && t.databaseId === selectedDatabaseId
-                      );
-
-                      if (referencedTable) {
-                        // Find the referenced column in that table
-                        const referencedColumn = referencedTable.columns.find((c) =>
-                          c.name === fkRef.columnName
-                        );
-
-                        if (referencedColumn) {
-                          column.foreignKeyReference = {
-                            tableId: referencedTable.id,
-                            columnId: referencedColumn.id,
-                            tableName: referencedTable.name,
-                            columnName: referencedColumn.name,
-                          };
-                        }
-                      }
-                    }
-
-                    return column;
-                  });
-
-                  // Add table to Firebase
-                  const tableId = uuidv4();
-                  const existingTables = tables.filter((t) => t.databaseId === selectedDatabaseId);
-                  const xOffset = (existingTables.length % 3) * 450;
-                  const yOffset = Math.floor(existingTables.length / 3) * 400;
-
-                  await setDoc(doc(db, 'tables', tableId), {
-                    name: tableName,
-                    databaseId: selectedDatabaseId,
-                    columns,
-                    position: { x: 100 + xOffset, y: 100 + yOffset },
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now(),
-                  });
-
-                  addLog('info', `Table '${tableName}' added to workflow`);
-
-                  // Log foreign key relationships
-                  columns.forEach((col: Column) => {
-                    if (col.isForeignKey && col.foreignKeyReference) {
-                      addLog('info', `Foreign key linked: ${tableName}.${col.name} → ${col.foreignKeyReference.tableName}.${col.foreignKeyReference.columnName}`);
-                    }
-                  });
+                if (!describeResult.success) {
+                  addLog('error', `Failed to describe table '${tableName}': ${describeResult.error || 'Unknown error'}`);
+                  return;
                 }
+
+                if (!Array.isArray(describeResult.columns) || describeResult.columns.length === 0) {
+                  addLog('warning', `Table '${tableName}' has no columns or couldn't be read`);
+                  return;
+                }
+
+                // Convert PostgreSQL column info to our Column format
+                // describeResult.columns already includes key information from the API
+                const columns = describeResult.columns.map((col: any) => {
+                  const column: Column = {
+                    id: uuidv4(),
+                    name: col.Field,
+                    dataType: col.Type,
+                    isPrimaryKey: col.Key === 'PRI',
+                    isNotNull: col.Null === 'NO',
+                    isUnique: col.Key === 'UNI',
+                    defaultValue: col.Default,
+                    isForeignKey: col.Key === 'MUL',
+                    isAutoIncrement: (col.Extra || '').includes('auto_increment'),
+                  };
+                  return column;
+                });
+
+                // Add table to Firebase
+                const tableId = uuidv4();
+                const position = calculateTablePosition(dbId);
+
+                const newTable: TableType = {
+                  id: tableId,
+                  name: tableName,
+                  databaseId: dbId,
+                  columns,
+                  position,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                };
+
+                await setDoc(doc(db, 'tables', tableId), {
+                  name: tableName,
+                  databaseId: dbId,
+                  columns,
+                  position,
+                  createdAt: Timestamp.now(),
+                  updatedAt: Timestamp.now(),
+                });
+
+                addLog('info', `Table '${tableName}' added to workflow`);
+
+                // Update React state immediately to show table in canvas
+                setTables((prevTables) => [...prevTables, newTable]);
+
+                // Ensure selectedDatabaseId matches so Firebase listener picks up future updates
+                if (selectedDatabaseId !== dbId) {
+                  setSelectedDatabaseId(dbId);
+                }
+
+                // Log foreign key relationships
+                columns.forEach((col: Column) => {
+                  if (col.isForeignKey && col.foreignKeyReference) {
+                    const fkTableName = getFKTableName(col.foreignKeyReference, tables);
+                    const fkColumnName = getFKColumnName(col.foreignKeyReference, tables);
+                    if (fkTableName && fkColumnName) {
+                      addLog('info', `Foreign key linked: ${tableName}.${col.name} → ${fkTableName}.${fkColumnName}`);
+                    }
+                  }
+                });
               } catch (err) {
                 console.error('Error syncing table to Firebase:', err);
+                addLog('error', `Failed to add table to workflow: ${err instanceof Error ? err.message : 'Unknown error'}`);
               }
             }
           } else if (upperCommand.startsWith('ALTER TABLE')) {
@@ -1598,87 +2247,36 @@ export default function DashboardPage() {
               );
 
               if (tableToUpdate) {
-                // Fetch updated table structure from MySQL
+                // Fetch updated table structure from PostgreSQL
                 try {
-                  const describeResponse = await fetch('/api/query/execute', {
+                  const describeResponse = await authFetch('/api/table/describe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       database: currentDatabaseName,
-                      query: `DESCRIBE \`${tableName}\``,
-                      userId: user?.uid,
+                      table: tableName,
                     }),
                   });
                   const describeResult = await describeResponse.json();
 
-                  if (describeResult.success && Array.isArray(describeResult.results)) {
-                    // Get foreign key information from INFORMATION_SCHEMA
-                    const fkResponse = await fetch('/api/query/execute', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        database: 'information_schema',
-                        query: `
-                          SELECT 
-                            COLUMN_NAME,
-                            REFERENCED_TABLE_NAME,
-                            REFERENCED_COLUMN_NAME
-                          FROM KEY_COLUMN_USAGE
-                          WHERE TABLE_SCHEMA = '${currentDatabaseName}'
-                            AND TABLE_NAME = '${tableName}'
-                            AND REFERENCED_TABLE_NAME IS NOT NULL
-                        `,
-                      }),
-                    });
-                    const fkResult = await fkResponse.json();
-                    const foreignKeys = fkResult.success && Array.isArray(fkResult.results) ? fkResult.results : [];
-
-                    // Create a map of column name -> foreign key reference
-                    const fkMap = new Map<string, { tableName: string; columnName: string }>();
-                    foreignKeys.forEach((fk: any) => {
-                      fkMap.set(fk.COLUMN_NAME, {
-                        tableName: fk.REFERENCED_TABLE_NAME,
-                        columnName: fk.REFERENCED_COLUMN_NAME,
-                      });
-                    });
-
-                    // Convert MySQL column info to our Column format
-                    const updatedColumns = describeResult.results.map((col: any) => {
+                  if (describeResult.success && Array.isArray(describeResult.columns)) {
+                    // Convert PostgreSQL column info to our Column format
+                    // IMPORTANT: Preserve original column IDs to maintain canvas integrity and relationships
+                    const updatedColumns = describeResult.columns.map((col: any) => {
+                      // Find if this column existed before (match by name)
+                      const existingColumn = tableToUpdate.columns.find((c) => c.name === col.Field);
+                      
                       const column: Column = {
-                        id: uuidv4(),
+                        id: existingColumn?.id || uuidv4(), // Keep original ID if exists, new ID only for new columns
                         name: col.Field,
                         dataType: col.Type,
                         isPrimaryKey: col.Key === 'PRI',
                         isNotNull: col.Null === 'NO',
                         isUnique: col.Key === 'UNI',
                         defaultValue: col.Default,
-                        isForeignKey: col.Key === 'MUL' || fkMap.has(col.Field),
+                        isForeignKey: col.Key === 'MUL',
+                        isAutoIncrement: (col.Extra || '').includes('auto_increment'),
                       };
-
-                      // Add foreign key reference if exists
-                      const fkRef = fkMap.get(col.Field);
-                      if (fkRef) {
-                        // Find the referenced table in our tables array
-                        const referencedTable = tables.find((t) =>
-                          t.name === fkRef.tableName && t.databaseId === selectedDatabaseId
-                        );
-
-                        if (referencedTable) {
-                          // Find the referenced column in that table
-                          const referencedColumn = referencedTable.columns.find((c) =>
-                            c.name === fkRef.columnName
-                          );
-
-                          if (referencedColumn) {
-                            column.foreignKeyReference = {
-                              tableId: referencedTable.id,
-                              columnId: referencedColumn.id,
-                              tableName: referencedTable.name,
-                              columnName: referencedColumn.name,
-                            };
-                          }
-                        }
-                      }
 
                       return column;
                     });
@@ -1694,7 +2292,11 @@ export default function DashboardPage() {
                     // Log foreign key relationships
                     updatedColumns.forEach((col: Column) => {
                       if (col.isForeignKey && col.foreignKeyReference) {
-                        addLog('info', `Foreign key linked: ${tableName}.${col.name} → ${col.foreignKeyReference.tableName}.${col.foreignKeyReference.columnName}`);
+                        const fkTableName = getFKTableName(col.foreignKeyReference, tables);
+                        const fkColumnName = getFKColumnName(col.foreignKeyReference, tables);
+                        if (fkTableName && fkColumnName) {
+                          addLog('info', `Foreign key linked: ${tableName}.${col.name} → ${fkTableName}.${fkColumnName}`);
+                        }
                       }
                     });
                   }
@@ -1728,10 +2330,10 @@ export default function DashboardPage() {
                   addLog('warning', `Failed to remove table '${tableName}' from workflow`);
                 }
               } else {
-                addLog('info', `Table '${tableName}' not found in workflow (dropped from MySQL only)`);
+                addLog('info', `Table '${tableName}' not found in workflow (dropped from PostgreSQL only)`);
               }
 
-              // Small delay to ensure MySQL has committed the DROP
+              // Small delay to ensure PostgreSQL has committed the DROP
               await new Promise(resolve => setTimeout(resolve, 200));
             }
           } else if (upperCommand.startsWith('DROP DATABASE')) {
@@ -1774,7 +2376,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Error executing query:', error);
-        addLog('error', 'Failed to execute query. Check if MySQL is running.');
+        addLog('error', 'Failed to execute query. Check if PostgreSQL is running.');
       }
     },
     [databases, selectedDatabaseId, tables, selectedTableId, addLog]
@@ -1787,7 +2389,7 @@ export default function DashboardPage() {
         case 'CREATE':
           // If no databases exist, automatically create database
           if (databases.length === 0) {
-            setIsCreateDbModalOpen(true);
+            handleOpenCreateDatabase();
           } else {
             // Show choice modal
             setIsCreateChoiceModalOpen(true);
@@ -1849,19 +2451,18 @@ export default function DashboardPage() {
     >
       {/* Navbar */}
       <Navbar
-        onPresentationMode={() => {
-          if (selectedDatabaseId) {
-            router.push(`/presentation?db=${selectedDatabaseId}&theme=${currentTheme}`);
-          }
-        }}
-        onTerminalMode={() => {
-          if (selectedDatabaseId) {
-            router.push(`/terminal-mode?db=${selectedDatabaseId}`);
-          }
-        }}
+        onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleTerminal={() => setIsTerminalMinimized(prev => !prev)}
+        isTerminalMinimized={isTerminalMinimized}
         onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-        showModeButtons={!!selectedDatabaseId}
+        onComposerToggle={() => setIsComposerOpen(prev => !prev)}
+        isComposerOpen={isComposerOpen}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+        selectedDatabaseName={databases.find(db => db.id === selectedDatabaseId)?.name}
+        tableCount={tablesForSelectedDb.length}
+        onExport={() => setIsExportModalOpen(true)}
+        onImport={() => setIsImportModalOpen(true)}
       />
 
       {/* Main Content */}
@@ -1908,11 +2509,11 @@ export default function DashboardPage() {
                     setIsMobileSidebarOpen(false);
                   }}
                   onCreateDatabase={() => {
-                    setIsCreateDbModalOpen(true);
+                    handleOpenCreateDatabase();
                     setIsMobileSidebarOpen(false);
                   }}
                   onCreateTable={() => {
-                    setIsCreateTableModalOpen(true);
+                    handleOpenCreateTable();
                     setIsMobileSidebarOpen(false);
                   }}
                   onDeleteDatabase={handleDeleteDatabase}
@@ -1962,8 +2563,8 @@ export default function DashboardPage() {
           user={user}
           onSelectDatabase={setSelectedDatabaseId}
           onSelectTable={setSelectedTableId}
-          onCreateDatabase={() => setIsCreateDbModalOpen(true)}
-          onCreateTable={() => setIsCreateTableModalOpen(true)}
+          onCreateDatabase={() => handleOpenCreateDatabase()}
+          onCreateTable={() => handleOpenCreateTable()}
           onDeleteDatabase={handleDeleteDatabase}
           onDeleteTable={handleDeleteTable}
           onQuickSQL={handleQuickSQL}
@@ -1984,18 +2585,20 @@ export default function DashboardPage() {
           showModeButtons={!!selectedDatabaseId}
           onLogout={handleLogout}
           theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+          isCollapsed={isSidebarCollapsed}
         />
 
+
         {/* Canvas Area */}
-        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4">
+        <div className="flex-1 flex flex-col overflow-hidden p-2 sm:p-3 md:p-4 bg-[#fafafa]">
           {/* React Flow Canvas */}
-          <div className="flex-1 relative" ref={workflowRef}>
+          <div className="flex-1 relative rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm" ref={workflowRef}>
             {selectedDatabaseId ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.99 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="h-full rounded-xl overflow-hidden border border-gray-200 bg-white"
+                transition={{ duration: 0.25 }}
+                className="h-full w-full"
               >
                 <ReactFlow
                   nodes={nodes}
@@ -2004,45 +2607,37 @@ export default function DashboardPage() {
                   onNodeDragStop={onNodeDragStop}
                   nodeTypes={nodeTypes}
                   edgeTypes={edgeTypes}
+                  onInit={setReactFlowInstance}
                   fitViewOptions={{
                     padding: 0.2,
                   }}
                   defaultViewport={{ x: 0, y: 0, zoom: 0.75 }}
                   proOptions={{ hideAttribution: true }}
-                  className={THEMES[currentTheme as keyof typeof THEMES]?.bg || THEMES.light.bg}
+                  className="bg-white"
                 >
-                  <Background
-                    variant={BackgroundVariant.Dots}
-                    gap={20}
-                    size={1}
-                    color={THEMES[currentTheme as keyof typeof THEMES]?.dots || THEMES.light.dots}
-                  />
-                  <Controls
-                    className="bg-white border border-gray-200 rounded-lg"
-                  />
+                  <div data-html2canvas-ignore="true">
+                    <Controls
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
+                    />
+                  </div>
                 </ReactFlow>
               </motion.div>
             ) : (
-              <div className={`h-full flex items-center justify-center rounded-2xl ${THEMES[currentTheme as keyof typeof THEMES]?.bg || THEMES.light.bg}`}>
+              <div className="h-full flex items-center justify-center rounded-2xl bg-white">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="text-center max-w-lg mx-auto px-8"
+                  transition={{ duration: 0.4 }}
+                  className="text-center max-w-md mx-auto px-6"
                 >
-                  {/* Clean, minimal icon */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.05 }}
-                    className={`w-14 h-14 ${currentTheme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-gray-100 border-gray-200'} border rounded-xl flex items-center justify-center mx-auto mb-6`}
-                  >
+                  {/* Brand Icon */}
+                  <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
                     <svg
-                      className={`w-6 h-6 ${currentTheme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}
+                      className="w-6 h-6 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
-                      strokeWidth={1.5}
+                      strokeWidth={1.75}
                     >
                       <path
                         strokeLinecap="round"
@@ -2050,105 +2645,47 @@ export default function DashboardPage() {
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                  </motion.div>
+                  </div>
 
                   {/* Title */}
-                  <motion.h2
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={`text-2xl font-light ${THEMES[currentTheme as keyof typeof THEMES]?.text || 'text-gray-900'} mb-3`}
-                    style={{ fontFamily: 'var(--font-geist-sans)', letterSpacing: '-0.01em' }}
+                  <h2
+                    className="text-2xl font-light text-black mb-2 tracking-tight"
+                    style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
                     Design your database
-                  </motion.h2>
+                  </h2>
 
                   {/* Subtitle */}
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                    className={`text-sm ${THEMES[currentTheme as keyof typeof THEMES]?.textSecondary || 'text-gray-500'} mb-8 max-w-sm mx-auto leading-relaxed`}
+                  <p
+                    className="text-xs font-light text-gray-500 mb-6 max-w-sm mx-auto leading-relaxed"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    Create tables, define columns, and set up relationships visually. Select a database from the sidebar or create a new one.
-                  </motion.p>
+                    Build tables visually, configure columns and constraints, and link relations. Select a database from the sidebar or start a new project.
+                  </p>
 
                   {/* Action button */}
-                  <motion.button
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.3 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsCreateDbModalOpen(true)}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 ${currentTheme === 'dark' ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'} rounded-lg transition-colors text-sm font-medium`}
+                  <button
+                    onClick={() => handleOpenCreateDatabase()}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-black hover:bg-gray-800 text-white rounded-full text-xs font-medium transition-colors shadow-sm"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
-                    New database
-                  </motion.button>
+                    <span>New Database</span>
+                  </button>
 
-                  {/* Keyboard shortcut hint */}
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={`text-xs ${currentTheme === 'dark' ? 'text-slate-500' : 'text-gray-400'} mt-4`}
+                  <p
+                    className="text-[11px] font-light text-gray-400 mt-3"
                     style={{ fontFamily: 'var(--font-geist-sans)' }}
                   >
-                    or select from the sidebar
-                  </motion.p>
+                    or select an existing database from the sidebar
+                  </p>
                 </motion.div>
               </div>
             )}
 
-            {/* Table count badge and Export Button */}
-            <AnimatePresence>
-              {selectedDatabaseId && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute top-8 right-8 space-y-3 z-10"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={`${currentTheme === 'dark' ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-300'} backdrop-blur-sm px-4 py-2.5 rounded-xl shadow-md border`}
-                  >
-                    <p className={`text-[13px] ${THEMES[currentTheme as keyof typeof THEMES]?.textSecondary || 'text-gray-600'}`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                      <span className={`font-medium ${THEMES[currentTheme as keyof typeof THEMES]?.text || 'text-gray-900'}`}>
-                        {selectedDatabaseName}
-                      </span>
-                      <span className="mx-1.5">·</span>
-                      {tablesForSelectedDb.length} {tablesForSelectedDb.length === 1 ? 'table' : 'tables'}
-                    </p>
-                  </motion.div>
 
-                  {/* Export Button */}
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.15 }}
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsExportModalOpen(true)}
-                    className="w-full bg-black hover:bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-md text-[13px] flex items-center justify-center gap-2 transition-colors"
-                    style={{ fontFamily: 'var(--font-geist-sans)' }}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export
-                  </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Query Results Panel */}
             <AnimatePresence>
@@ -2180,9 +2717,9 @@ export default function DashboardPage() {
         onClose={() => setIsCreateChoiceModalOpen(false)}
         onChoose={(choice) => {
           if (choice === 'database') {
-            setIsCreateDbModalOpen(true);
+            handleOpenCreateDatabase();
           } else {
-            setIsCreateTableModalOpen(true);
+            handleOpenCreateTable();
           }
         }}
         hasSelectedDatabase={!!selectedDatabaseId}
@@ -2206,7 +2743,6 @@ export default function DashboardPage() {
         existingTables={tablesForSelectedDb}
         databaseName={selectedDatabaseName}
         onInsertData={handleInsertData}
-        mysqlDatabaseName={databases.find((d) => d.id === selectedDatabaseId)?.mysqlName || selectedDatabaseName}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
 
@@ -2230,6 +2766,7 @@ export default function DashboardPage() {
         databases={databases}
         tables={tables}
         selectedDatabaseId={selectedDatabaseId}
+        userId={user?.uid}
         onInsert={handleInsertData}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
@@ -2241,6 +2778,7 @@ export default function DashboardPage() {
         databases={databases}
         tables={tables}
         selectedDatabaseId={selectedDatabaseId}
+        userId={user?.uid}
         onExecuteQuery={executeQuery}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
@@ -2252,6 +2790,7 @@ export default function DashboardPage() {
         databases={databases}
         tables={tables}
         selectedDatabaseId={selectedDatabaseId}
+        userId={user?.uid}
         onExecuteQuery={executeQuery}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
@@ -2263,6 +2802,7 @@ export default function DashboardPage() {
         databases={databases}
         tables={tables}
         selectedDatabaseId={selectedDatabaseId}
+        userId={user?.uid}
         onExecuteQuery={executeQuery}
         onShowResults={(results, query) => {
           setQueryResults({ results, query });
@@ -2275,8 +2815,9 @@ export default function DashboardPage() {
         isOpen={isDropModalOpen}
         onClose={() => setIsDropModalOpen(false)}
         databases={databases}
-        tables={tables}
+        tables={allTables}
         selectedDatabaseId={selectedDatabaseId}
+        userId={user?.uid}
         onDropDatabase={handleDeleteDatabase}
         onDropTable={handleDropTable}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
@@ -2303,13 +2844,37 @@ export default function DashboardPage() {
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
 
-      {/* SQL Chatbot Assistant */}
-      <SQLChatbot
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleSQLImport}
         theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
-        onExecuteSQL={handleExecuteSQL}
-        savedMessages={chatLoaded ? chatMessages : undefined}
-        onMessagesChange={handleChatMessagesChange}
-        activeDatabaseName={chatbotDbName || undefined}
+      />
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        reason={upgradeReason}
+        theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
+      />
+
+
+      {/* DB Composer Sidebar */}
+      <DBComposer
+        isOpen={isComposerOpen}
+        onClose={() => setIsComposerOpen(false)}
+        onOpen={() => setIsComposerOpen(true)}
+        userId={user?.uid}
+        databases={databases}
+        tables={tables}
+        selectedDatabaseId={selectedDatabaseId}
+        setSelectedDatabaseId={setSelectedDatabaseId}
+        addLog={addLog}
+        viewportCenter={viewportCenter}
+        onActionsExecuted={handleActionsExecuted}
+        theme={THEMES[currentTheme as keyof typeof THEMES] || THEMES.light}
       />
     </motion.div>
   );
