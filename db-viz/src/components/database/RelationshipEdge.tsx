@@ -51,8 +51,8 @@ export default function RelationshipEdge({
             y1="1"
             x2="5"
             y2="11"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
+            stroke="#000000"
+            strokeWidth="2"
             strokeLinecap="round"
           />
         </marker>
@@ -73,8 +73,8 @@ export default function RelationshipEdge({
             cy="6"
             r="2"
             fill="#ffffff"
-            stroke="#94a3b8"
-            strokeWidth="1.25"
+            stroke="#000000"
+            strokeWidth="1.75"
           />
           {/* Crow's foot prongs */}
           <line
@@ -82,8 +82,8 @@ export default function RelationshipEdge({
             y1="1.5"
             x2="6"
             y2="6"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
+            stroke="#000000"
+            strokeWidth="2"
             strokeLinecap="round"
           />
           <line
@@ -91,8 +91,8 @@ export default function RelationshipEdge({
             y1="6"
             x2="6"
             y2="6"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
+            stroke="#000000"
+            strokeWidth="2"
             strokeLinecap="round"
           />
           <line
@@ -100,8 +100,8 @@ export default function RelationshipEdge({
             y1="10.5"
             x2="6"
             y2="6"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
+            stroke="#000000"
+            strokeWidth="2"
             strokeLinecap="round"
           />
         </marker>
@@ -112,8 +112,8 @@ export default function RelationshipEdge({
         path={edgePath}
         style={{
           ...style,
-          strokeWidth: 1.5,
-          stroke: '#94a3b8',
+          strokeWidth: 2,
+          stroke: '#000000',
           strokeDasharray: 'none',
         }}
         markerStart={markerStart || 'url(#erd-one)'}
