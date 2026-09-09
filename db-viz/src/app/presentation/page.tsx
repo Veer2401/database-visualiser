@@ -90,7 +90,7 @@ function PresentationContent() {
     databaseId: databaseId,
   });
 
-  // Transition animation
+  // Fast transition animation (matches terminal mode timing)
   useEffect(() => {
     const progressInterval = setInterval(() => {
       setTransitionProgress((prev) => {
@@ -98,13 +98,13 @@ function PresentationContent() {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 2.5;
+        return prev + 12;
       });
-    }, 75);
+    }, 50);
 
     const transitionTimer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 3500);
+    }, 600);
 
     return () => {
       clearInterval(progressInterval);
@@ -293,96 +293,50 @@ function PresentationContent() {
     router.push('/dashboard');
   };
 
-  // Transition Screen
+  // Transition Screen (matches terminal mode layout and fast animation, preserves presentation colors)
   if (isTransitioning) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center justify-center"
+          transition={{ duration: 0.25 }}
+          className="text-center"
         >
-          {/* Presentation Screen Animation */}
-          <motion.div
-            initial={{ y: 50, rotateX: -30 }}
-            animate={{ y: 0, rotateX: 0 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="relative mb-8 flex justify-center"
+          {/* Landing-style Presentation Mockup */}
+          <div
+            className="w-[420px] rounded-2xl p-5 text-left mb-8 mx-auto"
+            style={{
+              background: 'linear-gradient(145deg, #f9fafb 0%, #f3f4f6 100%)',
+              border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 20px 40px -12px rgba(0,0,0,0.08)',
+            }}
           >
-            {/* Monitor Frame */}
-            <div className="relative">
-              <motion.div
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="w-96 h-56 bg-white rounded-2xl border-4 border-gray-300 shadow-2xl overflow-hidden"
-              >
-                {/* Screen Content */}
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 p-4">
-                  {/* Animated table placeholders */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.2, duration: 0.5 }}
-                    className="w-20 h-16 bg-white rounded-lg mb-3 shadow-lg border border-gray-200"
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.5, duration: 0.5 }}
-                    className="w-20 h-16 bg-white rounded-lg ml-auto shadow-lg border border-gray-200"
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.8, duration: 0.3 }}
-                    className="w-16 h-0.5 bg-gray-400 mx-auto mt-2"
-                  />
-                </div>
-              </motion.div>
-
-              {/* Monitor Stand */}
-              <motion.div
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="w-16 h-8 bg-gray-300 mx-auto rounded-b-lg"
-              />
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="w-32 h-2 bg-gray-300 mx-auto rounded-full"
-              />
+            <div className="flex items-center gap-1.5 mb-3">
+              <div className="w-2.5 h-2.5 bg-red-500 rounded-full" />
+              <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full" />
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />
+              <span className="ml-2 text-xs font-mono text-gray-500">presentation.view</span>
             </div>
-          </motion.div>
-
-          {/* Loading Text */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center justify-center gap-3">
-              <Presentation className="w-6 h-6 text-black" />
-              <h2 className="text-4xl font-light text-black" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                Switching to Presentation Mode
-              </h2>
+            <div className="font-mono text-xs space-y-1">
+              <p className="text-gray-500">schema &gt; <span className="text-black font-medium">PRESENTATION_MODE.start()</span></p>
+              <p className="text-emerald-600">Active interactive canvas ready</p>
             </div>
+          </div>
 
-            {/* Progress Bar */}
-            <div className="w-80 h-1 bg-gray-200 rounded-full mx-auto overflow-hidden">
+          <div className="space-y-3">
+            <h2 className="text-2xl font-light text-black" style={{ fontFamily: 'var(--font-geist-sans)' }}>
+              Opening Presentation
+            </h2>
+            <div className="w-48 h-1.5 bg-gray-200 rounded-full mx-auto overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${transitionProgress}%` }}
-                transition={{ ease: "easeOut" }}
+                transition={{ duration: 0.15 }}
                 className="h-full bg-black rounded-full"
               />
             </div>
-
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     );

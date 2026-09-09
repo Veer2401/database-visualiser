@@ -16,14 +16,14 @@ export default function GitHubLoginButton({ onClick, isLoading = false }: GitHub
       onClick={onClick}
       disabled={isLoading}
       className="
-        flex items-center justify-center gap-3 w-full
-        px-5 py-2.5 rounded-xl
-        bg-[#24292e]
-        border border-[#24292e]
+        flex items-center justify-center gap-2.5 w-full
+        px-4 py-2.5 rounded-xl
+        bg-black hover:bg-gray-900
+        border border-black
         text-white
-        font-medium text-sm sm:text-base
-        shadow-sm hover:shadow-md hover:bg-[#2f363d]
-        transition-all duration-200
+        font-medium text-xs sm:text-sm
+        shadow-sm hover:shadow
+        transition-all duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
       "
     >

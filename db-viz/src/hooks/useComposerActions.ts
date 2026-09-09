@@ -17,8 +17,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { doc, setDoc, deleteDoc, updateDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { authFetch } from '@/lib/api-client';
+import { calculatePriorityLayout, calculateNewTablePosition } from '@/lib/canvas-layout';
 import type { ComposerAction, ColumnDef } from '@/types/composer';
-import type { Column, DataType } from '@/types/database';
+import type { Column, DataType, Table } from '@/types/database';
 
 // ─── Params passed from the Dashboard ──────────────────────────────────────
 export interface UseComposerActionsParams {
@@ -289,6 +290,30 @@ export function useComposerActions(params: UseComposerActionsParams) {
                 }
               }
 
+              // Arrange newly created tables according to relationship priority layout (Parent leftmost, straight lines)
+              if (createdTables.length > 0) {
+                const tableModels: Table[] = createdTables.map(t => ({
+                  id: t.id,
+                  name: t.name,
+                  databaseId: t.databaseId,
+                  columns: t.columns,
+                  position: { x: 80, y: 80 },
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                }));
+                const priorityLayout = calculatePriorityLayout(tableModels);
+
+                for (const t of createdTables) {
+                  const pos = priorityLayout.get(t.id);
+                  if (pos) {
+                    await updateDoc(doc(db, 'tables', t.id), {
+                      position: pos,
+                      updatedAt: Timestamp.now(),
+                    });
+                  }
+                }
+              }
+
               results.push({ action: `CREATE_DATABASE ${sanitizedDbName}`, success: true, detail: `${sortedTables.length} tables` });
               break;
             }
@@ -359,8 +384,17 @@ export function useComposerActions(params: UseComposerActionsParams) {
 
               const tableId = uuidv4();
               const columns = action.columns.map(c => columnDefToColumn(c, tables));
-              const existingInDb = tables.filter(t => t.databaseId === targetDbId).length;
-              const position = calcPosition(0, existingInDb, viewportCenter);
+              const existingInDb = tables.filter(t => t.databaseId === targetDbId);
+              const newTableObj: Table = {
+                id: tableId,
+                name: sanitizedTableName,
+                databaseId: targetDbId,
+                columns,
+                position: { x: 0, y: 0 },
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+              const position = calculateNewTablePosition(newTableObj, existingInDb as Table[]);
 
               await setDoc(doc(db, 'tables', tableId), {
                 name: sanitizedTableName,

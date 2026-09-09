@@ -216,27 +216,6 @@ export default function DashboardPage() {
     }
   }, [reactFlowInstance, nodes]);
 
-  // Smooth fitView handler for DB Composer actions
-  const handleActionsExecuted = useCallback(() => {
-    if (reactFlowInstance) {
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
-      }, 200);
-    }
-  }, [reactFlowInstance]);
-
-  // Auto fitView whenever new tables are added
-  const prevTablesCountRef = useRef(tables.length);
-  useEffect(() => {
-    if (tables.length > prevTablesCountRef.current && reactFlowInstance) {
-      const timer = setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
-      }, 250);
-      return () => clearTimeout(timer);
-    }
-    prevTablesCountRef.current = tables.length;
-  }, [tables.length, reactFlowInstance]);
-
   // Workflow layouts for position persistence
   const {
     layouts: workflowLayouts,
@@ -246,6 +225,35 @@ export default function DashboardPage() {
     userId: user?.uid,
     databaseId: selectedDatabaseId,
   });
+
+  // Smooth fitView & priority layout handler for Schema Pilot / DB Composer actions
+  const handleActionsExecuted = useCallback(() => {
+    // Wait for Firestore snapshots to finish syncing
+    setTimeout(() => {
+      setTables((currentTables) => {
+        if (currentTables.length > 0) {
+          const layout = calculatePriorityLayout(currentTables);
+          setNodes((prevNodes) =>
+            prevNodes.map((node) => {
+              const pos = layout.get(node.id);
+              if (pos) {
+                saveTablePosition(node.id, pos);
+                return { ...node, position: pos };
+              }
+              return node;
+            })
+          );
+        }
+        return currentTables;
+      });
+
+      if (reactFlowInstance) {
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.25, duration: 600 });
+        }, 150);
+      }
+    }, 400);
+  }, [saveTablePosition, reactFlowInstance]);
 
   // Helper function to calculate optimal table position using connection priority
   const calculateTablePosition = useCallback(
@@ -1640,7 +1648,11 @@ export default function DashboardPage() {
               });
 
               const tableId = uuidv4();
-              const position = calculateTablePosition(selectedDatabaseId);
+              const position = calculateTablePosition(selectedDatabaseId, {
+                id: tableId,
+                name: tableName,
+                columns,
+              });
 
               await setDoc(doc(db, 'tables', tableId), {
                 name: tableName,
