@@ -34,6 +34,7 @@ import RelationshipEdge from '@/components/database/RelationshipEdge';
 import { useAuth } from '@/hooks/useAuth';
 import { authFetch } from '@/lib/api-client';
 import { useWorkflowLayouts } from '@/hooks/useWorkflowLayouts';
+import { calculatePriorityLayout } from '@/lib/canvas-layout';
 import {
   Database as DatabaseType,
   Table as TableType,
@@ -167,7 +168,7 @@ function PresentationContent() {
     return () => unsubscribe();
   }, [databaseId]);
 
-  // Convert foreign key relationships to edges
+  // Convert foreign key relationships to edges (Parent [Right] -> Child [Left])
   useEffect(() => {
     const newEdges: Edge[] = [];
 
@@ -181,22 +182,16 @@ function PresentationContent() {
 
           if (targetTable && targetColumn) {
             newEdges.push({
-              id: `${table.id}-${column.id}-${targetTable.id}-${targetColumn.id}`,
-              source: table.id,
-              target: targetTable.id,
-              sourceHandle: `${column.id}-source`,
-              targetHandle: `${targetColumn.id}-target`,
+              id: `${targetTable.id}-${targetColumn.id}-${table.id}-${column.id}`,
+              source: targetTable.id,
+              target: table.id,
+              sourceHandle: `${targetColumn.id}-source`,
+              targetHandle: `${column.id}-target`,
               type: 'relationshipEdge',
               animated: false,
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                color: '#475569',
-                width: 20,
-                height: 20,
-              },
               data: {
-                sourceColumn: column.name,
-                targetColumn: targetColumn.name,
+                sourceColumn: targetColumn.name,
+                targetColumn: column.name,
               },
             });
           }
@@ -271,10 +266,12 @@ function PresentationContent() {
     // Wait for layouts to load before rendering nodes with positions
     if (layoutsLoading) return;
 
+    const priorityLayout = calculatePriorityLayout(tables);
+
     const newNodes: Node[] = tables.map((table) => {
-      // Use saved layout position if available, otherwise use table's default position
+      // Use saved layout position if available, otherwise use priority layout position, then fallback
       const savedPosition = workflowLayouts[table.id];
-      const position = savedPosition || table.position;
+      const position = savedPosition || priorityLayout.get(table.id) || table.position;
 
       return {
         id: table.id,
