@@ -17,14 +17,14 @@ export default function GoogleLoginButton({ onClick, isLoading = false }: Google
       onClick={onClick}
       disabled={isLoading}
       className="
-        flex items-center justify-center gap-3 w-full
-        px-5 py-2.5 rounded-xl
+        flex items-center justify-center gap-2.5 w-full
+        px-4 py-2.5 rounded-xl
         bg-white
-        border border-gray-300
+        border border-gray-200 hover:border-gray-300
         text-gray-800
-        font-medium text-sm sm:text-base
-        shadow-sm hover:shadow-md
-        transition-all duration-200
+        font-medium text-xs sm:text-sm
+        shadow-sm hover:shadow
+        transition-all duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
       "
     >
