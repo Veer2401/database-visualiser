@@ -6,6 +6,7 @@ import ReactFlow, {
   Node,
   Edge,
   Controls,
+  ControlButton,
   useNodesState,
   useEdgesState,
   Connection,
@@ -73,6 +74,9 @@ import {
   Relationship,
 } from '@/types/database';
 
+// Layout & Priority Algorithms
+import { calculatePriorityLayout, calculateNewTablePosition } from '@/lib/canvas-layout';
+
 // SQL Parser
 import {
   parseSQLFile,
@@ -85,7 +89,7 @@ import {
 import { getFKTableName, getFKColumnName } from '@/lib/fk-helpers';
 
 // Icons
-import { Upload } from 'lucide-react';
+import { Upload, Sparkles } from 'lucide-react';
 import { authFetch } from '@/lib/api-client';
 
 // Node and Edge types for React Flow
@@ -212,27 +216,6 @@ export default function DashboardPage() {
     }
   }, [reactFlowInstance, nodes]);
 
-  // Smooth fitView handler for DB Composer actions
-  const handleActionsExecuted = useCallback(() => {
-    if (reactFlowInstance) {
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
-      }, 200);
-    }
-  }, [reactFlowInstance]);
-
-  // Auto fitView whenever new tables are added
-  const prevTablesCountRef = useRef(tables.length);
-  useEffect(() => {
-    if (tables.length > prevTablesCountRef.current && reactFlowInstance) {
-      const timer = setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.25, duration: 800 });
-      }, 250);
-      return () => clearTimeout(timer);
-    }
-    prevTablesCountRef.current = tables.length;
-  }, [tables.length, reactFlowInstance]);
-
   // Workflow layouts for position persistence
   const {
     layouts: workflowLayouts,
@@ -243,14 +226,58 @@ export default function DashboardPage() {
     databaseId: selectedDatabaseId,
   });
 
-  // Helper function to calculate optimal table position (side by side)
+  // Smooth fitView & priority layout handler for Schema Pilot / DB Composer actions
+  const handleActionsExecuted = useCallback(() => {
+    // Wait for Firestore snapshots to finish syncing
+    setTimeout(() => {
+      setTables((currentTables) => {
+        if (currentTables.length > 0) {
+          const layout = calculatePriorityLayout(currentTables);
+          setNodes((prevNodes) =>
+            prevNodes.map((node) => {
+              const pos = layout.get(node.id);
+              if (pos) {
+                saveTablePosition(node.id, pos);
+                return { ...node, position: pos };
+              }
+              return node;
+            })
+          );
+        }
+        return currentTables;
+      });
+
+      if (reactFlowInstance) {
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.25, duration: 600 });
+        }, 150);
+      }
+    }, 400);
+  }, [saveTablePosition, reactFlowInstance]);
+
+  // Helper function to calculate optimal table position using connection priority
   const calculateTablePosition = useCallback(
-    (databaseId: string): { x: number; y: number } => {
+    (databaseId: string, newTableData?: Partial<TableType>): { x: number; y: number } => {
       const dbTables = tables.filter((t) => t.databaseId === databaseId);
       
+      if (newTableData && newTableData.columns) {
+        return calculateNewTablePosition(
+          {
+            id: newTableData.id || 'temp-id',
+            name: newTableData.name || 'new_table',
+            databaseId,
+            columns: newTableData.columns,
+            position: { x: 0, y: 0 },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          dbTables
+        );
+      }
+
       if (dbTables.length === 0) {
         // First table: start at default position
-        return { x: 100, y: 100 };
+        return { x: 80, y: 80 };
       }
 
       // Find the rightmost table
@@ -258,10 +285,10 @@ export default function DashboardPage() {
         return table.position.x > max.position.x ? table : max;
       });
 
-      // Place next table 350px to the right (TABLE_WIDTH + SPACING)
+      // Place next table 420px to the right (TABLE_WIDTH + SPACING)
       // Align to the same Y level
       return {
-        x: rightmostTable.position.x + 350,
+        x: rightmostTable.position.x + 420,
         y: rightmostTable.position.y,
       };
     },
@@ -533,7 +560,7 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [selectedDatabaseId]);
 
-  // Convert foreign key relationships to edges (only update if edge structure changes)
+  // Convert foreign key relationships to edges (Parent [Right] -> Child [Left])
   useEffect(() => {
     const newEdges: Edge[] = [];
 
@@ -547,22 +574,16 @@ export default function DashboardPage() {
 
           if (targetTable && targetColumn) {
             newEdges.push({
-              id: `${table.id}-${column.id}-${targetTable.id}-${targetColumn.id}`,
-              source: table.id,
-              target: targetTable.id,
-              sourceHandle: `${column.id}-source`,
-              targetHandle: `${targetColumn.id}-target`,
+              id: `${targetTable.id}-${targetColumn.id}-${table.id}-${column.id}`,
+              source: targetTable.id,
+              target: table.id,
+              sourceHandle: `${targetColumn.id}-source`,
+              targetHandle: `${column.id}-target`,
               type: 'relationshipEdge',
               animated: false,
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                color: '#475569',
-                width: 20,
-                height: 20,
-              },
               data: {
-                sourceColumn: column.name,
-                targetColumn: targetColumn.name,
+                sourceColumn: targetColumn.name,
+                targetColumn: column.name,
               },
             });
           }
@@ -593,6 +614,24 @@ export default function DashboardPage() {
     },
     [saveTablePosition]
   );
+
+  // Auto-arrange tables based on connection priority and horizontal row alignment
+  const handleAutoArrange = useCallback(() => {
+    if (tables.length === 0) return;
+    const layout = calculatePriorityLayout(tables);
+    const updatedNodes = nodes.map((node) => {
+      const pos = layout.get(node.id);
+      if (pos) {
+        saveTablePosition(node.id, pos);
+        return { ...node, position: pos };
+      }
+      return node;
+    });
+    setNodes(updatedNodes);
+    setTimeout(() => {
+      reactFlowInstance?.fitView({ padding: 0.25, duration: 500 });
+    }, 50);
+  }, [tables, nodes, saveTablePosition, reactFlowInstance]);
 
   // Add terminal log
   const addLog = useCallback((type: TerminalLog['type'], message: string) => {
@@ -1609,7 +1648,11 @@ export default function DashboardPage() {
               });
 
               const tableId = uuidv4();
-              const position = calculateTablePosition(selectedDatabaseId);
+              const position = calculateTablePosition(selectedDatabaseId, {
+                id: tableId,
+                name: tableName,
+                columns,
+              });
 
               await setDoc(doc(db, 'tables', tableId), {
                 name: tableName,
@@ -1771,10 +1814,12 @@ export default function DashboardPage() {
       layouts: workflowLayouts,
     });
 
+    const priorityLayout = calculatePriorityLayout(tables);
+
     const newNodes: Node[] = tables.map((table) => {
-      // Use saved layout position if available, otherwise use table's default position
+      // Use saved layout position if available, otherwise use priority layout position, then fallback
       const savedPosition = workflowLayouts[table.id];
-      const position = savedPosition || table.position;
+      const position = savedPosition || priorityLayout.get(table.id) || table.position;
 
       console.log(`[Dashboard] Table ${table.name}: savedPosition=${JSON.stringify(savedPosition)}, using=${JSON.stringify(position)}`);
 
@@ -2618,7 +2663,15 @@ export default function DashboardPage() {
                   <div data-html2canvas-ignore="true">
                     <Controls
                       className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
-                    />
+                    >
+                      <ControlButton
+                        onClick={handleAutoArrange}
+                        title="Auto-Arrange Layout (Priority Columns)"
+                        aria-label="Auto-arrange layout"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-slate-700 hover:text-blue-600 transition-colors" />
+                      </ControlButton>
+                    </Controls>
                   </div>
                 </ReactFlow>
               </motion.div>

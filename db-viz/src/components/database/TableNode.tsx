@@ -39,17 +39,17 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
   return (
     <div
       className={`
-        relative ${theme?.modal || 'bg-white'} rounded-2xl overflow-visible
+        relative ${theme?.modal || 'bg-white'} rounded-xl overflow-visible
         shadow-sm hover:shadow-md transition-all duration-150
         border ${selected || isSelected ? 'border-black ring-2 ring-black/10' : 'border-gray-200 hover:border-gray-300'}
-        min-w-[230px]
+        w-[280px]
       `}
     >
-      {/* Table Header */}
-      <div className="bg-black px-4 py-2.5 flex items-center justify-between group rounded-t-2xl">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80" />
-          <h3 className="text-white font-normal text-xs tracking-wide" style={{ fontFamily: 'var(--font-geist-sans)' }}>
+      {/* Table Header - Solid Black */}
+      <div className="bg-black px-3.5 py-2.5 flex items-center justify-between group rounded-t-xl">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80 flex-shrink-0" />
+          <h3 className="text-white font-medium text-xs tracking-wide truncate" style={{ fontFamily: 'var(--font-geist-sans)' }}>
             {table.name}
           </h3>
         </div>
@@ -60,7 +60,8 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
             e.stopPropagation();
             onDelete(table.id);
           }}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/20 text-white transition-all"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-white/20 text-white/80 hover:text-white transition-all flex-shrink-0"
+          title="Delete table"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </motion.button>
@@ -68,63 +69,63 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
 
       {/* Columns */}
       <div className={`divide-y ${theme?.navbar?.includes('slate') ? 'divide-slate-700' : 'divide-gray-100'} overflow-hidden`}>
-        {table.columns.map((column, index) => (
+        {table.columns.map((column) => (
           <div
             key={column.id}
-            className={`relative px-4 py-2 flex items-center gap-3 ${theme?.navbar?.includes('slate') ? 'hover:bg-slate-700' : 'hover:bg-gray-50'} transition-colors`}
+            className={`relative px-3.5 py-2 flex items-center gap-2.5 ${theme?.navbar?.includes('slate') ? 'hover:bg-slate-700' : 'hover:bg-gray-50'} transition-colors`}
           >
-            {/* Source Handle for FK */}
+            {/* Target Handle for FK (Left side - accepts relationship from parent PK) */}
             {column.isForeignKey && (
               <Handle
-                type="source"
+                type="target"
                 position={Position.Left}
-                id={`${column.id}-source`}
-                className="!w-3 !h-3 !bg-gray-800 !border-2 !border-white"
-                style={{ left: -6 }}
+                id={`${column.id}-target`}
+                className="!w-2.5 !h-2.5 !bg-white !border-2 !border-black hover:!bg-black transition-colors z-10"
+                style={{ left: -5 }}
               />
             )}
 
             {/* Column Info */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
               {column.isPrimaryKey && (
                 <Key className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
               )}
               {column.isForeignKey && (
-                <Link className={`w-3.5 h-3.5 ${theme?.text || 'text-gray-700'} flex-shrink-0`} />
+                <Link className="w-3.5 h-3.5 text-gray-700 flex-shrink-0" />
               )}
-              <span className={`text-sm ${theme?.text || 'text-gray-900'} truncate font-light`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
+              <span className={`text-xs ${theme?.text || 'text-gray-900'} truncate font-medium`} style={{ fontFamily: 'var(--font-geist-sans)' }}>
                 {column.name}
               </span>
             </div>
 
             {/* Data Type */}
-            <div className={`flex items-center gap-1.5 ${theme?.textSecondary || 'text-gray-600'}`}>
+            <div className={`flex items-center gap-1 text-gray-500`}>
               {getTypeIcon(column.dataType)}
-              <span className="text-xs font-mono">{column.dataType}</span>
+              <span className="text-[11px] font-mono">{column.dataType}</span>
             </div>
 
             {/* Constraints Badges */}
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {column.isNotNull && (
-                <span className={`text-[10px] px-1 py-0.5 ${theme?.buttonSecondary || 'bg-gray-200 text-gray-800'} rounded font-light`}>
+                <span className="text-[10px] font-mono px-1 py-0.5 bg-gray-100 text-gray-700 rounded font-medium">
                   NN
                 </span>
               )}
               {column.isUnique && !column.isPrimaryKey && (
-                <span className={`text-[10px] px-1 py-0.5 ${theme?.navbar?.includes('slate') ? 'bg-slate-600 text-white' : 'bg-gray-400 text-gray-800'} rounded font-light`}>
+                <span className="text-[10px] font-mono px-1 py-0.5 bg-gray-100 text-gray-700 rounded font-medium">
                   UQ
                 </span>
               )}
             </div>
 
-            {/* Target Handle for PK */}
-            {column.isPrimaryKey && (
+            {/* Source Handle for PK / Unique (Right side - sends relationship to child FK) */}
+            {(column.isPrimaryKey || column.isUnique) && (
               <Handle
-                type="target"
+                type="source"
                 position={Position.Right}
-                id={`${column.id}-target`}
-                className="!w-3 !h-3 !bg-amber-500 !border-2 !border-white"
-                style={{ right: -6 }}
+                id={`${column.id}-source`}
+                className="!w-2.5 !h-2.5 !bg-white !border-2 !border-black hover:!bg-black transition-colors z-10"
+                style={{ right: -5 }}
               />
             )}
           </div>
@@ -132,19 +133,19 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
       </div>
 
       {/* Table Footer */}
-      <div className={`px-4 py-2 ${theme?.navbar?.includes('slate') ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'} border-t rounded-b-2xl`}>
-        <div className={`flex items-center justify-between text-xs ${theme?.textSecondary || 'text-gray-600'}`}>
+      <div className={`px-3.5 py-2 ${theme?.navbar?.includes('slate') ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'} border-t rounded-b-xl`}>
+        <div className={`flex items-center justify-between text-xs ${theme?.textSecondary || 'text-gray-500'}`}>
           <span>{table.columns.length} columns</span>
           <span className="flex items-center gap-1">
             {table.columns.filter((c) => c.isPrimaryKey).length > 0 && (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5 text-amber-600 font-medium">
                 <Key className="w-3 h-3 text-amber-500" />
                 {table.columns.filter((c) => c.isPrimaryKey).length}
               </span>
             )}
             {table.columns.filter((c) => c.isForeignKey).length > 0 && (
-              <span className="flex items-center gap-0.5 ml-2">
-                <Link className={`w-3 h-3 ${theme?.text || 'text-gray-700'}`} />
+              <span className="flex items-center gap-0.5 ml-2 text-gray-700 font-medium">
+                <Link className="w-3 h-3 text-gray-700" />
                 {table.columns.filter((c) => c.isForeignKey).length}
               </span>
             )}
@@ -154,16 +155,16 @@ function TableNode({ data, selected }: NodeProps<TableNodeData>) {
 
       {/* View Data Arrow Button */}
       <motion.button
-        whileHover={{ scale: 1.1, x: 3 }}
+        whileHover={{ scale: 1.1, x: 2 }}
         whileTap={{ scale: 0.9 }}
         onClick={(e) => {
           e.stopPropagation();
           onViewData(table.id, table.name);
         }}
-        className={`absolute -right-5 top-1/2 -translate-y-1/2 w-8 h-8 ${theme?.button || 'bg-black hover:bg-gray-800 text-white'} rounded-full shadow-lg flex items-center justify-center transition-colors z-20`}
+        className={`absolute -right-4 top-1/2 -translate-y-1/2 w-7 h-7 bg-black hover:bg-gray-800 text-white rounded-full shadow-md flex items-center justify-center transition-colors z-20`}
         title="View table data"
       >
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="w-3.5 h-3.5" />
       </motion.button>
     </div>
   );
