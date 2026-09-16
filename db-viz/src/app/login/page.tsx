@@ -3,10 +3,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Database, Eye, EyeOff, Mail, Lock, User as UserIcon, CheckCircle, ShieldCheck, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, CheckCircle, ShieldCheck, RefreshCw } from 'lucide-react';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 import GitHubLoginButton from '@/components/auth/GitHubLoginButton';
-import DatabaseAnimationShowcase from '@/components/auth/DatabaseAnimationShowcase';
+import SchemaViewLogo from '@/components/common/SchemaViewLogo';
 import { useAuth } from '@/hooks/useAuth';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'verify';
@@ -309,11 +309,11 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#f3f5f4]">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-12 h-12 border-4 border-black border-t-transparent rounded-full"
+          className="w-10 h-10 border-3 border-[#041c15] border-t-transparent rounded-full"
         />
       </div>
     );
@@ -321,78 +321,45 @@ export default function LoginPage() {
 
   const isOtpComplete = otpDigits.every((d) => d !== '');
 
+  // Input style constants for light NexDash theme
+  const inputClasses = "w-full pl-10 pr-3.5 py-3.5 bg-[#f5f5f6] border-0 rounded-full text-[13px] text-[#07110b] placeholder:text-[#858b8c] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#38AA78]/20 transition-all sv-body";
+
   return (
-    <div className="min-h-screen min-h-svh flex flex-col lg:flex-row bg-white relative overflow-x-hidden items-start">
+    <div className="h-screen h-svh flex items-center justify-center bg-[#f3f5f4] relative overflow-hidden">
       {/* ── Left Column: Authentication Form ── */}
-      <div className="w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 relative z-10 min-h-screen">
-        {/* Background Subtle Grid */}
-        <div className="absolute inset-0 opacity-[0.025] pointer-events-none">
-          <svg width="100%" height="100%">
-            <defs>
-              <pattern id="login-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-                <path d="M 32 0 L 0 0 0 32" fill="none" stroke="currentColor" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#login-grid)" />
-          </svg>
+      <div className="w-full max-w-[680px] flex flex-col items-center px-6 py-10 sm:px-10 sm:py-12 relative z-10">
+        {/* Schema View brand */}
+        <div className="flex items-center gap-2.5 mb-10 sm:mb-12">
+          <SchemaViewLogo size={30} />
+          <span className="sv-display text-[18px] font-bold tracking-[-0.02em] text-[#07110b]">SCHEMA VIEW</span>
         </div>
 
-        {/* Top Header: Back to Home link */}
-        <div className="w-full max-w-sm sm:max-w-md mx-auto lg:mx-0 mb-3 relative z-10">
-          <button
-            onClick={() => router.push('/')}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-black transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
-          </button>
-        </div>
-
-        {/* Center Container: Login Card shifted to left */}
+        {/* Center Container: Login Card */}
         <motion.div
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="w-full max-w-sm sm:max-w-md mx-auto lg:mx-0 my-auto py-2 relative z-10"
+          className="w-full max-w-[520px] mx-auto relative z-10"
         >
-          {/* Brand Header — Logo and Text Schema View on the SAME LINE */}
-          <div className="mb-5">
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-sm shrink-0">
-                <Database className="w-4 h-4 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-black tracking-tight" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                Schema View
-              </h1>
-            </div>
-            <p className="text-xs text-gray-500">
-              {mode === 'verify'
-                ? 'Verify your email address'
-                : mode === 'forgot'
-                ? 'Recover your account password'
-                : 'Sign in to access your databases'}
-            </p>
-          </div>
+          {/* Open form surface */}
+          <div className="w-full p-0" style={{ zoom: 0.96 }}>
+            {/* ── OAuth buttons ── */}
+            {mode !== 'forgot' && mode !== 'verify' && !resetSent && (
+              <>
+                <h1 className="sv-display text-center text-[26px] sm:text-[30px] text-[#07110b] font-medium mb-10">
+                  {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                </h1>
+                <div className="space-y-2">
+                  <GoogleLoginButton onClick={handleGoogleSignIn} isLoading={isGoogleLoading} />
+                  <GitHubLoginButton onClick={handleGithubSignIn} isLoading={isGithubLoading} />
+                </div>
 
-          {/* Card */}
-          <div className="w-full bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-7">
-            {/* ── Mode Tabs (Sign In / Sign Up) ── */}
-            {mode !== 'forgot' && mode !== 'verify' && (
-              <div className="flex bg-gray-100 p-1 rounded-xl mb-5">
-                {(['signin', 'signup'] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => switchMode(m)}
-                    className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                      mode === m
-                        ? 'bg-white text-black shadow-sm font-semibold'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    {m === 'signin' ? 'Sign In' : 'Sign Up'}
-                  </button>
-                ))}
-              </div>
+                <div className="flex items-center gap-3 my-4">
+                  <div className="flex-1 h-px bg-[#e2e6e3]" />
+                  <span className="text-[11px] text-[#858b8c] font-medium sv-body">or continue with</span>
+                  <div className="flex-1 h-px bg-[#e2e6e3]" />
+                </div>
+              </>
             )}
 
             {/* ── Success Banner ── */}
@@ -400,10 +367,10 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-start gap-2.5"
+                className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-2.5"
               >
                 <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-emerald-800">
+                <div className="text-[12px] text-emerald-800">
                   <p className="font-semibold mb-0.5">Success!</p>
                   <p>{verifiedSuccessMessage}</p>
                 </div>
@@ -414,26 +381,26 @@ export default function LoginPage() {
             {mode === 'verify' && (
               <div className="space-y-4">
                 <div className="text-center mb-3">
-                  <div className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-2.5 text-gray-800 shadow-sm">
-                    <ShieldCheck className="w-5 h-5" />
+                  <div className="w-10 h-10 bg-[#f0f3f1] border border-[#e2e6e3] rounded-xl flex items-center justify-center mx-auto mb-2.5 text-[#07110b] shadow-sm">
+                    <ShieldCheck className="w-5 h-5 text-[#38AA78]" />
                   </div>
-                  <h2 className="text-base font-semibold text-black mb-1">Verify Your Email</h2>
-                  <p className="text-xs text-gray-500 px-1">
-                    We sent a 6-digit code to <span className="font-semibold text-gray-800">{email}</span>.
+                  <h2 className="sv-display text-[16px] text-[#07110b] font-bold mb-1">Verify Your Email</h2>
+                  <p className="text-[12px] text-[#565c59] px-1 sv-body">
+                    We sent a 6-digit code to <span className="font-semibold text-[#07110b]">{email}</span>.
                   </p>
                 </div>
 
                 {devVerificationCodeHint && (
-                  <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-center">
-                    <p className="text-xs text-amber-800 font-mono">
+                  <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+                    <p className="text-[12px] text-amber-800 font-mono">
                       [Dev Mode Code]: <strong>{devVerificationCodeHint}</strong>
                     </p>
                   </div>
                 )}
 
                 {resendSuccessMessage && (
-                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                    <p className="text-xs text-emerald-700 font-medium">{resendSuccessMessage}</p>
+                  <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                    <p className="text-[12px] text-emerald-700 font-medium">{resendSuccessMessage}</p>
                   </div>
                 )}
 
@@ -452,10 +419,10 @@ export default function LoginPage() {
                         onPaste={handleOtpPaste}
                         className={`
                           w-10 h-12 text-lg font-bold font-mono text-center
-                          bg-white border rounded-xl text-gray-900 shadow-sm
-                          focus:outline-none focus:border-black focus:ring-1 focus:ring-black
+                          bg-[#f8faf8] border rounded-xl text-[#07110b] shadow-sm
+                          focus:outline-none focus:border-[#38AA78] focus:ring-1 focus:ring-[#38AA78]/20
                           transition-all duration-150
-                          ${digit ? 'border-black ring-1 ring-black' : 'border-gray-200'}
+                          ${digit ? 'border-[#38AA78] ring-1 ring-[#38AA78]/20' : 'border-[#dce1de]'}
                         `}
                       />
                     ))}
@@ -465,7 +432,7 @@ export default function LoginPage() {
                     id="verifyCodeBtn"
                     type="submit"
                     disabled={isVerifying || !isOtpComplete}
-                    className="w-full py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:bg-gray-900 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                    className="w-full py-3 bg-[#041c15] text-white text-[13px] font-bold rounded-full hover:bg-[#122b22] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm sv-body"
                   >
                     {isVerifying ? (
                       <motion.div
@@ -479,12 +446,12 @@ export default function LoginPage() {
                   </button>
                 </form>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs">
+                <div className="flex items-center justify-between pt-3 border-t border-[#eaedeb] text-[12px]">
                   <button
                     type="button"
                     onClick={handleResendCode}
                     disabled={isResending}
-                    className="text-gray-500 hover:text-black font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+                    className="text-[#565c59] hover:text-[#07110b] font-medium transition-colors flex items-center gap-1 disabled:opacity-50 sv-body"
                   >
                     <RefreshCw className={`w-3 h-3 ${isResending ? 'animate-spin' : ''}`} />
                     Resend code
@@ -493,7 +460,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode('signup')}
-                    className="text-gray-500 hover:text-black transition-colors"
+                    className="text-[#565c59] hover:text-[#07110b] transition-colors sv-body"
                   >
                     ← Back to Sign Up
                   </button>
@@ -504,8 +471,8 @@ export default function LoginPage() {
             {/* ── Forgot-password header ── */}
             {mode === 'forgot' && !resetSent && (
               <div className="text-center mb-4">
-                <h2 className="text-base font-semibold text-black mb-1">Reset your password</h2>
-                <p className="text-xs text-gray-500">
+                <h2 className="sv-display text-[16px] text-[#07110b] font-bold mb-1">Reset your password</h2>
+                <p className="text-[12px] text-[#565c59] sv-body">
                   Enter your email address and we will send you a link to reset your password.
                 </p>
               </div>
@@ -519,16 +486,16 @@ export default function LoginPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center gap-2.5 py-4 text-center"
                 >
-                  <div className="w-10 h-10 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center text-emerald-600 mb-1">
+                  <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-600 mb-1">
                     <CheckCircle className="w-5 h-5" />
                   </div>
-                  <p className="text-sm font-semibold text-gray-900">Check your inbox</p>
-                  <p className="text-xs text-gray-500">
-                    A reset link was sent to <span className="font-semibold text-gray-800">{email}</span>.
+                  <p className="sv-display text-[15px] text-[#07110b] font-bold">Check your inbox</p>
+                  <p className="text-[12px] text-[#565c59] sv-body">
+                    A reset link was sent to <span className="font-semibold text-[#07110b]">{email}</span>.
                   </p>
                   <button
                     onClick={() => switchMode('signin')}
-                    className="mt-3 text-xs text-black font-medium underline underline-offset-2 hover:no-underline"
+                    className="mt-3 text-[12px] text-[#07110b] font-medium underline underline-offset-2 hover:no-underline sv-body"
                   >
                     Back to Sign In
                   </button>
@@ -538,35 +505,27 @@ export default function LoginPage() {
 
             {/* ── Email / Password Form (Sign In / Sign Up / Forgot) ── */}
             {mode !== 'verify' && !resetSent && (
-              <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <form onSubmit={handleEmailSubmit} className="space-y-2.5">
                 {/* Display Name — Sign Up only */}
-                <AnimatePresence>
-                  {mode === 'signup' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="overflow-hidden"
-                    >
+                {mode === 'signup' && (
+                    <div>
                       <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858b8c]" />
                         <input
                           id="displayName"
                           type="text"
                           placeholder="Display name (optional)"
                           value={displayName}
                           onChange={(e) => setDisplayName(e.target.value)}
-                          className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                          className={inputClasses}
                         />
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                )}
 
                 {/* Email */}
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858b8c]" />
                   <input
                     id="email"
                     type="email"
@@ -574,22 +533,15 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    className={inputClasses}
                   />
                 </div>
 
                 {/* Password — hidden in forgot mode */}
-                <AnimatePresence>
-                  {mode !== 'forgot' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="overflow-hidden"
-                    >
+                {mode !== 'forgot' && (
+                    <div>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858b8c]" />
                         <input
                           id="password"
                           type={showPassword ? 'text' : 'password'}
@@ -597,34 +549,26 @@ export default function LoginPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                          className={`${inputClasses} !pr-10`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#858b8c] hover:text-[#07110b] transition-colors"
                           tabIndex={-1}
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
                           {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                )}
 
                 {/* Confirm Password — Sign Up only */}
-                <AnimatePresence>
-                  {mode === 'signup' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="overflow-hidden"
-                    >
+                {mode === 'signup' && (
+                    <div>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858b8c]" />
                         <input
                           id="confirmPassword"
                           type={showPassword ? 'text' : 'password'}
@@ -632,12 +576,11 @@ export default function LoginPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                          className={inputClasses}
                         />
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                )}
 
                 {/* Forgot password link */}
                 {mode === 'signin' && (
@@ -645,7 +588,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => switchMode('forgot')}
-                      className="text-xs text-gray-500 hover:text-black transition-colors"
+                      className="text-[12px] text-[#565c59] hover:text-[#07110b] transition-colors sv-body"
                     >
                       Forgot password?
                     </button>
@@ -657,7 +600,7 @@ export default function LoginPage() {
                   id="emailSubmitBtn"
                   type="submit"
                   disabled={isEmailLoading}
-                  className="w-full py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:bg-gray-900 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm mt-1"
+                  className="w-full py-2.5 bg-[#041c15] text-white text-[12px] font-bold rounded-full hover:bg-[#122b22] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm mt-1 sv-body"
                 >
                   {isEmailLoading ? (
                     <motion.div
@@ -679,7 +622,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode('signin')}
-                    className="w-full text-xs text-gray-500 hover:text-black transition-colors text-center pt-1"
+                    className="w-full text-[12px] text-[#565c59] hover:text-[#07110b] transition-colors text-center pt-1 sv-body"
                   >
                     ← Back to Sign In
                   </button>
@@ -694,55 +637,28 @@ export default function LoginPage() {
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-xl"
+                  className="mt-3 p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl"
                 >
-                  <p className="text-xs text-red-600 text-center">{authError}</p>
+                  <p className="text-[12px] text-red-600 text-center sv-body">{authError}</p>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── Divider + OAuth buttons (not shown on forgot / verify) ── */}
+            {/* Account mode switch */}
             {mode !== 'forgot' && mode !== 'verify' && !resetSent && (
-              <>
-                <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-[11px] text-gray-400 font-medium">or continue with</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-
-                <div className="space-y-2">
-                  <GoogleLoginButton onClick={handleGoogleSignIn} isLoading={isGoogleLoading} />
-                  <GitHubLoginButton onClick={handleGithubSignIn} isLoading={isGithubLoading} />
-                </div>
-              </>
-            )}
-
-            {/* Terms */}
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <p className="text-[11px] text-gray-400 text-center">
-                By continuing, you agree to our{' '}
-                <button onClick={() => router.push('/terms-of-service')} className="text-gray-600 hover:text-black transition-colors underline underline-offset-2">
-                  Terms
-                </button>{' '}
-                and{' '}
-                <button onClick={() => router.push('/privacy-policy')} className="text-gray-600 hover:text-black transition-colors underline underline-offset-2">
-                  Privacy Policy
+              <p className="mt-8 text-center text-[13px] text-[#858b8c] sv-body">
+                {mode === 'signup' ? 'Already have an account? ' : "Don't have an account? "}
+                <button
+                  onClick={() => switchMode(mode === 'signup' ? 'signin' : 'signup')}
+                  className="text-[#07110b] hover:opacity-70 transition-opacity"
+                >
+                  {mode === 'signup' ? 'Sign in' : 'Sign up'}
                 </button>
               </p>
-            </div>
+            )}
           </div>
         </motion.div>
-
-        {/* Footer */}
-        <div className="w-full max-w-sm sm:max-w-md mx-auto lg:mx-0 pt-3 relative z-10">
-          <p className="text-[11px] text-gray-400 text-left">
-            © {new Date().getFullYear()} Schema View. All rights reserved.
-          </p>
-        </div>
       </div>
-
-      {/* ── Right Column: Interactive Database Animation Showcase ── */}
-      <DatabaseAnimationShowcase />
     </div>
   );
 }
