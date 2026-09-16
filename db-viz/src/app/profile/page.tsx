@@ -9,13 +9,13 @@ import {
   Mail,
   Crown,
   ArrowUpRight,
-  Database,
   LogOut,
   Check,
   ShieldCheck,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import SchemaViewLogo from '@/components/common/SchemaViewLogo';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -66,9 +66,7 @@ export default function ProfilePage() {
             onClick={() => router.push('/')}
             className="flex items-center gap-2.5 cursor-pointer select-none"
           >
-            <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-sm">
-              <Database className="w-4 h-4 text-white" />
-            </div>
+            <SchemaViewLogo size={28} />
             <span
               className="text-sm font-semibold text-gray-900 tracking-tight"
               style={{ fontFamily: 'var(--font-geist-sans)' }}

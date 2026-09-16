@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Terminal, Play, Loader2, Database, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Terminal, Play, Loader2, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 // Firebase
 import { doc, onSnapshot, getDocs, query, collection, where, deleteDoc, updateDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import SchemaViewLogo from '@/components/common/SchemaViewLogo';
 
 // Hooks and Types
 import { useAuth } from '@/hooks/useAuth';
@@ -516,9 +517,7 @@ function TerminalModeContent() {
 
           {/* Schema View Brand */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-sm">
-              <Database className="w-3.5 h-3.5 text-black" />
-            </div>
+            <SchemaViewLogo size={28} />
             <span className="text-sm font-normal text-white" style={{ fontFamily: 'var(--font-geist-sans)' }}>
               Terminal Mode
             </span>

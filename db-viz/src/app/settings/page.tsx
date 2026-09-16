@@ -20,6 +20,7 @@ import {
 import { auth } from '@/lib/firebase';
 import { signOut, onAuthStateChanged, User as FirebaseUser, updateProfile } from 'firebase/auth';
 import { FONT_OPTIONS } from '@/components/common/FontProvider';
+import SchemaViewLogo from '@/components/common/SchemaViewLogo';
 
 type SettingsSection = 'general' | 'account' | 'appearance' | 'database' | 'billing' | 'about';
 
@@ -489,9 +490,7 @@ export default function SettingsPage() {
                         {/* App Info */}
                         <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-7 shadow-[0_20px_40px_-30px_rgba(0,0,0,0.06)]">
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center">
-                                    <Database className="w-4 h-4 text-white" />
-                                </div>
+                                <SchemaViewLogo size={28} />
                                 <span className="text-base font-normal text-black" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                                     Schema View
                                 </span>
@@ -546,9 +545,7 @@ export default function SettingsPage() {
                         onClick={() => router.push('/')}
                         className="flex items-center gap-2.5 cursor-pointer select-none"
                     >
-                        <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-sm">
-                            <Database className="w-4 h-4 text-white" />
-                        </div>
+                        <SchemaViewLogo size={28} />
                         <span className="text-sm font-semibold text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-geist-sans)' }}>
                             Schema View
                         </span>
