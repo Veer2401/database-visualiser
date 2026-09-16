@@ -43,13 +43,13 @@ export default function DatabaseAnimationShowcase() {
   const activeQuery = queries[activeQueryIdx];
 
   return (
-    <div className="hidden lg:flex flex-1 relative bg-[#090a0f] text-white overflow-hidden items-center justify-center p-8 xl:p-12 border-l border-zinc-800/80 select-none lg:h-screen lg:sticky lg:top-0">
+    <div className="hidden lg:flex flex-1 relative bg-[#eaedeb] text-[#07110b] overflow-hidden items-center justify-center p-8 xl:p-12 border-l border-[#dce1de] select-none lg:h-screen lg:sticky lg:top-0">
       {/* Background Dot Grid */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
+      <div className="absolute inset-0 opacity-40 pointer-events-none">
         <svg width="100%" height="100%">
           <defs>
             <pattern id="showcase-dots" width="24" height="24" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1" fill="#71717a" />
+              <circle cx="2" cy="2" r="1" fill="#a4ada7" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#showcase-dots)" />
@@ -57,23 +57,23 @@ export default function DatabaseAnimationShowcase() {
       </div>
 
       {/* Ambient Gradient Glows */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#38AA78]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-[#57C258]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Container */}
       <div className="relative z-10 w-full max-w-xl flex flex-col items-center">
         {/* Database Canvas Container */}
-        <div className="relative w-full rounded-2xl bg-zinc-950/70 border border-zinc-800/80 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="relative w-full rounded-2xl bg-white/90 border border-[#dce1de] p-6 shadow-[0_16px_40px_rgba(7,17,11,0.06)] backdrop-blur-xl">
           {/* Canvas Header Bar */}
-          <div className="flex items-center justify-between pb-4 mb-5 border-b border-zinc-800/70 text-xs">
+          <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#eaedeb] text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-              <span className="text-zinc-400 font-mono text-[11px] ml-2">ecommerce_production.db</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+              <span className="text-[#565c59] font-mono text-[11px] ml-2">ecommerce_production.db</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 text-zinc-400 font-mono text-[10px] border border-zinc-800">
-              <GitBranch className="w-3 h-3 text-zinc-400" />
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#f0f3f1] text-[#07110b] font-mono text-[10px] border border-[#dce1de]">
+              <GitBranch className="w-3 h-3 text-[#38AA78]" />
               <span>3 Tables · 2 FKs</span>
             </div>
           </div>
@@ -83,39 +83,29 @@ export default function DatabaseAnimationShowcase() {
             {/* SVG Connection Lines Overlay */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible"
-              style={{ filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.4))' }}
+              style={{ filter: 'drop-shadow(0 0 4px rgba(56, 170, 120, 0.4))' }}
             >
-              <defs>
-                <linearGradient id="fkLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#60a5fa" />
-                </linearGradient>
-              </defs>
-
-              {/* Straight Horizontal Line: users.id (Row 1 right) -> orders.user_id (Row 2 left) */}
-              {/* Note: Row 1 is id (y ~ 44), Row 2 in orders is user_id (y ~ 72). A crisp orthogonal step line: */}
+              {/* Straight Horizontal Line: users.id -> orders.user_id */}
               <path
-                d="M 230 46 H 265 V 74 H 300"
+                d="M 220 46 H 255 V 74 H 288"
                 fill="none"
-                stroke="#3b82f6"
+                stroke="#38AA78"
                 strokeWidth="2"
                 strokeDasharray="4 4"
               />
 
               {/* ERD Markers */}
-              {/* One marker on users (vertical line) */}
-              <line x1="233" y1="41" x2="233" y2="51" stroke="#3b82f6" strokeWidth="2" />
-              {/* Many marker on orders (crows foot) */}
-              <path d="M 292 69 L 299 74 L 292 79" fill="none" stroke="#3b82f6" strokeWidth="2" />
+              <line x1="223" y1="41" x2="223" y2="51" stroke="#38AA78" strokeWidth="2" />
+              <path d="M 280 69 L 287 74 L 280 79" fill="none" stroke="#38AA78" strokeWidth="2" />
 
               {/* Animated Glowing Packet Flow */}
               <motion.circle
                 key={packetTrigger}
                 r="3.5"
-                fill="#60a5fa"
-                initial={{ cx: 230, cy: 46, opacity: 0 }}
+                fill="#57C258"
+                initial={{ cx: 220, cy: 46, opacity: 0 }}
                 animate={{
-                  cx: [230, 265, 265, 300],
+                  cx: [220, 255, 255, 288],
                   cy: [46, 46, 74, 74],
                   opacity: [0, 1, 1, 0],
                 }}
@@ -128,154 +118,177 @@ export default function DatabaseAnimationShowcase() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4 }}
-              className="rounded-xl bg-zinc-900/90 border border-zinc-700/80 shadow-lg overflow-hidden text-xs"
+              className="rounded-xl bg-white border border-[#dce1de] shadow-sm overflow-hidden text-xs"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-zinc-800">
+              <div className="flex items-center justify-between px-3 py-2 bg-[#041c15] text-white">
                 <div className="flex items-center gap-1.5 font-semibold text-white">
-                  <Database className="w-3.5 h-3.5 text-zinc-300" />
-                  <span>users</span>
+                  <Database className="w-3.5 h-3.5 text-[#57C258]" />
+                  <span className="font-mono">users</span>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-mono">PRIORITY 1</span>
+                <span className="text-[9px] text-white/50 font-mono">PRIORITY 1</span>
               </div>
 
               {/* Rows */}
-              <div className="divide-y divide-zinc-800/60 font-mono text-[11px]">
-                <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/10 text-blue-300">
+              <div className="divide-y divide-[#f0f3f1] font-mono text-[11px]">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-[#57C258]/10 text-[#07110b]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded bg-amber-400 text-black text-[8px] font-bold flex items-center justify-center">
+                    <span className="w-3.5 h-3.5 rounded bg-[#38AA78] text-white text-[8px] font-bold flex items-center justify-center">
                       PK
                     </span>
-                    <span className="font-semibold text-white">id</span>
+                    <span className="font-semibold text-[#07110b]">id</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400">INT</span>
+                  <span className="text-[10px] text-[#565c59]">INT</span>
                 </div>
 
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-300">
+                <div className="flex items-center justify-between px-3 py-1.5 text-[#565c59]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded bg-zinc-800 text-zinc-400 text-[8px] font-bold flex items-center justify-center">
+                    <span className="w-3.5 h-3.5 rounded bg-[#eaedeb] text-[#565c59] text-[8px] font-bold flex items-center justify-center">
                       UQ
                     </span>
                     <span>email</span>
                   </div>
-                  <span className="text-[10px] text-zinc-500">VARCHAR</span>
+                  <span className="text-[10px] text-[#858b8c]">VARCHAR</span>
                 </div>
 
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-400">
-                  <span>role</span>
-                  <span className="text-[10px] text-zinc-500">ENUM</span>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-400">
-                  <span>created_at</span>
-                  <span className="text-[10px] text-zinc-500">TIMESTAMP</span>
+                <div className="flex items-center justify-between px-3 py-1.5 text-[#565c59]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded bg-[#eaedeb] text-[#858b8c] text-[8px] flex items-center justify-center font-bold">
+                      ·
+                    </span>
+                    <span>created_at</span>
+                  </div>
+                  <span className="text-[10px] text-[#858b8c]">TIMESTAMP</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Table 2: orders (Derived Child Table on Right) */}
+            {/* Table 2: orders (Child Table on Right) */}
             <motion.div
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="rounded-xl bg-zinc-900/90 border border-zinc-700/80 shadow-lg overflow-hidden text-xs"
+              className="rounded-xl bg-white border border-[#dce1de] shadow-sm overflow-hidden text-xs"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-zinc-800">
+              <div className="flex items-center justify-between px-3 py-2 bg-[#041c15] text-white">
                 <div className="flex items-center gap-1.5 font-semibold text-white">
-                  <Database className="w-3.5 h-3.5 text-zinc-300" />
-                  <span>orders</span>
+                  <Database className="w-3.5 h-3.5 text-[#57C258]" />
+                  <span className="font-mono">orders</span>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-mono">CHILD</span>
+                <span className="text-[9px] text-white/50 font-mono">PRIORITY 2</span>
               </div>
 
               {/* Rows */}
-              <div className="divide-y divide-zinc-800/60 font-mono text-[11px]">
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-300">
+              <div className="divide-y divide-[#f0f3f1] font-mono text-[11px]">
+                <div className="flex items-center justify-between px-3 py-1.5 text-[#565c59]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded bg-amber-400 text-black text-[8px] font-bold flex items-center justify-center">
+                    <span className="w-3.5 h-3.5 rounded bg-[#38AA78] text-white text-[8px] font-bold flex items-center justify-center">
                       PK
                     </span>
-                    <span className="font-semibold text-white">id</span>
+                    <span className="font-semibold text-[#07110b]">id</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400">INT</span>
+                  <span className="text-[10px] text-[#858b8c]">INT</span>
                 </div>
 
-                {/* Highlighted Foreign Key Row */}
-                <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/15 text-blue-300 border-l-2 border-blue-400">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-[#38AA78]/10 text-[#07110b]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded bg-blue-500 text-white text-[8px] font-bold flex items-center justify-center">
+                    <span className="w-3.5 h-3.5 rounded bg-[#041c15] text-white text-[8px] font-bold flex items-center justify-center">
                       FK
                     </span>
-                    <span className="font-semibold text-white">user_id</span>
+                    <span className="font-semibold text-[#07110b]">user_id</span>
                   </div>
-                  <span className="text-[10px] text-blue-300 font-bold">INT → users</span>
+                  <span className="text-[10px] text-[#38AA78]">users(id)</span>
                 </div>
 
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-400">
-                  <span>total_amount</span>
-                  <span className="text-[10px] text-zinc-500">DECIMAL</span>
-                </div>
-
-                <div className="flex items-center justify-between px-3 py-1.5 text-zinc-400">
-                  <span>status</span>
-                  <span className="text-[10px] text-zinc-500">VARCHAR</span>
+                <div className="flex items-center justify-between px-3 py-1.5 text-[#565c59]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded bg-[#eaedeb] text-[#858b8c] text-[8px] flex items-center justify-center font-bold">
+                      $
+                    </span>
+                    <span>total_amount</span>
+                  </div>
+                  <span className="text-[10px] text-[#858b8c]">DECIMAL</span>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* SQL Terminal Animation Card — Fixed Size to prevent layout shifting */}
-          <div className="mt-5 pt-4 border-t border-zinc-800/80">
-            <div className="rounded-xl bg-black/95 border border-zinc-800 p-4 font-mono text-xs shadow-inner h-[150px] flex flex-col justify-between overflow-hidden">
-              <div className="flex items-center justify-between pb-2.5 border-b border-zinc-800 text-[10px] text-zinc-500 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-zinc-300 font-semibold tracking-wide">SQL Terminal</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-emerald-400 flex items-center gap-1 font-mono">
-                    <CheckCircle2 className="w-3 h-3" />
-                    {activeQuery.latency}
-                  </span>
-                  <span className="text-zinc-400 font-mono">{activeQuery.rows}</span>
-                </div>
-              </div>
-
-              {/* Animated Query text area with locked fixed height */}
-              <div className="flex-1 relative w-full overflow-hidden mt-2">
-                <AnimatePresence mode="wait">
-                  <motion.pre
-                    key={activeQueryIdx}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.18 }}
-                    className="text-zinc-300 text-[11px] leading-relaxed overflow-x-auto whitespace-pre font-mono absolute inset-0 select-text"
-                  >
-                    <span className="text-emerald-400 font-bold">$ </span>
-                    {activeQuery.sql}
-                  </motion.pre>
-                </AnimatePresence>
-              </div>
+          {/* Table 3: items preview */}
+          <div className="mt-4 pt-4 border-t border-[#eaedeb] flex items-center justify-between text-[11px] text-[#565c59]">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#57C258]" />
+              <span>Real-time Foreign Key integrity verification</span>
             </div>
+            <span className="font-mono text-[10px] text-[#38AA78] bg-[#38AA78]/10 px-2 py-0.5 rounded-full font-medium">
+              3NF Validated
+            </span>
           </div>
         </div>
 
-        {/* Feature Highlights beneath preview */}
-        <div className="grid grid-cols-3 gap-3 w-full mt-5">
-          <div className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/80 text-center">
-            <p className="text-xs font-semibold text-white">Priority Tiers</p>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Left-to-right hierarchy</p>
+        {/* Dynamic SQL Terminal Execution Card */}
+        <div className="w-full mt-5 rounded-2xl bg-[#041c15] border border-white/10 p-5 shadow-[0_12px_30px_rgba(4,28,21,0.2)] text-white">
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-3.5 h-3.5 text-[#57C258]" />
+              <span className="font-mono text-[11px] text-white/80">Interactive Query Execution</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[10px] font-mono text-[#57C258] bg-[#57C258]/10 px-2 py-0.5 rounded border border-[#57C258]/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#57C258] animate-pulse" />
+                {activeQuery.latency}
+              </span>
+            </div>
           </div>
-          <div className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/80 text-center">
-            <p className="text-xs font-semibold text-white">Straight Lines</p>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Orthogonal FK routing</p>
+
+          {/* Animated SQL Script */}
+          <div className="font-mono text-[11.5px] leading-relaxed min-h-[58px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeQueryIdx}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="whitespace-pre-line text-white/70"
+              >
+                {activeQuery.sql.split('\n').map((line, i) => (
+                  <div key={i}>
+                    {line.startsWith('SELECT') || line.startsWith('FROM') || line.startsWith('JOIN') || line.startsWith('CREATE') || line.startsWith('GROUP') || line.startsWith('ORDER') ? (
+                      <span>
+                        <span className="text-[#57C258] font-bold">{line.split(' ')[0]}</span>{' '}
+                        {line.substring(line.indexOf(' ') + 1)}
+                      </span>
+                    ) : (
+                      line
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
-          <div className="p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/80 text-center">
-            <p className="text-xs font-semibold text-white">Schema Pilot</p>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Instant AI generation</p>
+
+          <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[10.5px] text-white/40 font-mono">
+            <span>Result: {activeQuery.rows}</span>
+            <span className="text-[#38AA78]">PostgreSQL 16 Compatible</span>
           </div>
+        </div>
+
+        {/* Feature Highlights Pills */}
+        <div className="w-full mt-5 grid grid-cols-3 gap-3">
+          {[
+            { label: 'Auto Normalization', sub: '3NF Assured' },
+            { label: 'Instant SQL Export', sub: 'DOCX · PDF · DDL' },
+            { label: 'Live Schema Sync', sub: 'Zero Latency' },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="p-3 rounded-xl bg-white/70 border border-[#dce1de] text-center"
+            >
+              <p className="text-[11px] font-bold text-[#07110b]">{item.label}</p>
+              <p className="text-[10px] text-[#565c59] mt-0.5">{item.sub}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

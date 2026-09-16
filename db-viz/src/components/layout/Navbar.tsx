@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Menu, Database, Upload } from 'lucide-react';
+import SchemaViewLogo from '@/components/common/SchemaViewLogo';
 
 interface NavbarProps {
   onPresentationMode?: () => void;
@@ -49,10 +50,8 @@ export default function Navbar({
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 select-none">
-          <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-sm">
-            <Database className="w-4 h-4 text-white" />
-          </div>
+        <div className="flex items-center gap-2 select-none">
+          <SchemaViewLogo size={28} />
           <span className="text-sm font-semibold text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-geist-sans)' }}>
             Schema View
           </span>
