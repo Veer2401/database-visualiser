@@ -11,7 +11,6 @@ const nextConfig = {
     root: path.join(__dirname),
   },
   images: {
-    unoptimized: true, // Required for Netlify static export
     remotePatterns: [
       {
         protocol: 'https',

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { MotionValue, motion, useScroll, useTransform, useInView, useMotionValue, animate } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -188,9 +189,11 @@ export const Lid = ({
       >
         <div className="absolute inset-0 rounded-lg bg-white" />
         {src ? (
-          <img
+          <Image
             src={src}
             alt="Screen preview"
+            fill
+            sizes="(max-width: 768px) 32rem, 512px"
             className="absolute inset-0 h-full w-full rounded-lg object-contain"
           />
         ) : (

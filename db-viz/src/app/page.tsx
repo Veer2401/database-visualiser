@@ -193,7 +193,7 @@ export default function LandingPage() {
             {/* Database illustration aligned to reach up into the right portion of the title */}
             <div className="lg:absolute lg:-top-[2vw] xl:-top-[3vw] lg:-right-[1%] lg:w-[62%] lg:max-w-[900px] max-md:mt-6 max-md:mb-6 max-md:w-full max-md:overflow-hidden pointer-events-none">
               <Image
-                src="/LandingImage-transparent.png"
+                src="/LandingImage-transparent.webp"
                 alt="Isometric database infrastructure illustration"
                 width={1428}
                 height={736}
@@ -286,7 +286,7 @@ export default function LandingPage() {
               </Reveal>
               <div className="relative mt-8 aspect-[4/3] w-full overflow-hidden lg:min-h-0 lg:flex-1 lg:aspect-auto">
                 <Image
-                  src="/Database.png"
+                  src="/Database.webp"
                   alt="Abstract database illustration"
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"
