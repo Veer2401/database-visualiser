@@ -59,13 +59,15 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match application routes that may need proxy headers, except for:
+     * - the static landing and public pages (serve directly from the CDN)
      * - _next/image (image optimization files)
      * - _next/static (static files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - API routes (their cache policy is defined in next.config.js/netlify.toml)
      */
-    '/((?!_next/image|_next/static|favicon.ico|public).*)',
+    '/((?!$|pricing|privacy-policy|terms-of-service|documentation|_next/image|_next/static|favicon.ico|public|api).*)',
   ],
 };
 
