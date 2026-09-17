@@ -19,9 +19,10 @@ import {
     Sparkles,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { signOut, onAuthStateChanged, User as FirebaseUser, updateProfile } from 'firebase/auth';
+import { signOut, updateProfile } from 'firebase/auth';
 import { FONT_OPTIONS } from '@/components/common/FontProvider';
 import SchemaViewLogo from '@/components/common/SchemaViewLogo';
+import { useAuth } from '@/hooks/useAuth';
 
 type SettingsSection = 'general' | 'account' | 'appearance' | 'database' | 'billing' | 'about';
 
@@ -42,8 +43,7 @@ const navItems: NavItem[] = [
 
 export default function SettingsPage() {
     const router = useRouter();
-    const [user, setUser] = useState<FirebaseUser | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user, loading } = useAuth();
     const [activeSection, setActiveSection] = useState<SettingsSection>('general');
     const [displayName, setDisplayName] = useState('');
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -57,19 +57,14 @@ export default function SettingsPage() {
     }, []);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            setLoading(false);
-            if (currentUser?.displayName) {
-                setDisplayName(currentUser.displayName);
-            }
-            if (!currentUser) {
-                router.push('/login');
-            }
-        });
+        if (user?.displayName) {
+            setDisplayName(user.displayName);
+        }
+    }, [user]);
 
-        return () => unsubscribe();
-    }, [router]);
+    useEffect(() => {
+        if (!loading && !user) router.push('/login');
+    }, [loading, router, user]);
 
     const handleSaveDisplayName = async () => {
         if (!user || !displayName.trim()) return;
@@ -78,7 +73,8 @@ export default function SettingsPage() {
         setSaveSuccess(false);
 
         try {
-            await updateProfile(user, {
+            if (!auth.currentUser) return;
+            await updateProfile(auth.currentUser, {
                 displayName: displayName.trim(),
             });
             setSaveSuccess(true);

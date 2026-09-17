@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -15,26 +15,17 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import SchemaViewLogo from '@/components/common/SchemaViewLogo';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-
-      if (!currentUser) {
-        router.push('/login');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
+  React.useEffect(() => {
+    if (!loading && !user) router.push('/login');
+  }, [loading, router, user]);
 
   const handleSignOut = async () => {
     try {
