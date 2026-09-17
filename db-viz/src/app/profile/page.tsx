@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -124,9 +125,12 @@ export default function ProfilePage() {
               <div>
                 <div className="flex items-center gap-5">
                   {user.photoURL ? (
-                    <img
+                    <Image
                       src={user.photoURL}
                       alt={user.displayName || 'User'}
+                      width={72}
+                      height={72}
+                      unoptimized
                       className="w-18 h-18 rounded-2xl border border-gray-200 shadow-sm object-cover"
                     />
                   ) : (
