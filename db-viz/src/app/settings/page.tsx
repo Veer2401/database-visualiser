@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -223,9 +224,12 @@ export default function SettingsPage() {
 
                             <div className="flex items-center gap-5">
                                 {user.photoURL ? (
-                                    <img
+                                    <Image
                                         src={user.photoURL}
                                         alt={user.displayName || 'User'}
+                                        width={64}
+                                        height={64}
+                                        unoptimized
                                         className="w-16 h-16 rounded-full border border-gray-200 object-cover shadow-sm"
                                     />
                                 ) : (

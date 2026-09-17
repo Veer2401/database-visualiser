@@ -17,6 +17,12 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Cache Next.js image optimization responses briefly at the CDN
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=60, must-revalidate"
+
 # Cache public assets (images, fonts, icons)
 [[headers]]
   for = "/static/*"

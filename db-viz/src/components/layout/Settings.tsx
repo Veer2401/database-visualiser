@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { X, User as UserIcon, LogOut, Palette, Check, CreditCard } from 'lucide-react';
 import Button from '@/components/common/Button';
 import { User } from '@/types/database';
@@ -89,9 +90,12 @@ export default function Settings({
                   <div className="space-y-3">
                     <div className={`p-4 rounded-2xl ${currentTheme === 'dark' ? 'bg-slate-800/80 border-slate-700/50' : 'bg-white/80 border-gray-200/50'} backdrop-blur-sm border shadow-sm flex items-center gap-3`}>
                       {user.photoURL && (
-                        <img
+                        <Image
                           src={user.photoURL}
                           alt={user.displayName || 'User'}
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="w-12 h-12 rounded-full border-2 border-white shadow-md"
                         />
                       )}
